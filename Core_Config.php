@@ -40,6 +40,19 @@ class Core_Config extends Module_Config {
 					$classes[$file['filename']] = $f;
 				}
 
+				if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){
+					$files = glob($d.DIRECTORY_SEPARATOR.'controllers/*');
+					foreach($files as $f){
+						if(is_dir($f))
+							continue;
+						$file = pathinfo($f);
+						if($file['extension']!='php')
+							continue;
+
+						$classes[$file['filename']] = $f;
+					}
+				}
+
 				if(file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php')){
 					include_once($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php');
 					$configClassName = '\\Model\\'.$d_info['filename'].'_Config';

@@ -10,6 +10,12 @@ class Core implements \JsonSerializable{
 	protected $availableModules = [];
 	/** @var string[] */
 	protected $rules = [];
+	/** @var string */
+	public $controllerName;
+	/** @var Controller */
+	public $controller;
+	/** @var array */
+	protected $viewOptions = [];
 
 	/**
 	 * Core constructor.
@@ -75,6 +81,8 @@ class Core implements \JsonSerializable{
 			];
 			$this->rules = ['zk'];
 		}
+
+		$this->modules['Core'][0] = $this;
 	}
 
 	/* MODULES MANAGEMENT */
@@ -278,6 +286,7 @@ class Core implements \JsonSerializable{
 		if(count($matchedRules)==0){
 			$ruleFound = '404';
 			$module = 'Core';
+			$this->viewOptions['404-reason'] = 'No rule matched the request.';
 		}else{
 			if(count($matchedRules)>1)
 				krsort($matchedRules);
@@ -287,11 +296,45 @@ class Core implements \JsonSerializable{
 		}
 
 		/*
-		 *
+		 * Next step, I ask the module in charge which controller should I load
+		 * Then, I check if it really exists and I load it. I pass it the default View Options as well
 		 * */
 
-		zkdump($ruleFound);
-		zkdump($module);
+		$controllerName = $this->getModule($module)->getController($ruleFound);
+		if(!$controllerName){
+			$controllerName = 'Err404';
+			$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
+		}
+
+		$controllerClassName = '\\'.$controllerName.'Controller';
+
+		if(!class_exists($controllerClassName)){
+			$controllerName = 'Err404';
+			$this->viewOptions['404-reason'] = 'Controller class not found.';
+			$controllerClassName = '\\'.$controllerName.'Controller';
+		}
+
+		$this->controllerName = $controllerName;
+		$this->controller = new $controllerClassName($this);
+		$this->controller->viewOptions = array_merge($this->controller->viewOptions, $this->viewOptions);
+
+		/*
+		 * The init method is expanded in the specific controller and is executed beforehand
+		 * Then I execute the modelInit which is standard for all controllers
+		 * And at last, the index (or post) method which should contain the actual execution of the actions
+		 * */
+
+		$this->controller->init();
+		$this->controller->modelInit();
+
+		if(isset($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD']=='POST'){
+			if(array_keys($_POST)==['zkbindings'])
+				$this->controller->index();
+			else
+				$this->controller->post();
+		}else{
+			$this->controller->index();
+		}
 	}
 
 	/**
@@ -321,9 +364,28 @@ class Core implements \JsonSerializable{
 	 */
 	public function terminate(){
 		foreach($this->modules as $name=>$modules){
+			if($name=='Core')
+				continue;
 			foreach($modules as $m){
 				$m->terminate();
 			}
+		}
+	}
+
+	/**
+	 * Returns the controller needed for the rules for which the Core module is in charge (currently only "zk" for the management panel)
+	 *
+	 * @param string $rule
+	 * @return string
+	 */
+	public function getController($rule){
+		switch($rule){
+			case 'zk':
+				return 'Zk';
+				break;
+			default:
+				return 'Err404';
+				break;
 		}
 	}
 
