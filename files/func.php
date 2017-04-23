@@ -1,9 +1,10 @@
 <?php
-/***
-ModEl Framework
-Functions
- ***/
-
+/**
+ * Serialization of data for logging
+ *
+ * @param mixed $var
+ * @return string
+ */
 function serializeForLog($var){
 	try {
 		$string = serialize( $var );
@@ -13,6 +14,13 @@ function serializeForLog($var){
 	}
 }
 
+/**
+ * Shortcut for extended htmlentities handling
+ *
+ * @param string $text
+ * @param bool $br
+ * @return string
+ */
 function entities($text, $br = false){
 	if(is_object($text) and DEBUG_MODE){
 		echo 'Oggetto passato dentro entities!';
@@ -23,6 +31,15 @@ function entities($text, $br = false){
 	return $text;
 }
 
+/**
+ * Cut a given text at a certain length, aware of word breaks.
+ *
+ * @param string $text
+ * @param int $limit
+ * @param array $options
+ * @param bool $safe
+ * @return string
+ */
 function textCutOff($text, $limit, $options=array(), $safe = true){
 	if(!is_array($options)) // Retrocompatibilità
 		$options = array('other'=>$options, 'safe'=>$safe);
@@ -68,6 +85,13 @@ function textCutOff($text, $limit, $options=array(), $safe = true){
 	}else return $tor;
 }
 
+/**
+ * Returns a correct price representation of a given number
+ *
+ * @param float $p
+ * @param array $options
+ * @return string
+ */
 function makePrice($p, $options=array()){
 	if(is_bool($options)) // Retrocompatibilità
 		$options = array('show_currency'=>true);
@@ -83,15 +107,30 @@ function makePrice($p, $options=array()){
 	return $return;
 }
 
+/**
+ * Conversion of several number formats from string to number
+ *
+ * @param $n
+ * @return bool|int|string
+ */
 function textToNumber($n){
 	$n = str_replace(',', '.', $n);
 	$n = preg_replace('/\.(?=.*\.)/', '', $n);
 	return is_numeric($n) ? $n : false;
 }
 
+/**
+ * Rewrite words in a correct url format
+ *
+ * @param array $names
+ * @param bool $lower
+ * @return string
+ */
 function rewriteUrlWords($names, $lower=true){
-	if(empty($names)) return false;
-	if(!is_array($names)) $names = array($names);
+	if(empty($names))
+		return '';
+	if(!is_array($names))
+		$names = array($names);
 
 	foreach($names as $n => $name){
 		if($lower)
@@ -114,6 +153,14 @@ function rewriteUrlWords($names, $lower=true){
 	return $url;
 }
 
+/**
+ * Dumping for a visual representation
+ *
+ * @param mixed $v
+ * @param bool $use_json
+ * @param bool $return
+ * @return bool|string
+ */
 function zkdump($v, $use_json=false, $return=false){
 	if(!DEBUG_MODE and !$return)
 		return false;
@@ -123,9 +170,14 @@ function zkdump($v, $use_json=false, $return=false){
 		$v = json_decode(json_encode($v), true);
 	var_dump($v);
 	echo '</pre>';
-	if($return) return ob_get_clean();
+	if($return)
+		return ob_get_clean();
 }
 
+/**
+ * @param bool $return
+ * @return array
+ */
 function zkBacktrace($return = false){
 	$backtrace = version_compare(phpversion(), '5.3.6', '<') ? debug_backtrace(false) : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 	if(version_compare(phpversion(), '5.3.6', '<')){
@@ -135,19 +187,59 @@ function zkBacktrace($return = false){
 		}
 		unset($bt);
 	}
-	if($return) return $backtrace;
-	else zkdump($backtrace);
+	if($return)
+		return $backtrace;
+	else
+		zkdump($backtrace);
 }
 
+/**
+ * Is a ZkException?
+ *
+ * @param $el
+ * @return bool
+ */
 function isErr($el){
 	if(is_object($el) and get_class($el)=='ZkException') return true;
 	else return false;
 }
 
-function getErr($e){
+/**
+ * Gets the string from an Exception, depending if it's a simple Exception or a ZkException
+ *
+ * @param Exception $e
+ * @return string
+ */
+function getErr(\Exception $e){
 	return isErr($e) ? $e->show() : $e->getMessage();
 }
 
+/**
+ * Given an array, it returns true if is associative, false otherwise
+ *
+ * @param array $arr
+ * @return bool
+ */
 function isAssoc($arr){
 	return array_keys($arr) !== range(0, count($arr) - 1);
+}
+
+// Functions for preventing CSRF attacks
+
+if(!isset($_SESSION['csrf']))
+	$_SESSION['csrf'] = md5(uniqid(rand(), true));
+
+/**
+ * @return bool
+ */
+function checkCsrf(){
+	if(isset($_POST['c_id']) and $_POST['c_id']==$_SESSION['csrf']) return true;
+	else return false;
+}
+
+/**
+ *
+ */
+function csrfInput(){
+	echo '<input type="hidden" name="c_id" value="'.$_SESSION['csrf'].'" />';
 }
