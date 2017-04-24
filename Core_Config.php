@@ -41,7 +41,7 @@ class Core_Config extends Module_Config {
 				}
 
 				if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){
-					$files = glob($d.DIRECTORY_SEPARATOR.'controllers/*');
+					$files = glob($d.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
 					foreach($files as $f){
 						if(is_dir($f))
 							continue;
@@ -62,13 +62,27 @@ class Core_Config extends Module_Config {
 					if(!is_array($moduleRules))
 						throw new \Exception('The module '.$d_info['filename'].' returned a non-array as rules.');
 
-					foreach($moduleRules as $r){
+					foreach($moduleRules as $rIdx=>$r){
 						if(isset($rules[$r]))
 							continue;
-						$rules[$r] = $d_info['filename'];
+						$rules[$r] = [
+							'module'=>$d_info['filename'],
+							'idx'=>$rIdx,
+						];
 					}
 				}
 			}
+		}
+
+		$files = glob(INCLUDE_PATH.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
+		foreach($files as $f){
+			if(is_dir($f))
+				continue;
+			$file = pathinfo($f);
+			if($file['extension']!='php')
+				continue;
+
+			$classes[$file['filename']] = $f;
 		}
 
 		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
@@ -89,6 +103,8 @@ $modules = '.var_export($modules, true).';
 	 * @return array
 	 */
 	function getRules(){
-		return ['zk'];
+		return [
+			'zk'=>'zk',
+		];
 	}
 }

@@ -266,33 +266,39 @@ class Core implements \JsonSerializable{
 		 * If more than one rule is matching, I assign a score to each one (the more specific is the rule, the higher is the score) and pick the highest one.
 		 * So I'll found the module in charge to handle the current request.
 		 * */
-		$matchedRules = [];
-		foreach($this->rules as $r=>$module){
-			$rArr = explode('/', $r);
-			$score = 0;
-			foreach($rArr as $i=>$sr){
-				if(!isset($request[$i]))
-					continue 2;
-				if(!preg_match('/'.$sr.'/i', $request[$i]))
-					continue 2;
 
-				$score = $i*2;
-				if(strpos($sr, '[')===false)
-					$score += 1;
+		$matchedRules = [];
+		if(empty($request)){ // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
+			if(isset($this->rules['']))
+				$matchedRules[''] = 0;
+		}else{
+			foreach($this->rules as $r=>$module){
+				$rArr = explode('/', $r);
+				$score = 0;
+				foreach($rArr as $i=>$sr){
+					if(!isset($request[$i]))
+						continue 2;
+					if(!preg_match('/^'.$sr.'/i', $request[$i]))
+						continue 2;
+
+					$score = $i*2;
+					if(strpos($sr, '[')===false)
+						$score += 1;
+				}
+				$matchedRules[$r] = $score;
 			}
-			$matchedRules[$r] = $score;
 		}
 
 		if(count($matchedRules)==0){
-			$ruleFound = '404';
 			$module = 'Core';
+			$ruleFound = '404';
 			$this->viewOptions['404-reason'] = 'No rule matched the request.';
 		}else{
 			if(count($matchedRules)>1)
 				krsort($matchedRules);
 
-			$ruleFound = key($matchedRules);
-			$module = $this->rules[$ruleFound];
+			$module = $this->rules[key($matchedRules)]['module'];
+			$ruleFound = $this->rules[key($matchedRules)]['idx'];
 		}
 
 		/*
