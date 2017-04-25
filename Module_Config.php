@@ -2,6 +2,13 @@
 namespace Model;
 
 class Module_Config{
+	/** @var Core */
+	protected $model;
+
+	public function __construct(Core $model){
+		$this->model = $model;
+	}
+
 	/**
 	 * Utility method, returns the path of this module.
 	 *
@@ -23,11 +30,20 @@ class Module_Config{
 	}
 
 	/**
-	 * If this module needs rules to register, this is the method who should return them.
+	 * If this module needs to register rules, this is the method that should return them.
 	 *
 	 * @return array
 	 */
 	public function getRules(){
+		return [];
+	}
+
+	/**
+	 * If this module has classes to register, this is the method that should return them.
+	 *
+	 * @return array
+	 */
+	function getClasses(){
 		return [];
 	}
 }

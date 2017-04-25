@@ -278,7 +278,7 @@ class Core implements \JsonSerializable{
 				foreach($rArr as $i=>$sr){
 					if(!isset($request[$i]))
 						continue 2;
-					if(!preg_match('/^'.$sr.'/i', $request[$i]))
+					if(!preg_match('/^'.$sr.'$/i', $request[$i]))
 						continue 2;
 
 					$score = $i*2;

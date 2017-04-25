@@ -56,7 +56,7 @@ class Core_Config extends Module_Config {
 				if(file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php')){
 					include_once($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php');
 					$configClassName = '\\Model\\'.$d_info['filename'].'_Config';
-					$configClass = new $configClassName();
+					$configClass = new $configClassName($this->model);
 
 					$moduleRules = $configClass->getRules();
 					if(!is_array($moduleRules))
@@ -70,6 +70,12 @@ class Core_Config extends Module_Config {
 							'idx'=>$rIdx,
 						];
 					}
+
+					$moduleClasses = $configClass->getClasses();
+					if(!is_array($moduleClasses))
+						throw new \Exception('The module '.$d_info['filename'].' returned a non-array as classes.');
+
+					$classes = array_merge($classes, $moduleClasses);
 				}
 			}
 		}
