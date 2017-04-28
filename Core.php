@@ -85,6 +85,10 @@ class Core implements \JsonSerializable{
 		}
 
 		$this->modules['Core'][0] = $this;
+
+		// Output module, if present, is always loaded, to have its methods bound here
+		if($this->moduleExists('Output'))
+			$this->load('Output');
 	}
 
 	/* MODULES MANAGEMENT */
@@ -371,11 +375,16 @@ class Core implements \JsonSerializable{
 		}else{
 			$this->controller->index();
 		}
+
+		/*
+		 * Finally, I render the output content (default method in the controller use the Output module to handle this, but this behaviour can be customized.
+		 * */
+		$this->controller->output();
 	}
 
 	/**
 	 * It may be expanded in the FrontController.
-	 * It is called at the end of each correct (with no exception raised) execution.
+	 * It is called at the end of each correct execution.
 	 */
 	protected function end(){}
 
