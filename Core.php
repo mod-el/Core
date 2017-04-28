@@ -5,7 +5,9 @@ class Core implements \JsonSerializable{
 	/** @var array[] */
 	public $modules = array();
 	/** @var string[] */
-	protected $modulesMethods = array();
+	protected $boundMethods = array();
+	/** @var string[] */
+	protected $boundProperties = array();
 	/** @var array[] */
 	protected $availableModules = [];
 	/** @var string[] */
@@ -125,6 +127,27 @@ class Core implements \JsonSerializable{
 		if($module['load']){
 			$className = '\\Model\\'.$name;
 			$this->modules[$name][$idx] = new $className($this, $idx, $options);
+
+			foreach($this->modules[$name][$idx]->methods as $m_name){
+				if(method_exists($this, $m_name))
+					$this->error('Protected method name "'.$m_name.'", error while loading module '.$name.'.');
+
+				if(isset($this->boundMethods[$m_name]))
+					$this->error('Method "'.$m_name.'" already bound by another module, error while loading module '.$name.'.');
+
+				$this->boundMethods[$m_name] = $name;
+			}
+
+			foreach($this->modules[$name][$idx]->properties as $p_name){
+				if(property_exists($this, $p_name))
+					$this->error('Protected property name "'.$p_name.'", error while loading module '.$name.'.');
+
+				if(isset($this->boundProperties[$p_name]))
+					$this->error('Property "'.$p_name.'" already bound by another module, error while loading module '.$name.'.');
+
+				$this->boundProperties[$p_name] = $name;
+			}
+
 			return $this->modules[$name][$idx];
 		}else{
 			$this->modules[$name][$idx] = true;
@@ -207,12 +230,15 @@ class Core implements \JsonSerializable{
 	}
 
 	/**
-	 * Magic getter, shortcut for getModule.
+	 * Getter.
+	 * If called with an underscore, like _Db, it attempts to retrieve a module (recomended way of retrieving modules).
 	 * The modules can be retrieved (and this is the official way) with ->_ModuleName or ->_ModuleName_Idx
 	 * It raises an exception if the module is not found.
 	 *
+	 * Otherwise it will attempt to return a bound property, if any exists.
+	 *
 	 * @param $i
-	 * @return Module
+	 * @return mixed
 	 */
 	function __get($i){
 		if(preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)){
@@ -223,22 +249,26 @@ class Core implements \JsonSerializable{
 				return $this->getModule($name[0], $name[1]);
 			}else{
 				$this->error('Unknown module '.entities($i).'.');
+				return false;
 			}
+		}elseif(isset($this->boundProperties[$i])){
+			$module = $this->getModule($this->boundProperties[$i]);
+			return $module->{$i};
 		}else{
-			$this->error('Wrong module name format.');
+			return null;
 		}
 	}
 
 	/**
-	 * Call a registered method off one of the modules.
+	 * Call a method bound by one of the modules.
 	 *
 	 * @param string $name
 	 * @param array $arguments
 	 * @return mixed
 	 */
 	function __call($name, $arguments){
-		if(isset($this->modulesMethods[$name])){
-			$module = $this->getModule($this->modulesMethods[$name]);
+		if(isset($this->boundMethods[$name])){
+			$module = $this->getModule($this->boundMethods[$name]);
 			return call_user_func_array(array($module, $name), $arguments);
 		}else{
 			return null;

@@ -8,6 +8,8 @@ class Module{
 	public $module_id;
 	/** @var array */
 	public $methods = array();
+	/** @var array */
+	public $properties = array();
 
 	/**
 	 * Module constructor.
