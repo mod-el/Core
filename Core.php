@@ -18,6 +18,8 @@ class Core implements \JsonSerializable{
 	public $controller;
 	/** @var array */
 	protected $viewOptions = [];
+	/** @var bool|array */
+	private $inputVarsCache = false;
 
 	/**
 	 * Core constructor.
@@ -464,6 +466,59 @@ class Core implements \JsonSerializable{
 			return $req;
 		}else{
 			return array_key_exists($i, $req) ? $req[$i] : null;
+		}
+	}
+
+	/**
+	 * Returns one or all the input variables.
+	 * ModEl framwork can be called either via HTTP request (eg. via browser) or via CLI.
+	 * If $i is given, it returns that variable.
+	 * Otherwise, it returns the full array.
+	 *
+	 * @param bool|int $i
+	 * @param string $type
+	 * @return array|string|null
+	 */
+	public function getInput($i=false, $type='request'){
+		if (php_sapi_name() == "cli") {
+			if($this->inputVarsCache===false){
+				$this->inputVarsCache = [];
+
+				global $argv;
+
+				if(is_array($argv) and count($argv)>2){
+					$arr = $argv;
+					unset($arr[0]); // Script name
+					unset($arr[1]); // Main request (accesible via getRequest method)
+
+					foreach($arr as $input){
+						$input = explode('=', $input);
+						if(count($input)==2){
+							$this->inputVarsCache[$input[0]] = $input[1];
+						}
+					}
+				}
+			}
+
+			$arr = $this->inputVarsCache;
+		}else{
+			switch($type){
+				case 'get':
+					$arr = $_GET;
+					break;
+				case 'post':
+					$arr = $_POST;
+					break;
+				case 'request':
+					$arr = $_REQUEST;
+					break;
+			}
+		}
+
+		if($i===false){
+			return $arr;
+		}else{
+			return array_key_exists($i, $arr) ? $arr[$i] : null;
 		}
 	}
 
