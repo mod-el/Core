@@ -20,6 +20,8 @@ class Core implements \JsonSerializable{
 	protected $viewOptions = [];
 	/** @var bool|array */
 	private $inputVarsCache = false;
+	/** @var array */
+	private $registeredListeners = [];
 
 	/**
 	 * Core constructor.
@@ -608,6 +610,40 @@ class Core implements \JsonSerializable{
 			}
 		}
 		return false;
+	}
+
+	/* EVENTS */
+	/**
+	 * Registers a closure to be called when a particular event is triggered.
+	 * The event signature should be provided in the form of Module_Event
+	 * The callback should accept a $data parameter, which will contain the data of the event
+	 *
+	 * @param string $event
+	 * @param \Closure $callback
+	 */
+	public function on($event, \Closure $callback){
+		if(!isset($this->registeredListeners[$event]))
+			$this->registeredListeners[$event] = [];
+		$this->registeredListeners[$event][] = $callback;
+	}
+
+	/**
+	 * Triggers a particular event. If any callback is registered, it gets executed.
+	 *
+	 * @param string $module
+	 * @param string $event
+	 * @param array $data
+	 * @return bool
+	 */
+	public function trigger($module, $event, $data){
+		$event = $module.'_'.$event;
+		if(isset($this->registeredListeners[$event])){
+			foreach($this->registeredListeners[$event] as $callback){
+				call_user_func($callback, $data);
+			}
+		}
+
+		return true;
 	}
 
 	/* VARIOUS UTILITIES */

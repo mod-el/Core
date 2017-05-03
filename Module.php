@@ -58,4 +58,20 @@ class Module{
 			return array();
 		}
 	}
+
+	/**
+	 * This will trigger a new event in the Core, coming from this module.
+	 * Each event has its own name (param $event) and eventually carries a bunch of data in the form of an array (param $data)
+	 *
+	 * @param $event
+	 * @param array $data
+	 * @return bool
+	 */
+	protected function trigger($event, $data = []){
+		$classname = get_class($this);
+		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
+			$classname = substr($classname, $pos + 1);
+
+		return $this->model->trigger($classname, $event, $data);
+	}
 }
