@@ -54,7 +54,6 @@ class Controller{
 	/**
 	 * Outputs the content
 	 * It uses Output model, by default, but this behaviour can be customized by extending the method
-	 *
 	 */
 	public function output(){
 		/* Backward compatibility */
@@ -68,6 +67,13 @@ class Controller{
 		}
 
 		$this->model->_Output->render($this->viewOptions);
+	}
+
+	/**
+	 * Optionally, this method can be expanded by the controller to override the default output method, if model is executed in a CLI environment
+	 */
+	public function outputCLI(){
+		$this->output();
 	}
 
 	/**

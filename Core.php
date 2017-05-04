@@ -383,7 +383,10 @@ class Core implements \JsonSerializable{
 		/*
 		 * Finally, I render the output content (default method in the controller use the Output module to handle this, but this behaviour can be customized.
 		 * */
-		$this->controller->output();
+		if($this->isCLI())
+			$this->controller->outputCLI();
+		else
+			$this->controller->output();
 	}
 
 	/**
