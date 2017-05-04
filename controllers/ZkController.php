@@ -1,6 +1,6 @@
 <?php
 class ZkController extends \Model\Controller {
-	function index(){
-		echo 'It works!';
+	function init(){
+		$this->viewOptions['template-path'] = 'model/Core/templates';
 	}
 }
