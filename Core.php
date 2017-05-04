@@ -450,7 +450,7 @@ class Core implements \JsonSerializable{
 	 * @return array|string|null
 	 */
 	public function getRequest($i=false){
-		if (php_sapi_name() == "cli") {
+		if ($this->isCLI()) {
 			global $argv;
 			if(!is_array($argv))
 				return $i===false ? [] : null;
@@ -482,7 +482,7 @@ class Core implements \JsonSerializable{
 	 * @return array|string|null
 	 */
 	public function getInput($i=false, $type='request'){
-		if (php_sapi_name() == "cli") {
+		if ($this->isCLI()) {
 			if($this->inputVarsCache===false){
 				$this->inputVarsCache = [];
 
@@ -654,6 +654,15 @@ class Core implements \JsonSerializable{
 	 */
 	public function jsonSerialize(){
 		return 'MODEL/FRONT CONTROLLER';
+	}
+
+	/**
+	 * Returns true if Model is executed via CLI, false otherwise
+	 *
+	 * @return bool
+	 */
+	public function isCLI(){
+		return (php_sapi_name() == "cli");
 	}
 
 	/* BACKWARD COMPATIBILITY */
