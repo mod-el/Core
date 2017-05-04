@@ -665,6 +665,14 @@ class Core implements \JsonSerializable{
 		return (php_sapi_name() == "cli");
 	}
 
+	/**
+	 * Shortcut for redirecting
+	 */
+	function redirect($path){
+		header('Location: '.$path);
+		die();
+	}
+
 	/* BACKWARD COMPATIBILITY */
 
 	public function loaded($name, $idx=false){ return $this->isLoaded($name, $idx); }
