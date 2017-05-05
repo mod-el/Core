@@ -51,11 +51,13 @@ class Module{
 	 * @return array
 	 */
 	public function retrieveConfig(){
-		if(file_exists(INCLUDE_PATH.'data/config/'.get_class($this).'/config.php')){
-			require(INCLUDE_PATH.'data/config/'.get_class($this).'/config.php');
+		$classname = $this->getClass();
+
+		if(file_exists(INCLUDE_PATH.'data/config/'.$classname.'/config.php')){
+			require(INCLUDE_PATH.'data/config/'.$classname.'/config.php');
 			return $config;
 		}else{
-			return array();
+			return [];
 		}
 	}
 
@@ -68,10 +70,18 @@ class Module{
 	 * @return bool
 	 */
 	protected function trigger($event, $data = []){
+		return $this->model->trigger($this->getClass(), $event, $data);
+	}
+
+	/**
+	 * Returns the non-namespaced class name of this module.
+	 *
+	 * @return string
+	 */
+	private function getClass(){
 		$classname = get_class($this);
 		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
 			$classname = substr($classname, $pos + 1);
-
-		return $this->model->trigger($classname, $event, $data);
+		return $classname;
 	}
 }
