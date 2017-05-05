@@ -680,12 +680,8 @@ class Core implements \JsonSerializable{
 	 * Retrieves the Core config (as for any other module)
 	 */
 	public function retrieveConfig(){
-		$classname = get_class($this);
-		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
-			$classname = substr($classname, $pos + 1);
-
-		if(file_exists(INCLUDE_PATH.'data/config/'.$classname.'/config.php')){
-			require(INCLUDE_PATH.'data/config/'.$classname.'/config.php');
+		if(file_exists(INCLUDE_PATH.'data/config/Core/config.php')){
+			require(INCLUDE_PATH.'data/config/Core/config.php');
 			return $config;
 		}else{
 			return [];
