@@ -43,7 +43,27 @@ class Module_Config{
 	 *
 	 * @return array
 	 */
-	function getClasses(){
+	public function getClasses(){
 		return [];
+	}
+
+	/**
+	 * If the module has a configuration/installation page in the control panel, it's handled by this method
+	 *
+	 * @param array $request
+	 * @return string
+	 */
+	public function getTemplate($request){
+		return false;
+	}
+
+	/**
+	 * This is called every time a POST request hits the configuration page
+	 *
+	 * @param array $request
+	 * @return string
+	 */
+	public function execConfig($request, $data){
+		return true;
 	}
 }
