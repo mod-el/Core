@@ -61,7 +61,8 @@ class Module_Config{
 	 * This is called every time a POST request hits the configuration page
 	 *
 	 * @param array $request
-	 * @return string
+	 * @param array $data
+	 * @return bool
 	 */
 	public function execConfig($request, $data){
 		return true;
