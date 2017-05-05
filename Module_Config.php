@@ -4,6 +4,8 @@ namespace Model;
 class Module_Config{
 	/** @var Core */
 	protected $model;
+	/** @var bool */
+	public $configurable = false;
 
 	public function __construct(Core $model){
 		$this->model = $model;
