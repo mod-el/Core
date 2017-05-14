@@ -10,6 +10,9 @@ class ZkController extends \Model\Controller {
 				$this->viewOptions['template'] = 'modules';
 				$this->viewOptions['cache'] = false;
 
+				$this->model->addCSS('model/Core/templates/style.css');
+				$this->model->addJS('model/Core/templates/js.js');
+
 				switch($this->model->getRequest(2)){
 					case 'config':
 					case 'install':
@@ -20,14 +23,42 @@ class ZkController extends \Model\Controller {
 							$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 						}
 						break;
-					case 'install':
-
-						break;
 					default:
 						$updater = new \Model\Updater($this->model, 0, []);
 						$this->viewOptions['modules'] = $updater->getModules(true);
 						break;
 				}
+				break;
+			case 'make-cache':
+				$updater = new \Model\Updater($this->model, 0, []);
+				$modules = $updater->getModules();
+
+				$Core_Config = new \Model\Core_Config($this->model);
+				if(!$Core_Config->makeCache())
+					die('Error: can\'t make cache for the Core.');
+
+				$modulesConfigs = [];
+				foreach($modules as $mIdx=>$m){
+					if($mIdx=='Core')
+						continue;
+					if($m->hasConfigClass){
+						$modulesConfigs['\\Model\\'.$mIdx.'_Config'] = false;
+					}
+				}
+
+				for($c=1;$c<=2;$c++){ // Since some modules require others to have cache updated, I run through each one twice, instead of manually forcing the order
+					foreach($modulesConfigs as $className=>$mStatus){
+						$moduleConfig = new $className($this->model);
+						$modulesConfigs[$className] = $moduleConfig->makeCache();
+					}
+				}
+
+				foreach($modulesConfigs as $className=>$mStatus){
+					if(!$mStatus)
+						die('Error in making cache for module '.$className);
+				}
+
+				die('Cache succesfully updated.');
 				break;
 			default:
 				if($this->model->isCLI())
