@@ -13,6 +13,8 @@ class Core implements \JsonSerializable{
 	/** @var string[] */
 	protected $rules = [];
 	/** @var string */
+	public $leadingModule;
+	/** @var string */
 	public $controllerName;
 	/** @var Controller */
 	public $controller;
@@ -338,6 +340,8 @@ class Core implements \JsonSerializable{
 			$module = $this->rules[key($matchedRules)]['module'];
 			$ruleFound = $this->rules[key($matchedRules)]['idx'];
 		}
+
+		$this->leadingModule = $module;
 
 		/*
 		 * Next step, I ask the module in charge which controller should I load
