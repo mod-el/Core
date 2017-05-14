@@ -30,32 +30,36 @@ class ZkController extends \Model\Controller {
 				}
 				break;
 			case 'make-cache':
-				$updater = new \Model\Updater($this->model, 0, []);
-				$modules = $updater->getModules();
+				try {
+					$updater = new \Model\Updater($this->model, 0, []);
+					$modules = $updater->getModules();
 
-				$Core_Config = new \Model\Core_Config($this->model);
-				if(!$Core_Config->makeCache())
-					die('Error: can\'t make cache for the Core.');
+					$Core_Config = new \Model\Core_Config($this->model);
+					if (!$Core_Config->makeCache())
+						$this->model->error('Error: can\'t make cache for the Core.');
 
-				$modulesConfigs = [];
-				foreach($modules as $mIdx=>$m){
-					if($mIdx=='Core')
-						continue;
-					if($m->hasConfigClass){
-						$modulesConfigs['\\Model\\'.$mIdx.'_Config'] = false;
+					$modulesConfigs = [];
+					foreach ($modules as $mIdx => $m) {
+						if ($mIdx == 'Core')
+							continue;
+						if ($m->hasConfigClass) {
+							$modulesConfigs['\\Model\\' . $mIdx . '_Config'] = false;
+						}
 					}
-				}
 
-				for($c=1;$c<=2;$c++){ // Since some modules require others to have cache updated, I run through each one twice, instead of manually forcing the order
-					foreach($modulesConfigs as $className=>$mStatus){
-						$moduleConfig = new $className($this->model);
-						$modulesConfigs[$className] = $moduleConfig->makeCache();
+					for ($c = 1; $c <= 2; $c++) { // Since some modules require others to have cache updated, I run through each one twice, instead of manually forcing the order
+						foreach ($modulesConfigs as $className => $mStatus) {
+							$moduleConfig = new $className($this->model);
+							$modulesConfigs[$className] = $moduleConfig->makeCache();
+						}
 					}
-				}
 
-				foreach($modulesConfigs as $className=>$mStatus){
-					if(!$mStatus)
-						die('Error in making cache for module '.$className);
+					foreach ($modulesConfigs as $className => $mStatus) {
+						if (!$mStatus)
+							$this->model->error('Error in making cache for module ' . $className);
+					}
+				} catch (Exception $e) {
+					die(getErr($e));
 				}
 
 				die('Cache succesfully updated.');
