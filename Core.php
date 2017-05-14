@@ -144,7 +144,7 @@ class Core implements \JsonSerializable{
 				if(method_exists($this, $m_name))
 					$this->error('Protected method name "'.$m_name.'", error while loading module '.$name.'.');
 
-				if(isset($this->boundMethods[$m_name]))
+				if(isset($this->boundMethods[$m_name]) and $this->boundMethods[$m_name]!=$name)
 					$this->error('Method "'.$m_name.'" already bound by another module, error while loading module '.$name.'.');
 
 				$this->boundMethods[$m_name] = $name;
@@ -154,7 +154,7 @@ class Core implements \JsonSerializable{
 				if(property_exists($this, $p_name))
 					$this->error('Protected property name "'.$p_name.'", error while loading module '.$name.'.');
 
-				if(isset($this->boundProperties[$p_name]))
+				if(isset($this->boundProperties[$p_name]) and $this->boundProperties[$p_name]!=$name)
 					$this->error('Property "'.$p_name.'" already bound by another module, error while loading module '.$name.'.');
 
 				$this->boundProperties[$p_name] = $name;
