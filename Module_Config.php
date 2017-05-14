@@ -69,4 +69,32 @@ class Module_Config{
 	public function execConfig($request, $data){
 		return true;
 	}
+
+	/**
+	 * Retrieves the configuration file of this module - if exists - and returns it.
+	 *
+	 * @return array
+	 */
+	public function retrieveConfig(){
+		$classname = $this->getClass();
+
+		if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
+			require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
+			return $config;
+		}else{
+			return [];
+		}
+	}
+
+	/**
+	 * Returns the non-namespaced class name of this module.
+	 *
+	 * @return string
+	 */
+	private function getClass(){
+		$classname = get_class($this);
+		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
+			$classname = substr($classname, $pos + 1);
+		return substr($classname, 0, -7);
+	}
 }

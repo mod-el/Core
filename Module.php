@@ -53,8 +53,8 @@ class Module{
 	public function retrieveConfig(){
 		$classname = $this->getClass();
 
-		if(file_exists(INCLUDE_PATH.'data/config/'.$classname.'/config.php')){
-			require(INCLUDE_PATH.'data/config/'.$classname.'/config.php');
+		if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
+			require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
 			return $config;
 		}else{
 			return [];
