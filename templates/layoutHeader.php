@@ -11,8 +11,8 @@
 <div id="tools">
     <p><b>Tools</b></p>
     <div id="cmd-make-cache"><a href="#" onclick="cmd('make-cache'); return false">Update cache</a></div>
-    <div id="cmd-session-clear"><a href="#" onclick="return false">Empty session</a></div>
-    <div><a href="<?=PATH?>zk/get-session" target="_blank">Inspect session</a></div>
+    <div id="cmd-empty-session"><a href="#" onclick="cmd('empty-session'); return false">Empty session</a></div>
+    <div><a href="<?=PATH?>zk/inspect-session" target="_blank">Inspect session</a></div>
 </div>
 
 <div id="header">

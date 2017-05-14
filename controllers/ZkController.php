@@ -60,6 +60,18 @@ class ZkController extends \Model\Controller {
 
 				die('Cache succesfully updated.');
 				break;
+			case 'empty-session':
+				$_SESSION[SESSION_ID] = array();
+				die('Session cleared.');
+				break;
+			case 'inspect-session':
+				if($this->model->isCLI()){
+					$this->model->sendJSON($_SESSION[SESSION_ID]);
+				}else{
+					zkdump($_SESSION[SESSION_ID]);
+				}
+				die();
+				break;
 			default:
 				if($this->model->isCLI())
 					die('Invalid request.'.PHP_EOL);
