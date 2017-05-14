@@ -6,7 +6,7 @@ html, body{
 }
 
 body{
-    background: #F9F9F9 url('<?=PATH?>model/Core/templates/logo.png') center no-repeat;
+    background: #F9F9F9 url('logo.png') center no-repeat;
 }
 
 #tools{
