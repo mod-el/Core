@@ -16,6 +16,8 @@ class Core implements \JsonSerializable{
 	public $leadingModule;
 	/** @var string */
 	public $controllerName;
+	/** @var string */
+	private $requestPrefix = '';
 	/** @var Controller */
 	public $controller;
 	/** @var array */
@@ -345,11 +347,19 @@ class Core implements \JsonSerializable{
 
 		/*
 		 * Next step, I ask the module in charge which controller should I load
+		 * The module can also return a prefix to keep in mind for building future requests (defaults to PATH)
 		 * Then, I check if it really exists and I load it. I pass it the default View Options as well
 		 * */
 
-		$controllerName = $this->getModule($module)->getController($ruleFound);
-		if(!$controllerName){
+		$this->requestPrefix = PATH;
+
+		$controllerData = $this->getModule($module)->getController($ruleFound);
+		if($controllerData and is_array($controllerData) and isset($controllerData['controller'])) {
+			$controllerName = $controllerData['controller'];
+			if(isset($controllerData['prefix']) and $controllerData['prefix']){
+				$this->requestPrefix .= $controllerData['prefix'].'/';
+			}
+		}else{
 			$controllerName = 'Err404';
 			$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
 		}
@@ -432,20 +442,24 @@ class Core implements \JsonSerializable{
 	 * Returns the controller needed for the rules for which the Core module is in charge (currently only "zk" for the management panel)
 	 *
 	 * @param string $rule
-	 * @return string
+	 * @return array
 	 */
 	public function getController($rule){
 		switch($rule){
 			case 'zk':
-				return 'Zk';
+				return [
+					'controller'=>'Zk',
+				];
 				break;
 			default:
-				return 'Err404';
+				return [
+					'controller'=>'Zk',
+				];
 				break;
 		}
 	}
 
-	/* INPUT MANAGEMENT */
+	/* REQUEST AND INPUT MANAGEMENT */
 
 	/**
 	 * Returns the current request.
@@ -529,6 +543,15 @@ class Core implements \JsonSerializable{
 		}else{
 			return array_key_exists($i, $arr) ? $arr[$i] : null;
 		}
+	}
+
+	/**
+	 * Returns the requests prefix
+	 *
+	 * @return string
+	 */
+	public function prefix(){
+		return $this->requestPrefix;
 	}
 
 	/* ERRORS MANAGEMENT */
