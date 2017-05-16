@@ -20,6 +20,7 @@ class ZkController extends \Model\Controller {
 							require(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
 							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
 							$configClass = new $configClass($this->model);
+							$this->viewOptions['config'] = $configClass->retrieveConfig();
 							$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 						}
 						break;
