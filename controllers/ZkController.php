@@ -47,16 +47,22 @@ class ZkController extends \Model\Controller {
 						}
 					}
 
+					$cacheErrors = [];
 					for ($c = 1; $c <= 2; $c++) { // Since some modules require others to have cache updated, I run through each one twice, instead of manually forcing the order
 						foreach ($modulesConfigs as $className => $mStatus) {
-							$moduleConfig = new $className($this->model);
-							$modulesConfigs[$className] = $moduleConfig->makeCache();
+							try {
+								$moduleConfig = new $className($this->model);
+								$modulesConfigs[$className] = $moduleConfig->makeCache();
+							} catch (Exception $e) {
+								$modulesConfigs[$className] = false;
+								$cacheErrors[$className] = $e->getMessage();
+							}
 						}
 					}
 
 					foreach ($modulesConfigs as $className => $mStatus) {
 						if (!$mStatus)
-							$this->model->error('Error in making cache for module ' . $className);
+							$this->model->error('Error in making cache for module ' . $className.(isset($cacheErrors[$className]) ? "\n".$cacheErrors[$className] : ''));
 					}
 				} catch (Exception $e) {
 					die(getErr($e));
