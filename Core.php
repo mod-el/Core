@@ -33,8 +33,6 @@ class Core implements \JsonSerializable{
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
 	function __construct(){
-		session_start();
-
 		DEFINE('START_TIME', microtime(true));
 
 		if(version_compare(phpversion(), '5.4.0', '<'))
