@@ -686,6 +686,9 @@ class Core implements \JsonSerializable{
 	 * @return bool
 	 */
 	public function trigger($module, $event, $data=[]){
+		if(!$this->eventsOn)
+			return true;
+
 		$this->eventsHistory[] = [
 			'module'=>$module,
 			'event'=>$event,
