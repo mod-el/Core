@@ -572,8 +572,12 @@ class Core implements \JsonSerializable{
 	 *
 	 * @return string
 	 */
-	public function prefix(){
-		return $this->requestPrefix;
+	public function prefix($withoutPath=false){
+		$prefix = $this->requestPrefix;
+		if($withoutPath){
+			$prefix = substr($prefix, strlen(PATH));
+		}
+		return $prefix;
 	}
 
 	/* ERRORS MANAGEMENT */
