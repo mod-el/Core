@@ -4,7 +4,7 @@
 
 <head>
     <title>Model Framework Control Panel - <?=NOME_SITO?></title>
-    <?php $this->head(); ?>
+    [:head]
 </head>
 
 <body>

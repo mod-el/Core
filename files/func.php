@@ -1,20 +1,5 @@
 <?php
 /**
- * Serialization of data for logging
- *
- * @param mixed $var
- * @return string
- */
-function serializeForLog($var){
-	try {
-		$string = serialize( $var );
-		return $string;
-	} catch( Exception $e ) {
-		return 'unserializable';
-	}
-}
-
-/**
  * Shortcut for extended htmlentities handling
  *
  * @param string $text
@@ -179,14 +164,7 @@ function zkdump($v, $use_json=false, $return=false){
  * @return array
  */
 function zkBacktrace($return = false){
-	$backtrace = version_compare(phpversion(), '5.3.6', '<') ? debug_backtrace(false) : debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-	if(version_compare(phpversion(), '5.3.6', '<')){
-		foreach($backtrace as &$bt){
-			if(isset($bt['args']))
-				unset($bt['args']);
-		}
-		unset($bt);
-	}
+	$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 	if($return)
 		return $backtrace;
 	else

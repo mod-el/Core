@@ -17,9 +17,10 @@ class ZkController extends \Model\Controller {
 					case 'config':
 					case 'install':
 						if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php')){
-							require(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
+							require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
 							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
 							$configClass = new $configClass($this->model);
+							$this->viewOptions['config'] = $configClass->retrieveConfig();
 							$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 						}
 						break;
@@ -47,16 +48,22 @@ class ZkController extends \Model\Controller {
 						}
 					}
 
+					$cacheErrors = [];
 					for ($c = 1; $c <= 2; $c++) { // Since some modules require others to have cache updated, I run through each one twice, instead of manually forcing the order
 						foreach ($modulesConfigs as $className => $mStatus) {
-							$moduleConfig = new $className($this->model);
-							$modulesConfigs[$className] = $moduleConfig->makeCache();
+							try {
+								$moduleConfig = new $className($this->model);
+								$modulesConfigs[$className] = $moduleConfig->makeCache();
+							} catch (Exception $e) {
+								$modulesConfigs[$className] = false;
+								$cacheErrors[$className] = $e->getMessage();
+							}
 						}
 					}
 
 					foreach ($modulesConfigs as $className => $mStatus) {
 						if (!$mStatus)
-							$this->model->error('Error in making cache for module ' . $className);
+							$this->model->error('Error in making cache for module ' . $className.(isset($cacheErrors[$className]) ? "\n".$cacheErrors[$className] : ''));
 					}
 				} catch (Exception $e) {
 					die(getErr($e));
@@ -97,5 +104,27 @@ class ZkController extends \Model\Controller {
 				$this->model->sendJSON($this->viewOptions['modules']);
 				break;
 		}
+	}
+
+	function post(){
+		switch($this->model->getRequest(1)) {
+			case 'modules':
+				switch ($this->model->getRequest(2)) {
+					case 'config':
+					case 'install':
+						if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php')){
+							require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
+							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
+							$configClass = new $configClass($this->model);
+							if($configClass->saveConfig($this->model->getRequest(2), $_POST)){
+								$this->viewOptions['messages'][] = 'Configuration saved.';
+							}
+						}
+						break;
+				}
+				break;
+		}
+
+		$this->index();
 	}
 }

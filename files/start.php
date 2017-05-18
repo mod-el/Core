@@ -1,4 +1,6 @@
 <?php
+session_start();
+
 // Setup the Autoloader
 include_once(realpath(dirname(__FILE__)).'/../Autoloader.php');
 

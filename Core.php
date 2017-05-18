@@ -26,6 +26,10 @@ class Core implements \JsonSerializable{
 	private $inputVarsCache = false;
 	/** @var array */
 	private $registeredListeners = [];
+	/** @var array */
+	private $eventsHistory = [];
+	/** @var bool */
+	private $eventsOn = true;
 
 	/**
 	 * Core constructor.
@@ -33,9 +37,9 @@ class Core implements \JsonSerializable{
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
 	function __construct(){
-		session_start();
-
 		DEFINE('START_TIME', microtime(true));
+
+		$this->trigger('Core', 'start');
 
 		if(version_compare(phpversion(), '5.4.0', '<'))
 			die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
@@ -130,6 +134,11 @@ class Core implements \JsonSerializable{
 		if(isset($this->modules[$name][$idx])){
 			return $this->modules[$name][$idx];
 		}
+
+		$this->trigger('Core', 'loadModule', [
+			'module'=>$name,
+			'idx'=>$idx,
+		]);
 
 		$module = $this->moduleExists($name);
 		if(!$module){
@@ -345,6 +354,8 @@ class Core implements \JsonSerializable{
 
 		$this->leadingModule = $module;
 
+		$this->trigger('Core', 'leadingModuleFound', ['module'=>$module]);
+
 		/*
 		 * Next step, I ask the module in charge which controller should I load
 		 * The module can also return a prefix to keep in mind for building future requests (defaults to PATH)
@@ -364,6 +375,8 @@ class Core implements \JsonSerializable{
 			$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
 		}
 
+		$this->trigger('Core', 'controllerFound', ['controller'=>$controllerName]);
+
 		$controllerClassName = '\\'.$controllerName.'Controller';
 
 		if(!class_exists($controllerClassName)){
@@ -382,21 +395,28 @@ class Core implements \JsonSerializable{
 		 * And at last, the index (or post) method which should contain the actual execution of the actions
 		 * */
 
+		$this->trigger('Core', 'controllerInit');
+
 		$this->controller->init();
 		$this->controller->modelInit();
 
 		if(isset($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD']=='POST'){
-			if(array_keys($_POST)==['zkbindings'])
+			if(array_keys($_POST)==['zkbindings']){
+				$this->trigger('Core', 'controllerIndex');
 				$this->controller->index();
-			else
+			}else{
+				$this->trigger('Core', 'controllerPost');
 				$this->controller->post();
+			}
 		}else{
+			$this->trigger('Core', 'controllerIndex');
 			$this->controller->index();
 		}
 
 		/*
 		 * Finally, I render the output content (default method in the controller use the Output module to handle this, but this behaviour can be customized.
 		 * */
+		$this->trigger('Core', 'outputStart');
 		if($this->isCLI())
 			$this->controller->outputCLI();
 		else
@@ -429,6 +449,8 @@ class Core implements \JsonSerializable{
 	 * It is executed at the end of each execution (both correct ones and with errors) and it calls the "terminate" method of each loaded module, to do possible clean ups.
 	 */
 	public function terminate(){
+		$this->trigger('Core', 'end');
+
 		foreach($this->modules as $name=>$modules){
 			if($name=='Core')
 				continue;
@@ -550,8 +572,12 @@ class Core implements \JsonSerializable{
 	 *
 	 * @return string
 	 */
-	public function prefix(){
-		return $this->requestPrefix;
+	public function prefix($withoutPath=false){
+		$prefix = $this->requestPrefix;
+		if($withoutPath){
+			$prefix = substr($prefix, strlen(PATH));
+		}
+		return $prefix;
 	}
 
 	/* ERRORS MANAGEMENT */
@@ -574,7 +600,7 @@ class Core implements \JsonSerializable{
 
 		$b = debug_backtrace();
 
-		$this->errorHandler('ModEl', '('.$options['code'].')'.$gen.' - '.$options['mex'], $b[0]['file'], $b[0]['line']); // Log
+		$this->errorHandler('ModEl', $gen.' - '.$options['mex'], $b[0]['file'], $b[0]['line']); // Log
 
 		$e = new ZkException($gen);
 		$e->_code = $options['code'];
@@ -595,57 +621,24 @@ class Core implements \JsonSerializable{
 	 * @return bool
 	 */
 	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext=false){
-		$db = $this->getModule('Db', false, false);
-		if($db){
-			try{
-				if(!defined('MYSQL_MAX_ALLOWED_PACKET')){
-					$max_allowed_packet_query = $db->query('SHOW VARIABLES LIKE \'max_allowed_packet\'')->fetch();
-					if($max_allowed_packet_query)
-						define('MYSQL_MAX_ALLOWED_PACKET', $max_allowed_packet_query['Value']);
-					else
-						define('MYSQL_MAX_ALLOWED_PACKET', 1000000);
-				}
+		$backtrace = zkBacktrace(true);
+		array_shift($backtrace);
 
-				$backtrace = zkBacktrace(true);
-				array_shift($backtrace);
-				$prepared_session = $db->quote(serializeForLog($_SESSION[SESSION_ID]));
-				$prepared_backtrace = $db->quote(serializeForLog($backtrace));
+		$this->trigger('Core', 'error', [
+			'code' => $errno,
+			'str' => $errstr,
+			'file' => $errfile,
+			'line' => $errline,
+			'backtrace' => $backtrace,
+		]);
 
-				if(strlen($prepared_session)>MYSQL_MAX_ALLOWED_PACKET-400)
-					$prepared_session = '\'TOO LARGE\'';
-				if(strlen($prepared_backtrace)>MYSQL_MAX_ALLOWED_PACKET-400)
-					$prepared_backtrace = '\'TOO LARGE\'';
-				if(strlen($prepared_session)+strlen($prepared_backtrace)>MYSQL_MAX_ALLOWED_PACKET-400)
-					$prepared_session = '\'TOO LARGE\'';
-
-				$get = $_GET; if(isset($get['url'])) unset($get['url']);
-				$user = isset($_COOKIE['ZKID']) ? $db->quote($_COOKIE['ZKID']) : 'NULL';
-
-				$errors = array('ZK'=>'ZK', E_ERROR=>'E_ERROR', E_WARNING=>'E_WARNING', E_PARSE=>'E_PARSE', E_NOTICE=>'E_NOTICE', E_CORE_ERROR=>'E_CORE_ERROR', E_CORE_WARNING=>'E_CORE_WARNING', E_COMPILE_ERROR=>'E_COMPILE_ERROR', E_COMPILE_WARNING=>'E_COMPILE_WARNING', E_USER_ERROR=>'E_USER_ERROR', E_USER_WARNING=>'E_USER_WARNING', E_USER_NOTICE=>'E_USER_NOTICE', E_STRICT=>'E_STRICT', E_RECOVERABLE_ERROR=>'E_RECOVERABLE_ERROR', E_DEPRECATED=>'E_DEPRECATED', E_USER_DEPRECATED=>'E_USER_DEPRECATED', E_ALL=>'E_ALL');
-				$db->query('INSERT INTO zk_error_log(type,str,file,line,backtrace,session,date,user,url) VALUES(
-				'.$db->quote(isset($errors[$errno]) ? $errors[$errno] : 'UNKWNOWN ('.$errno.')').',
-				'.$db->quote($errstr).',
-				'.$db->quote($errfile).',
-				'.$db->quote($errline).',
-				'.$prepared_backtrace.',
-				'.$prepared_session.',
-				'.$db->quote(date('Y-m-d H:i:s')).',
-				'.$user.',
-				'.$db->quote(implode('/', $this->getRequest()).'?'.http_build_query($get)).'
-			)');
-			}catch(Exception $e){
-				if(DEBUG_MODE){
-					echo '<b>ERRORE DURANTE IL LOG:</b> '.$e->getMessage();
-				}
-			}
-		}
 		return false;
 	}
 
 	/* EVENTS */
 	/**
 	 * Registers a closure to be called when a particular event is triggered.
-	 * The event signature should be provided in the form of Module_Event
+	 * The event signature should be provided in the form of Module_Event or just _Event (if it can come from any module)
 	 * The callback should accept a $data parameter, which will contain the data of the event
 	 *
 	 * @param string $event
@@ -665,15 +658,48 @@ class Core implements \JsonSerializable{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger($module, $event, $data){
-		$event = $module.'_'.$event;
-		if(isset($this->registeredListeners[$event])){
-			foreach($this->registeredListeners[$event] as $callback){
+	public function trigger($module, $event, $data=[]){
+		if(!$this->eventsOn)
+			return true;
+
+		$this->eventsHistory[] = [
+			'module'=>$module,
+			'event'=>$event,
+			'data'=>$data,
+			'time'=>microtime(true),
+		];
+
+		if(isset($this->registeredListeners['_'.$event])){
+			foreach($this->registeredListeners['_'.$event] as $callback){
+				call_user_func($callback, $data);
+			}
+		}
+
+		if(isset($this->registeredListeners[$module.'_'.$event])){
+			foreach($this->registeredListeners[$module.'_'.$event] as $callback){
 				call_user_func($callback, $data);
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Getter for events history
+	 *
+	 * @return array
+	 */
+	public function getEventsHistory(){
+		return $this->eventsHistory;
+	}
+
+	/**
+	 * Turns off or on events
+	 *
+	 * @param bool $set
+	 */
+	public function switchEvents($set){
+		$this->eventsOn = $set;
 	}
 
 	/* VARIOUS UTILITIES */

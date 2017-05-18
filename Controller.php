@@ -17,7 +17,7 @@ class Controller{
 		'template-folder' => [],
 		'template' => false,
 		'errors' => [],
-		'messagges' => [],
+		'messages' => [],
 	);
 
 	function __construct(\FrontController $model){

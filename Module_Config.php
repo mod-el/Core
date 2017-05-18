@@ -62,12 +62,20 @@ class Module_Config{
 	/**
 	 * This is called every time a POST request hits the configuration page
 	 *
-	 * @param array $request
+	 * @param string $type
 	 * @param array $data
 	 * @return bool
 	 */
-	public function execConfig($request, $data){
-		return true;
+	public function saveConfig($type, $data){
+		$classname = $this->getClass();
+
+		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php';
+
+		$w = file_put_contents($configFile, '<?php
+$config = '.var_export($data, true).';
+');
+
+		return (bool) $w;
 	}
 
 	/**
@@ -78,8 +86,8 @@ class Module_Config{
 	public function retrieveConfig(){
 		$classname = $this->getClass();
 
-		if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
-			require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
+		if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php')){
+			require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php');
 			return $config;
 		}else{
 			return [];
