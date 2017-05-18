@@ -37,6 +37,8 @@ class Core implements \JsonSerializable{
 	function __construct(){
 		DEFINE('START_TIME', microtime(true));
 
+		$this->trigger('Core', 'start');
+
 		if(version_compare(phpversion(), '5.4.0', '<'))
 			die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
 
@@ -130,6 +132,11 @@ class Core implements \JsonSerializable{
 		if(isset($this->modules[$name][$idx])){
 			return $this->modules[$name][$idx];
 		}
+
+		$this->trigger('Core', 'loadModule', [
+			'module'=>$name,
+			'idx'=>$idx,
+		]);
 
 		$module = $this->moduleExists($name);
 		if(!$module){
@@ -345,6 +352,8 @@ class Core implements \JsonSerializable{
 
 		$this->leadingModule = $module;
 
+		$this->trigger('Core', 'moduleFound', ['module'=>$module]);
+
 		/*
 		 * Next step, I ask the module in charge which controller should I load
 		 * The module can also return a prefix to keep in mind for building future requests (defaults to PATH)
@@ -364,6 +373,8 @@ class Core implements \JsonSerializable{
 			$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
 		}
 
+		$this->trigger('Core', 'controllerFound', ['controller'=>$controllerName]);
+
 		$controllerClassName = '\\'.$controllerName.'Controller';
 
 		if(!class_exists($controllerClassName)){
@@ -382,21 +393,28 @@ class Core implements \JsonSerializable{
 		 * And at last, the index (or post) method which should contain the actual execution of the actions
 		 * */
 
+		$this->trigger('Core', 'controllerInit');
+
 		$this->controller->init();
 		$this->controller->modelInit();
 
 		if(isset($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD']=='POST'){
-			if(array_keys($_POST)==['zkbindings'])
+			if(array_keys($_POST)==['zkbindings']){
+				$this->trigger('Core', 'controllerIndex');
 				$this->controller->index();
-			else
+			}else{
+				$this->trigger('Core', 'controllerPost');
 				$this->controller->post();
+			}
 		}else{
+			$this->trigger('Core', 'controllerIndex');
 			$this->controller->index();
 		}
 
 		/*
 		 * Finally, I render the output content (default method in the controller use the Output module to handle this, but this behaviour can be customized.
 		 * */
+		$this->trigger('Core', 'outputStart');
 		if($this->isCLI())
 			$this->controller->outputCLI();
 		else
@@ -665,7 +683,7 @@ class Core implements \JsonSerializable{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger($module, $event, $data){
+	public function trigger($module, $event, $data=[]){
 		$this->eventsHistory[] = [
 			'module'=>$module,
 			'event'=>$event,
