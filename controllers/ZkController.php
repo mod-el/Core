@@ -17,7 +17,7 @@ class ZkController extends \Model\Controller {
 					case 'config':
 					case 'install':
 						if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php')){
-							require(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
+							require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
 							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
 							$configClass = new $configClass($this->model);
 							$this->viewOptions['config'] = $configClass->retrieveConfig();
@@ -104,5 +104,27 @@ class ZkController extends \Model\Controller {
 				$this->model->sendJSON($this->viewOptions['modules']);
 				break;
 		}
+	}
+
+	function post(){
+		switch($this->model->getRequest(1)) {
+			case 'modules':
+				switch ($this->model->getRequest(2)) {
+					case 'config':
+					case 'install':
+						if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php')){
+							require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
+							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
+							$configClass = new $configClass($this->model);
+							if($configClass->saveConfig($this->model->getRequest(2), $_POST)){
+								$this->viewOptions['messages'][] = 'Configuration saved.';
+							}
+						}
+						break;
+				}
+				break;
+		}
+
+		$this->index();
 	}
 }
