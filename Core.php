@@ -28,6 +28,8 @@ class Core implements \JsonSerializable{
 	private $registeredListeners = [];
 	/** @var array */
 	private $eventsHistory = [];
+	/** @var bool */
+	private $eventsOn = true;
 
 	/**
 	 * Core constructor.
@@ -713,6 +715,15 @@ class Core implements \JsonSerializable{
 	 */
 	public function getEventsHistory(){
 		return $this->eventsHistory;
+	}
+
+	/**
+	 * Turns off or on events
+	 *
+	 * @param bool $set
+	 */
+	public function switchEvents($set){
+		$this->eventsOn = $set;
 	}
 
 	/* VARIOUS UTILITIES */
