@@ -26,6 +26,8 @@ class Core implements \JsonSerializable{
 	private $inputVarsCache = false;
 	/** @var array */
 	private $registeredListeners = [];
+	/** @var array */
+	private $eventsHistory = [];
 
 	/**
 	 * Core constructor.
@@ -643,7 +645,7 @@ class Core implements \JsonSerializable{
 	/* EVENTS */
 	/**
 	 * Registers a closure to be called when a particular event is triggered.
-	 * The event signature should be provided in the form of Module_Event
+	 * The event signature should be provided in the form of Module_Event or just _Event (if it can come from any module)
 	 * The callback should accept a $data parameter, which will contain the data of the event
 	 *
 	 * @param string $event
@@ -664,14 +666,35 @@ class Core implements \JsonSerializable{
 	 * @return bool
 	 */
 	public function trigger($module, $event, $data){
-		$event = $module.'_'.$event;
-		if(isset($this->registeredListeners[$event])){
-			foreach($this->registeredListeners[$event] as $callback){
+		$this->eventsHistory[] = [
+			'module'=>$module,
+			'event'=>$event,
+			'data'=>$data,
+			'time'=>microtime(true),
+		];
+
+		if(isset($this->registeredListeners['_'.$event])){
+			foreach($this->registeredListeners['_'.$event] as $callback){
+				call_user_func($callback, $data);
+			}
+		}
+
+		if(isset($this->registeredListeners[$module.'_'.$event])){
+			foreach($this->registeredListeners[$module.'_'.$event] as $callback){
 				call_user_func($callback, $data);
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Getter for events history
+	 *
+	 * @return array
+	 */
+	public function getEventsHistory(){
+		return $this->eventsHistory;
 	}
 
 	/* VARIOUS UTILITIES */
