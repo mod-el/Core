@@ -354,7 +354,7 @@ class Core implements \JsonSerializable{
 
 		$this->leadingModule = $module;
 
-		$this->trigger('Core', 'moduleFound', ['module'=>$module]);
+		$this->trigger('Core', 'leadingModuleFound', ['module'=>$module]);
 
 		/*
 		 * Next step, I ask the module in charge which controller should I load
@@ -449,6 +449,8 @@ class Core implements \JsonSerializable{
 	 * It is executed at the end of each execution (both correct ones and with errors) and it calls the "terminate" method of each loaded module, to do possible clean ups.
 	 */
 	public function terminate(){
+		$this->trigger('Core', 'end');
+
 		foreach($this->modules as $name=>$modules){
 			if($name=='Core')
 				continue;
@@ -594,7 +596,7 @@ class Core implements \JsonSerializable{
 
 		$b = debug_backtrace();
 
-		$this->errorHandler('ModEl', '('.$options['code'].')'.$gen.' - '.$options['mex'], $b[0]['file'], $b[0]['line']); // Log
+		$this->errorHandler('ModEl', $gen.' - '.$options['mex'], $b[0]['file'], $b[0]['line']); // Log
 
 		$e = new ZkException($gen);
 		$e->_code = $options['code'];
@@ -615,50 +617,17 @@ class Core implements \JsonSerializable{
 	 * @return bool
 	 */
 	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext=false){
-		$db = $this->getModule('Db', false, false);
-		if($db){
-			try{
-				if(!defined('MYSQL_MAX_ALLOWED_PACKET')){
-					$max_allowed_packet_query = $db->query('SHOW VARIABLES LIKE \'max_allowed_packet\'')->fetch();
-					if($max_allowed_packet_query)
-						define('MYSQL_MAX_ALLOWED_PACKET', $max_allowed_packet_query['Value']);
-					else
-						define('MYSQL_MAX_ALLOWED_PACKET', 1000000);
-				}
+		$backtrace = zkBacktrace(true);
+		array_shift($backtrace);
 
-				$backtrace = zkBacktrace(true);
-				array_shift($backtrace);
-				$prepared_session = $db->quote(serializeForLog($_SESSION[SESSION_ID]));
-				$prepared_backtrace = $db->quote(serializeForLog($backtrace));
+		$this->trigger('Core', 'error', [
+			'code' => $errno,
+			'str' => $errstr,
+			'file' => $errfile,
+			'line' => $errline,
+			'backtrace' => $backtrace,
+		]);
 
-				if(strlen($prepared_session)>MYSQL_MAX_ALLOWED_PACKET-400)
-					$prepared_session = '\'TOO LARGE\'';
-				if(strlen($prepared_backtrace)>MYSQL_MAX_ALLOWED_PACKET-400)
-					$prepared_backtrace = '\'TOO LARGE\'';
-				if(strlen($prepared_session)+strlen($prepared_backtrace)>MYSQL_MAX_ALLOWED_PACKET-400)
-					$prepared_session = '\'TOO LARGE\'';
-
-				$get = $_GET; if(isset($get['url'])) unset($get['url']);
-				$user = isset($_COOKIE['ZKID']) ? $db->quote($_COOKIE['ZKID']) : 'NULL';
-
-				$errors = array('ZK'=>'ZK', E_ERROR=>'E_ERROR', E_WARNING=>'E_WARNING', E_PARSE=>'E_PARSE', E_NOTICE=>'E_NOTICE', E_CORE_ERROR=>'E_CORE_ERROR', E_CORE_WARNING=>'E_CORE_WARNING', E_COMPILE_ERROR=>'E_COMPILE_ERROR', E_COMPILE_WARNING=>'E_COMPILE_WARNING', E_USER_ERROR=>'E_USER_ERROR', E_USER_WARNING=>'E_USER_WARNING', E_USER_NOTICE=>'E_USER_NOTICE', E_STRICT=>'E_STRICT', E_RECOVERABLE_ERROR=>'E_RECOVERABLE_ERROR', E_DEPRECATED=>'E_DEPRECATED', E_USER_DEPRECATED=>'E_USER_DEPRECATED', E_ALL=>'E_ALL');
-				$db->query('INSERT INTO zk_error_log(type,str,file,line,backtrace,session,date,user,url) VALUES(
-				'.$db->quote(isset($errors[$errno]) ? $errors[$errno] : 'UNKWNOWN ('.$errno.')').',
-				'.$db->quote($errstr).',
-				'.$db->quote($errfile).',
-				'.$db->quote($errline).',
-				'.$prepared_backtrace.',
-				'.$prepared_session.',
-				'.$db->quote(date('Y-m-d H:i:s')).',
-				'.$user.',
-				'.$db->quote(implode('/', $this->getRequest()).'?'.http_build_query($get)).'
-			)');
-			}catch(Exception $e){
-				if(DEBUG_MODE){
-					echo '<b>ERRORE DURANTE IL LOG:</b> '.$e->getMessage();
-				}
-			}
-		}
 		return false;
 	}
 
