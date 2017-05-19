@@ -26,7 +26,39 @@ class ZkController extends \Model\Controller {
 						break;
 					default:
 						$updater = new \Model\Updater($this->model, 0, []);
-						$this->viewOptions['modules'] = $updater->getModules(true);
+						$modules = $updater->getModules(true);
+
+						// Check that all dependencies are satisfied, and check if some module still has to be installed
+						$toBeInstalled = [];
+						foreach($modules as $m){
+							if(!$m->installed)
+								$toBeInstalled[] = $m;
+
+							foreach($m->dependencies as $depModule=>$depVersion){
+								if(!isset($modules[$depModule])){
+									$this->viewOptions['errori'][] = 'Module "'.$depModule.'", dependency of "'.$m->name.'" is not installed!';
+								}else{
+									if($depVersion=='*')
+										continue;
+
+									if(strpos($depVersion, '>=')===0 or strpos($depVersion, '<=')===0 or strpos($depVersion, '<>')===0 or strpos($depVersion, '!=')===0 or strpos($depVersion, '==')===0){
+										$compareOperator = substr($depVersion, 0, 2);
+										$compareToVersion = substr($depVersion, 2);
+									}elseif(strpos($depVersion, '>')===0 or strpos($depVersion, '<')===0 or strpos($depVersion, '=')===0){
+										$compareOperator = substr($depVersion, 0, 1);
+										$compareToVersion = substr($depVersion, 1);
+									}else{
+										$compareOperator = '=';
+										$compareToVersion = $depVersion;
+									}
+
+									if(!version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator))
+										$this->viewOptions['errori'][] = 'Module "'.$depModule.'", dependency of "'.$m->name.'", does not match required version of '.$depVersion;
+								}
+							}
+						}
+
+						$this->viewOptions['modules'] = $modules;
 						break;
 				}
 				break;

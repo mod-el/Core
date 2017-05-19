@@ -2,11 +2,20 @@
 namespace Model;
 
 class Updater extends Module{
+	/** @var array */
 	public $model_files = array(
 		'index.php',
 		'img/loading.gif',
 	);
 
+	/**
+	 * Get a list of the current installed modules
+	 * If $get_updates is true, check on the repository if a new version is available
+	 *
+	 * @param bool $get_updates
+	 * @param string $base_dir
+	 * @return ReflectionModule[]
+	 */
 	function getModules($get_updates=false, $base_dir=''){
 		$modules = array();
 

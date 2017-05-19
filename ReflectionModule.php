@@ -109,16 +109,4 @@ class ReflectionModule{
 
 		return $files;
 	}
-
-	/*function hasToBeInstalled(){
-		if($this->installed)
-			return false;
-
-		if(file_exists($this->path.'install') and file_exists($this->path.'install/'.$this->folder_name.'_Config.php')){
-			return true;
-		}else{
-			$this->model->_ZkPanel->markInstalled($this->folder_name);
-			return false;
-		}
-	}*/
 }
