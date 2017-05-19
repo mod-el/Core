@@ -2,11 +2,20 @@
 namespace Model;
 
 class Updater extends Module{
+	/** @var array */
 	public $model_files = array(
 		'index.php',
 		'img/loading.gif',
 	);
 
+	/**
+	 * Get a list of the current installed modules
+	 * If $get_updates is true, check on the repository if a new version is available
+	 *
+	 * @param bool $get_updates
+	 * @param string $base_dir
+	 * @return ReflectionModule[]
+	 */
 	function getModules($get_updates=false, $base_dir=''){
 		$modules = array();
 
@@ -48,5 +57,30 @@ class Updater extends Module{
 		}
 
 		return $modules;
+	}
+
+	/**
+	 * Sets the internal status of a module as installed
+	 *
+	 * @param $name
+	 * @return bool
+	 */
+	function markAsInstalled($name){
+		if(!file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'))
+			mkdir(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data');
+		$file_path = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
+
+		if(!file_exists($file_path)){
+			file_put_contents($file_path, "<?php\n");
+			@chmod($file_path, 0755);
+		}
+
+		$text = file_get_contents($file_path);
+
+		if(stripos($text, '$installed')!==false){
+			return (bool) file_put_contents($file_path, preg_replace('/\$installed ?=.+;/i', '$installed = true;', $text));
+		}else{
+			return (bool) file_put_contents($file_path, $text."\n".'$installed = true;'."\n");
+		}
 	}
 }

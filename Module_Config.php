@@ -56,7 +56,17 @@ class Module_Config{
 	 * @return string
 	 */
 	public function getTemplate($request){
-		return false;
+		return null;
+	}
+
+	/**
+	 * Executed after the first installation of the module
+	 *
+	 * @param array $data
+	 * @return bool
+	 */
+	public function install($data=[]){
+		return true;
 	}
 
 	/**
@@ -92,6 +102,26 @@ $config = '.var_export($data, true).';
 		}else{
 			return [];
 		}
+	}
+
+	/**
+	 * It has to return the required data for the configuration of the module via CLI, in the form of [ 'data' => 'label', 'data' => 'label' ]
+	 *
+	 * @return bool|array
+	 */
+	public function getConfigDataKeys(){
+		return false;
+	}
+
+	/**
+	 * Used in configurations via CLI
+	 *
+	 * @param string $k
+	 * @return mixed
+	 */
+	public function getDefaultFor($k){
+		$config = $this->retrieveConfig();
+		return isset($config[$k]) ? $config[$k] : null;
 	}
 
 	/**

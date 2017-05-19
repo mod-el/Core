@@ -2,6 +2,8 @@
 namespace Model;
 
 class Core_Config extends Module_Config {
+	public $configurable = true;
+
 	/**
 	 * Caches the following:
 	 * - All the available modules
@@ -11,7 +13,7 @@ class Core_Config extends Module_Config {
 	 * @return bool
 	 * @throws \Exception
 	 */
-	function makeCache(){
+	public function makeCache(){
 		$classes = [];
 		$rules = [];
 		$modules = [];
@@ -108,9 +110,53 @@ $modules = '.var_export($modules, true).';
 	 *
 	 * @return array
 	 */
-	function getRules(){
+	public function getRules(){
 		return [
 			'zk'=>'zk',
+		];
+	}
+
+	/**
+	 * Returns the config template
+	 *
+	 * @param array $request
+	 * @return string
+	 */
+	public function getTemplate($request){
+		return $request[2]=='config' ? INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'config' : null;
+	}
+
+	/**
+	 * Save the configuration
+	 *
+	 * @param string $type
+	 * @param array $data
+	 * @return bool
+	 */
+	public function saveConfig($type, $data){
+		$config = $this->retrieveConfig();
+
+		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
+
+		$dataKeys = $this->getConfigDataKeys();
+		foreach($dataKeys as $d=>$label){
+			if(isset($data[$d]))
+				$config[$d] = $data[$d];
+		}
+
+		$w = file_put_contents($configFile, '<?php
+$config = '.var_export($config, true).';
+');
+		return (bool) $w;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getConfigDataKeys(){
+		return [
+			'repository' => 'Repository',
+			'license' => 'License Key',
 		];
 	}
 }

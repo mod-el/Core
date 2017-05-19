@@ -17,7 +17,7 @@ class Module{
 	 * @param mixed $idx
 	 * @param mixed $options
 	 */
-	function __construct($front, $idx, $options){
+	function __construct(Core $front, $idx, $options){
 		$this->model = $front;
 		$this->module_id = $idx;
 		$this->init($options);

@@ -9,6 +9,24 @@ body{
     background: #F9F9F9 url('logo.png') center no-repeat;
 }
 
+.red-message{
+    padding: 10px;
+    background: #FBB;
+    color: #000;
+    border: solid #F33 1px;
+    margin: 15px auto;
+    font-weight: bold;
+}
+
+.green-message{
+    padding: 10px;
+    background: #9F9;
+    border: solid #080 1px;
+    color: #000;
+    margin: 15px auto;
+    font-weight: bold;
+}
+
 #tools{
     position: absolute;
     z-index: 10;
