@@ -123,7 +123,7 @@ $modules = '.var_export($modules, true).';
 	 * @return string
 	 */
 	public function getTemplate($request){
-		return INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'config';
+		return $request[2]=='config' ? INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'config' : null;
 	}
 
 	/**

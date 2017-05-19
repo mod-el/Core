@@ -56,7 +56,17 @@ class Module_Config{
 	 * @return string
 	 */
 	public function getTemplate($request){
-		return false;
+		return null;
+	}
+
+	/**
+	 * Executed after the first installation of the module
+	 *
+	 * @param array $data
+	 * @return bool
+	 */
+	public function install($data=[]){
+		return true;
 	}
 
 	/**
