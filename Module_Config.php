@@ -114,6 +114,17 @@ $config = '.var_export($data, true).';
 	}
 
 	/**
+	 * Used in configurations via CLI
+	 *
+	 * @param string $k
+	 * @return mixed
+	 */
+	public function getDefaultFor($k){
+		$config = $this->retrieveConfig();
+		return isset($config[$k]) ? $config[$k] : null;
+	}
+
+	/**
 	 * Returns the non-namespaced class name of this module.
 	 *
 	 * @return string

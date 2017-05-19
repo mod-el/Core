@@ -26,18 +26,19 @@ class ZkController extends \Model\Controller {
 							if($this->model->isCLI()){
 								$dataKeys = $configClass->getConfigDataKeys();
 								if(!$dataKeys){
-									die('Module is not configurable via CLI, please use browser.');
+									echo 'Module is not configurable via CLI, please use browser.';
 								}else{
 									$data = [];
 									echo "Configuration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
 									$handle = fopen ("php://stdin","r");
 									foreach($dataKeys as $k=>$label){
-										echo $label.' (default '.(isset($config[$k]) ? $config[$k] : 'empty').'): ';
+										$default = $configClass->getDefaultFor($k);
+										echo $label.($default!==null ? ' (default '.$default.')' : '').': ';
 										$line = trim(fgets($handle));
 										if($line)
 											$data[$k] = $line;
 										else
-											$data[$k] = isset($config[$k]) ? $config[$k] : null;
+											$data[$k] = $default;
 									}
 									fclose($handle);
 
@@ -55,10 +56,9 @@ class ZkController extends \Model\Controller {
 											}
 											break;
 									}
-									echo "\n";
-
-									die();
 								}
+								echo "\n";
+								die();
 							}else {
 								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 								if ($this->viewOptions['template'] === null) {
