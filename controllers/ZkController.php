@@ -20,27 +20,67 @@ class ZkController extends \Model\Controller {
 				switch($this->model->getRequest(2)){
 					case 'config':
 					case 'install':
-						if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php')){
-							require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
-							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
-							$configClass = new $configClass($this->model);
-							$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
-							if($this->viewOptions['template']===null){
-								if($this->model->getRequest(2)=='install') {
-									$installation = $configClass->install();
-									if($installation){
-										$this->updater->markAsInstalled($this->model->getRequest(3));
-										$this->model->redirect(PATH.'zk/modules');
-									}else{
-										$this->viewOptions['errors'][] = 'Something is wrong, can\'t install module '.$this->model->getRequest(3);
+						$configClass = $this->getConfigClassFor($this->model->getRequest(3));
+						if($configClass){
+							$config = $configClass->retrieveConfig();
+							if($this->model->isCLI()){
+								$dataKeys = $configClass->getConfigDataKeys();
+								if(!$dataKeys){
+									die('Module is not configurable via CLI, please use browser.');
+								}else{
+									$data = [];
+									echo "Configuration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
+									$handle = fopen ("php://stdin","r");
+									foreach($dataKeys as $k=>$label){
+										echo $label.' (default '.(isset($config[$k]) ? $config[$k] : 'empty').'): ';
+										$line = trim(fgets($handle));
+										if($line)
+											$data[$k] = $line;
+										else
+											$data[$k] = isset($config[$k]) ? $config[$k] : null;
+									}
+									fclose($handle);
+
+									switch ($this->model->getRequest(2)) {
+										case 'config':
+											if($configClass->saveConfig('config', $data))
+												echo 'Configuration saved';
+											break;
+										case 'install':
+											if($configClass->install($data)){
+												$this->updater->markAsInstalled($this->model->getRequest(3));
+												echo 'Module initialized';
+											}else{
+												echo 'Some error occurred while installing.';
+											}
+											break;
+									}
+									echo "\n";
+
+									die();
+								}
+							}else {
+								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
+								if ($this->viewOptions['template'] === null) {
+									if ($this->model->getRequest(2) == 'install') {
+										$installation = $configClass->install();
+										if ($installation) {
+											$this->updater->markAsInstalled($this->model->getRequest(3));
+											$this->model->redirect(PATH . 'zk/modules');
+										} else {
+											$this->viewOptions['errors'][] = 'Something is wrong, can\'t install module ' . $this->model->getRequest(3);
+										}
 									}
 								}
+								$this->viewOptions['config'] = $config;
 							}
-							$this->viewOptions['config'] = $configClass->retrieveConfig();
 						}else{
 							if($this->model->getRequest(2)=='install'){
 								$this->updater->markAsInstalled($this->model->getRequest(3));
-								$this->model->redirect(PATH.'zk/modules');
+								if($this->model->isCLI())
+									die('Module initialized');
+								else
+									$this->model->redirect(PATH.'zk/modules');
 							}
 						}
 						break;
@@ -88,7 +128,11 @@ class ZkController extends \Model\Controller {
 							});
 
 							$first = reset($toBeInstalled);
-							$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
+							if($this->model->isCLI()){
+								die('Module '.$first->folder_name.' is not initialized, please go to zk/modules/install/'.$first->folder_name);
+							}else{
+								$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
+							}
 						}
 
 						$this->viewOptions['modules'] = $modules;
@@ -158,14 +202,11 @@ class ZkController extends \Model\Controller {
 
 	function outputCLI(){
 		switch($this->model->getRequest(2)){
-			case 'config':
-				die('Module configuration still supported only via browser.');
-				break;
-			case 'install':
-				die('Module installation still supported only via browser.');
+			case 'modules':
+				$this->model->sendJSON($this->viewOptions['modules']);
 				break;
 			default:
-				$this->model->sendJSON($this->viewOptions['modules']);
+				die('CLI not supported for the request.');
 				break;
 		}
 	}
@@ -176,10 +217,8 @@ class ZkController extends \Model\Controller {
 				switch ($this->model->getRequest(2)) {
 					case 'config':
 					case 'install':
-						if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php')){
-							require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$this->model->getRequest(3).DIRECTORY_SEPARATOR.$this->model->getRequest(3).'_Config.php');
-							$configClass = '\\Model\\'.$this->model->getRequest(3).'_Config';
-							$configClass = new $configClass($this->model);
+						$configClass = $this->getConfigClassFor($this->model->getRequest(3));
+						if($configClass){
 							switch ($this->model->getRequest(2)) {
 								case 'config':
 									if($configClass->saveConfig($this->model->getRequest(2), $_POST))
@@ -201,5 +240,20 @@ class ZkController extends \Model\Controller {
 		}
 
 		$this->index();
+	}
+
+	/**
+	 * @param string $name
+	 * @return \Model\Module_Config|bool
+	 */
+	function getConfigClassFor($name){
+		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')) {
+			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $name . '_Config.php');
+			$configClass = '\\Model\\' . $name . '_Config';
+			$configClass = new $configClass($this->model);
+			return $configClass;
+		}else{
+			return false;
+		}
 	}
 }

@@ -138,15 +138,25 @@ $modules = '.var_export($modules, true).';
 
 		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
 
-		$data = ['repository', 'license'];
-		foreach($data as $d){
-			if(isset($_POST[$d]))
-				$config[$d] = $_POST[$d];
+		$dataKeys = $this->getConfigDataKeys();
+		foreach($dataKeys as $d=>$label){
+			if(isset($data[$d]))
+				$config[$d] = $data[$d];
 		}
 
 		$w = file_put_contents($configFile, '<?php
 $config = '.var_export($config, true).';
 ');
 		return (bool) $w;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getConfigDataKeys(){
+		return [
+			'repository' => 'Repository',
+			'license' => 'License Key',
+		];
 	}
 }

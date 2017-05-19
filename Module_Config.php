@@ -105,6 +105,15 @@ $config = '.var_export($data, true).';
 	}
 
 	/**
+	 * It has to return the required data for the configuration of the module via CLI, in the form of [ 'data' => 'label', 'data' => 'label' ]
+	 *
+	 * @return bool|array
+	 */
+	public function getConfigDataKeys(){
+		return false;
+	}
+
+	/**
 	 * Returns the non-namespaced class name of this module.
 	 *
 	 * @return string
