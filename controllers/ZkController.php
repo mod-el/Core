@@ -20,6 +20,16 @@ class ZkController extends \Model\Controller {
 				switch($this->model->getRequest(2)){
 					case 'config':
 					case 'install':
+						if($this->model->getRequest(2)=='install'){ // Check if already installed
+							$checkModule = new \Model\ReflectionModule($this->model->getRequest(3), $this->model);
+							if($checkModule->installed){
+								if($this->model->isCLI()){
+									die("Module already installed\n");
+								}else{
+									$this->model->redirect(PATH.'zk/modules');
+								}
+							}
+						}
 						$configClass = $this->getConfigClassFor($this->model->getRequest(3));
 						if($configClass){
 							$config = $configClass->retrieveConfig();
@@ -129,7 +139,7 @@ class ZkController extends \Model\Controller {
 
 							$first = reset($toBeInstalled);
 							if($this->model->isCLI()){
-								die('Module '.$first->folder_name.' is not initialized, please go to zk/modules/install/'.$first->folder_name);
+								die('Module '.$first->folder_name.' is not initialized, please go to zk/modules/install/'.$first->folder_name."\n");
 							}else{
 								$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
 							}
