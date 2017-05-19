@@ -201,7 +201,7 @@ class ZkController extends \Model\Controller {
 	}
 
 	function outputCLI(){
-		switch($this->model->getRequest(2)){
+		switch($this->model->getRequest(1)){
 			case 'modules':
 				$this->model->sendJSON($this->viewOptions['modules']);
 				break;
