@@ -2,26 +2,43 @@
 namespace Model;
 
 class ReflectionModule{
+	/** @var string */
 	protected $base_dir = '';
+	/** @var string */
 	protected $path;
+	/** @var Core */
 	protected $model;
+	/** @var string|bool */
 	public $name = false;
+	/** @var string|bool */
 	public $folder_name = false;
+	/** @var string|bool */
 	public $description = false;
+	/** @var array */
 	public $dependencies = array();
+	/** @var bool */
 	public $installed = false;
+	/** @var string|bool */
 	public $version = false;
+	/** @var array */
 	public $files = array();
+	/** @var string|bool */
 	public $md5 = false;
+	/** @var bool */
 	public $official = null;
+	/** @var bool */
 	public $hasConfigClass = false;
+	/** @var bool */
 	public $configurable = false;
 
+	/** @var bool */
 	public $new_version = false;
+	/** @var bool */
 	public $expected_md5 = false;
+	/** @var bool */
 	public $corrupted = false;
 
-	function __construct($name, $model, $base_dir='', $forza_files=array()){
+	function __construct($name, Core $model, $base_dir='', $forza_files=array()){
 		$this->folder_name = $name;
 		$this->model = $model;
 		$this->base_dir = $base_dir;
@@ -63,6 +80,12 @@ class ReflectionModule{
 		$this->md5 = md5(implode('', $md5));
 	}
 
+	/**
+	 * Returns an array with all the files of the module and their MD5
+	 *
+	 * @param $folder
+	 * @return array
+	 */
 	function getFiles($folder){
 		$files = array();
 		$ff = glob($folder.'*');
