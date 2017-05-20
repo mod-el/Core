@@ -93,11 +93,19 @@ class Core_Config extends Module_Config {
 			$classes[$file['filename']] = $f;
 		}
 
-		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
+		$cache = [
+			'classes' => $classes,
+			'rules' => $rules,
+			'modules' => $modules,
+		];
+
+		$cacheDir = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data';
+		if(!is_dir($cacheDir))
+			mkdir($cacheDir, 0777, true);
+
+		$cacheFile = $cacheDir.DIRECTORY_SEPARATOR.'cache.php';
 		$scrittura = file_put_contents($cacheFile, '<?php
-$classes = '.var_export($classes, true).';
-$rules = '.var_export($rules, true).';
-$modules = '.var_export($modules, true).';
+$cache = '.var_export($cache, true).';
 ');
 		if(!$scrittura)
 			return false;

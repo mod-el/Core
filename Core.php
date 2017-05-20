@@ -83,26 +83,36 @@ class Core implements \JsonSerializable{
 
 		set_error_handler(array($this, 'errorHandler'));
 
-		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
-		if(file_exists($cacheFile)){
-			include($cacheFile);
-			$this->availableModules = $modules;
-			$this->rules = $rules;
-			Autoloader::$classes = $classes;
-		}else{
-			$this->availableModules = [
-				'Core'=>[
-					'path'=>'model/Core',
-				],
-			];
-			$this->rules = ['zk'];
-		}
+		$cacheFile = $this->retrieveCacheFile();
+		Autoloader::$classes = $cacheFile['classes'];
+		$this->rules = $cacheFile['rules'];
+		$this->availableModules = $cacheFile['modules'];
 
 		$this->modules['Core'][0] = $this;
 
 		// Output module, if present, is always loaded, to have its methods bound here
 		if($this->moduleExists('Output'))
 			$this->load('Output');
+	}
+
+	/**
+	 * Looks for the internal cache file, and attempts to generate it if not found (e.g. first runs, or accidental cache wipes)
+	 */
+	private function retrieveCacheFile(){
+		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
+		if(!file_exists($cacheFile)){
+			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Module_Config.php');
+			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Core_Config.php');
+			$configClass = new Core_Config($this);
+			$configClass->makeCache();
+		}
+
+		if(file_exists($cacheFile)){
+			require($cacheFile);
+			return $cache;
+		}else{
+			$this->model->error('Cannot generate Core cache file.');
+		}
 	}
 
 	/* MODULES MANAGEMENT */
