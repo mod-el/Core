@@ -138,10 +138,10 @@ $modules = '.var_export($modules, true).';
 
 		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
 
-		$dataKeys = $this->getConfigDataKeys();
-		foreach($dataKeys as $d=>$label){
-			if(isset($data[$d]))
-				$config[$d] = $data[$d];
+		$dataKeys = $this->getConfigData();
+		foreach($dataKeys as $k=>$d){
+			if(isset($data[$k]))
+				$config[$k] = $data[$k];
 		}
 
 		$w = file_put_contents($configFile, '<?php
@@ -153,10 +153,18 @@ $config = '.var_export($config, true).';
 	/**
 	 * @return array
 	 */
-	public function getConfigDataKeys(){
+	public function getConfigData(){
+		$config = $this->retrieveConfig();
+
 		return [
-			'repository' => 'Repository',
-			'license' => 'License Key',
+			'repository' => [
+				'label' => 'Repository',
+				'default' => isset($config['repository']) ? $config['repository'] : 'http://www.netrails.net',
+			],
+			'license' => [
+				'label' => 'License Key',
+				'default' => isset($config['license']) ? $config['license'] : '',
+			],
 		];
 	}
 }

@@ -34,20 +34,19 @@ class ZkController extends \Model\Controller {
 						if($configClass){
 							$config = $configClass->retrieveConfig();
 							if($this->model->isCLI()){
-								$dataKeys = $configClass->getConfigDataKeys();
+								$configData = $configClass->getConfigData();
 
 								$data = [];
-								if($dataKeys){
-									echo "Configuration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
+								if($configData){
+									echo "-------------------\nConfiguration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
 									$handle = fopen ("php://stdin","r");
-									foreach($dataKeys as $k=>$label){
-										$default = $configClass->getDefaultFor($k);
-										echo $label.($default!==null ? ' (default '.$default.')' : '').': ';
+									foreach($configData as $k=>$d){
+										echo $d['label'].($d['default']!==null ? ' (default '.$d['default'].')' : '').': ';
 										$line = trim(fgets($handle));
 										if($line)
 											$data[$k] = $line;
 										else
-											$data[$k] = $default;
+											$data[$k] = $d['default'];
 									}
 									fclose($handle);
 								}

@@ -105,23 +105,12 @@ $config = '.var_export($data, true).';
 	}
 
 	/**
-	 * It has to return the required data for the configuration of the module via CLI, in the form of [ 'data' => 'label', 'data' => 'label' ]
+	 * It has to return the required data for the configuration of the module via CLI, in the form of [ k => ['label'=>label, 'default'=>default], etc... ]
 	 *
-	 * @return bool|array
+	 * @return array
 	 */
-	public function getConfigDataKeys(){
-		return false;
-	}
-
-	/**
-	 * Used in configurations via CLI
-	 *
-	 * @param string $k
-	 * @return mixed
-	 */
-	public function getDefaultFor($k){
-		$config = $this->retrieveConfig();
-		return isset($config[$k]) ? $config[$k] : null;
+	public function getConfigData(){
+		return [];
 	}
 
 	/**
