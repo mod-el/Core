@@ -90,6 +90,47 @@ class ZkController extends \Model\Controller {
 							}
 						}
 						break;
+					case 'update':
+						$files = $this->updater->getModuleFileList($_GET['module']);
+
+						if($this->model->isCLI()){
+							die('CLI module updating not yet supported');
+						}else{
+							$_SESSION[SESSION_ID]['delete-from-module-'.$_GET['module']] = $files['delete'];
+							$this->model->sendJSON($files['update'], false);
+						}
+						die();
+						break;
+					case 'update-file':
+						if($this->model->isCLI()){
+							die('Unsupported action in CLI');
+						}else{
+							if(!isset($_GET['file']))
+								die('Missing data');
+							if ($this->updater->updateFile($_GET['module'], $_GET['file']))
+								echo 'ok';
+							else
+								echo 'Error while updating file.';
+							die();
+						}
+						break;
+					case 'finalize-update':
+						if($this->model->isCLI()){
+							die('Unsupported action in CLI');
+						}else{
+							if ($this->updater->finalizeUpdate($_GET['module'], $_SESSION[SESSION_ID]['delete-from-module-'.$_GET['module']]))
+								echo 'ok';
+							else
+								echo 'Error while finalizing the update, you might need to update manually.';
+							die();
+						}
+						break;
+					case 'refresh':
+						$modules = $this->updater->getModules(true);
+						$this->viewOptions['showLayout'] = false;
+						$this->viewOptions['template'] = 'module';
+						$this->viewOptions['module'] = $modules[$_GET['module']];
+						break;
 					default:
 						$modules = $this->updater->getModules(true);
 

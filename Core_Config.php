@@ -1,5 +1,6 @@
 <?php
 namespace Model;
+echo '';
 
 class Core_Config extends Module_Config {
 	public $configurable = true;

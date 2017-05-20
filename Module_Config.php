@@ -114,6 +114,59 @@ $config = '.var_export($data, true).';
 	}
 
 	/**
+	 * Executes eventual postUpdate methods, called after every update
+	 *
+	 * @param string $from
+	 * @param string $to
+	 * @return bool
+	 */
+	public function postUpdate($from, $to){
+		$methods = $this->getPostUpdateMethods();
+
+		foreach($methods as $idx=>$method){
+			$idx = explode('.', $idx);
+			$idx = ((int) $idx[0]).'.'.((int) $idx[1]).'.'.((int) $idx[2]);
+
+			if(($from!==null and version_compare($idx, $from)>0) and version_compare($idx, $to)<=0){
+				$res = call_user_func(array($this, $method));
+				if(!$res){
+					if(method_exists($this, $method.'_Backup')){
+						call_user_func(array($this, $method.'_Backup'));
+					}
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns a list of all postUpdate methods
+	 *
+	 * @return array
+	 */
+	private function getPostUpdateMethods(){
+		$arr = array();
+
+		$reflection = new \ReflectionClass($this);
+		$methods = $reflection->getMethods();
+		foreach($methods as $m){
+			if(preg_match('/^postUpdate_[0-9]+_[0-9]+_[0-9]+$/', $m->name)){
+				$name = explode('_', $m->name);
+				$idx = str_pad($name[1], 10, '0', STR_PAD_LEFT)
+					.'.'.str_pad($name[2], 10, '0', STR_PAD_LEFT)
+					.'.'.str_pad($name[3], 10, '0', STR_PAD_LEFT);
+				$arr[$idx] = $m->name;
+			}
+		}
+
+		ksort($arr);
+
+		return $arr;
+	}
+
+	/**
 	 * Returns the non-namespaced class name of this module.
 	 *
 	 * @return string
