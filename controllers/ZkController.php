@@ -35,10 +35,9 @@ class ZkController extends \Model\Controller {
 							$config = $configClass->retrieveConfig();
 							if($this->model->isCLI()){
 								$dataKeys = $configClass->getConfigDataKeys();
-								if(!$dataKeys){
-									echo 'Module is not configurable via CLI, please use browser.';
-								}else{
-									$data = [];
+
+								$data = [];
+								if($dataKeys){
 									echo "Configuration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
 									$handle = fopen ("php://stdin","r");
 									foreach($dataKeys as $k=>$label){
@@ -51,23 +50,24 @@ class ZkController extends \Model\Controller {
 											$data[$k] = $default;
 									}
 									fclose($handle);
-
-									switch ($this->model->getRequest(2)) {
-										case 'config':
-											if($configClass->saveConfig('config', $data))
-												echo 'Configuration saved';
-											break;
-										case 'install':
-											if($configClass->install($data)){
-												$this->updater->markAsInstalled($this->model->getRequest(3));
-												echo 'Module initialized';
-											}else{
-												echo 'Some error occurred while installing.';
-											}
-											break;
-									}
 								}
-								echo "\n";
+
+								switch ($this->model->getRequest(2)) {
+									case 'config':
+										if($configClass->saveConfig('config', $data))
+											echo "Configuration saved\n";
+										break;
+									case 'install':
+										if($configClass->install($data)){
+											$this->updater->markAsInstalled($this->model->getRequest(3));
+											echo "Module ".$this->model->getRequest(3)." initialized\n";
+											$this->model->redirect(PATH . 'zk/modules');
+										}else{
+											echo "Some error occurred while installing.\n";
+										}
+										break;
+								}
+
 								die();
 							}else {
 								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
@@ -87,10 +87,7 @@ class ZkController extends \Model\Controller {
 						}else{
 							if($this->model->getRequest(2)=='install'){
 								$this->updater->markAsInstalled($this->model->getRequest(3));
-								if($this->model->isCLI())
-									die('Module initialized');
-								else
-									$this->model->redirect(PATH.'zk/modules');
+								$this->model->redirect(PATH.'zk/modules');
 							}
 						}
 						break;
@@ -138,11 +135,7 @@ class ZkController extends \Model\Controller {
 							});
 
 							$first = reset($toBeInstalled);
-							if($this->model->isCLI()){
-								die('Module '.$first->folder_name.' is not initialized, please go to zk/modules/install/'.$first->folder_name."\n");
-							}else{
-								$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
-							}
+							$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
 						}
 
 						$this->viewOptions['modules'] = $modules;

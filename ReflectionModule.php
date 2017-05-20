@@ -55,7 +55,7 @@ class ReflectionModule{
 
 		require($this->path.'model.php');
 		if(file_exists(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')){
-			require(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php');
+			require_once(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php');
 			$this->hasConfigClass = true;
 			$configClass = '\\Model\\'.$name.'_Config';
 			$configClass = new $configClass($this->model);
