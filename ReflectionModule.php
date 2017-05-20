@@ -38,7 +38,7 @@ class ReflectionModule{
 	/** @var bool */
 	public $corrupted = false;
 
-	function __construct($name, Core $model, $base_dir='', $forza_files=array()){
+	function __construct($name, Core $model, $base_dir=''){
 		$this->folder_name = $name;
 		$this->model = $model;
 		$this->base_dir = $base_dir;
@@ -46,16 +46,10 @@ class ReflectionModule{
 		$this->path = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR;
 		$vars_file = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
 		$this->files = $this->getFiles($this->path);
-		foreach($forza_files as $f){
-			$this->files[] = array(
-				'path'=>$f,
-				'md5'=>md5(file_get_contents(INCLUDE_PATH.$this->base_dir.$f)),
-			);
-		}
 
 		require($this->path.'model.php');
 		if(file_exists(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')){
-			require(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php');
+			require_once(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php');
 			$this->hasConfigClass = true;
 			$configClass = '\\Model\\'.$name.'_Config';
 			$configClass = new $configClass($this->model);
@@ -92,7 +86,7 @@ class ReflectionModule{
 		foreach($ff as $f){
 			if(is_dir($f)){
 				$f_name = substr($f, strlen($folder));
-				if($f_name=='data') continue;
+				if(in_array($f_name, ['data', '.git', '.gitignore'])) continue;
 				$sub_files = $this->getFiles($f.DIRECTORY_SEPARATOR);
 				foreach($sub_files as $sf){
 					$sf['path'] = $f_name.DIRECTORY_SEPARATOR.$sf['path'];

@@ -1,4 +1,10 @@
-var myRequest = new Array(); function CreateXmlHttpReq(n, handler, campi_addizionali){ // Funzione che verr� usata da richiestaAjax
+var updatingFileList = {};
+var updatingTotalSteps = {};
+var updatingStep = {};
+
+var myRequest = new Array();
+
+function CreateXmlHttpReq(n, handler, campi_addizionali){ // Funzione che verr� usata da richiestaAjax
 	var xmlhttp = false;
 	try{
 		xmlhttp = new XMLHttpRequest();
@@ -19,7 +25,7 @@ var myRequest = new Array(); function CreateXmlHttpReq(n, handler, campi_addizio
 				}
 
 				if(typeof handler=='object' && handler.nodeType && handler.nodeType == 1){
-					jsFill(r, handler);
+					handler.innerHTML = r;
 				}else{
 					if(typeof handler!='function')
 						eval('handler = '+handler+';');
@@ -50,15 +56,88 @@ function ajax(handler, indirizzo, parametri_get, parametri_post, campi_addiziona
 	return n;
 }
 
+function loading(cont){
+	cont.innerHTML = '<img src="'+base_path+'model/Output/files/loading.gif" alt="" />';
+}
+
 function cmd(cmd, post){
 	if(typeof post=='undefined') post = '';
 	var div = document.getElementById('cmd-'+cmd);
 	if(!div)
 		return false;
 	var ex = div.innerHTML;
-	div.innerHTML = '<img src="'+base_path+'img/loading.gif" alt="" />';
+	loading(div);
 	ajax(function(r, dati){
 		alert(r);
 		dati.div.innerHTML = dati.html;
 	}, absolute_path+'zk/'+cmd, '', post, {'div':div, 'html':ex});
+}
+
+function updateModule(name){
+	var cont = document.getElementById('module-'+name);
+	loading(cont);
+
+	var bar = document.getElementById('loading-bar-'+name);
+	bar.style.visibility = 'visible';
+
+	updatingStep[name] = 0;
+
+	ajax(function(r, name){
+		if(typeof r!='object'){
+			alert('Errore nell\'aggiornamento del modulo '+name+":\n"+r);
+		}else{
+			updatingFileList[name] = r;
+			updatingTotalSteps[name] = r.length+2;
+			updatingStep[name]++;
+			updateModuleBar(name);
+			updateNextFile(name);
+		}
+	}, absolute_path+'zk/modules/update', 'module='+encodeURIComponent(name), 'c_id='+c_id, name);
+}
+
+function updateModuleBar(name){
+	if(typeof updatingTotalSteps[name]=='undefined' || !updatingTotalSteps[name] || typeof updatingStep[name]=='undefined')
+		return;
+	var bar = document.getElementById('loading-bar-'+name);
+	bar.firstElementChild.style.width = parseInt(updatingStep[name]/updatingTotalSteps[name]*100)+'%';
+}
+
+function updateNextFile(name){
+	if(typeof !updatingFileList[name]=='undefined' || !updatingFileList[name])
+		return;
+	if(updatingFileList[name].length>0){
+		var file = updatingFileList[name].shift();
+		ajax(function(r, name){
+			if(r=='ok'){
+				updatingStep[name]++;
+				updateModuleBar(name);
+				updateNextFile(name);
+			}else{
+				alert(r);
+			}
+		}, absolute_path+'zk/modules/update-file', 'module='+encodeURIComponent(name)+'&file='+encodeURIComponent(file), 'c_id='+c_id, name);
+	}else{
+		ajax(function(r, name){
+			if(r=='ok'){
+				updatingStep[name]++;
+				updateModuleBar(name);
+				refreshModule(name);
+				resetModuleLoadingBar(name);
+			}else{
+				alert(r);
+			}
+		}, absolute_path+'zk/modules/finalize-update', 'module='+encodeURIComponent(name), 'c_id='+c_id, name);
+	}
+}
+
+function resetModuleLoadingBar(name){
+	var bar = document.getElementById('loading-bar-'+name);
+	bar.style.visibility = 'hidden';
+	bar.style.width = '0%';
+}
+
+function refreshModule(name){
+	var cont = document.getElementById('module-'+name);
+	loading(cont);
+	ajax(cont, absolute_path+'zk/modules/refresh', 'module='+encodeURIComponent(name), '', cont);
 }
