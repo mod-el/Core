@@ -1,3 +1,5 @@
+var updateQueue = [];
+
 var updatingFileList = {};
 var updatingTotalSteps = {};
 var updatingStep = {};
@@ -85,6 +87,7 @@ function updateModule(name){
 	ajax(function(r, name){
 		if(typeof r!='object'){
 			alert('Errore nell\'aggiornamento del modulo '+name+":\n"+r);
+			refreshModule(name);
 		}else{
 			updatingFileList[name] = r;
 			updatingTotalSteps[name] = r.length+2;
@@ -114,6 +117,7 @@ function updateNextFile(name){
 				updateNextFile(name);
 			}else{
 				alert(r);
+				refreshModule(name);
 			}
 		}, absolute_path+'zk/modules/update-file', 'module='+encodeURIComponent(name)+'&file='+encodeURIComponent(file), 'c_id='+c_id, name);
 	}else{
@@ -123,8 +127,12 @@ function updateNextFile(name){
 				updateModuleBar(name);
 				refreshModule(name);
 				resetModuleLoadingBar(name);
+
+				if(updateQueue.length>0)
+					updateModule(updateQueue.shift());
 			}else{
 				alert(r);
+				refreshModule(name);
 			}
 		}, absolute_path+'zk/modules/finalize-update', 'module='+encodeURIComponent(name), 'c_id='+c_id, name);
 	}
@@ -141,3 +149,8 @@ function refreshModule(name){
 	loading(cont);
 	ajax(cont, absolute_path+'zk/modules/refresh', 'module='+encodeURIComponent(name), '', cont);
 }
+
+window.addEventListener('load', function(){
+	if(updateQueue.length>0)
+		updateModule(updateQueue.shift());
+});

@@ -82,13 +82,15 @@ class Updater extends Module{
 	 * Retrieves file list for a module from the repository
 	 *
 	 * @param string $name
-	 * @return array
+	 * @return array|bool
 	 */
 	public function getModuleFileList($name){
 		$config = $this->model->_Core->retrieveConfig();
 
 		$files = file_get_contents($config['repository'].'?act=get-files&module='.urlencode($name).'&key='.urlencode($config['license']).'&md5');
 		$files = json_decode($files, true);
+		if(!$files)
+			return false;
 
 		$filesToUdate = []; $filesToDelete = []; $filesArr = [];
 		foreach($files as $f){
@@ -163,7 +165,7 @@ class Updater extends Module{
 		}
 
 		foreach($delete as $f){
-			unlink(INCLUDE_PATH.$f);
+			unlink(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f);
 		}
 		if(!$this->deleteDirectory('model'.DIRECTORY_SEPARATOR.$name, true))
 			return false;
