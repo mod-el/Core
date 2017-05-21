@@ -88,6 +88,9 @@ function updateModule(name){
 		if(typeof r!='object'){
 			alert('Errore nell\'aggiornamento del modulo '+name+":\n"+r);
 			refreshModule(name);
+
+			if(updateQueue.length>0)
+				updateModule(updateQueue.shift());
 		}else{
 			updatingFileList[name] = r;
 			updatingTotalSteps[name] = r.length+2;
@@ -118,6 +121,9 @@ function updateNextFile(name){
 			}else{
 				alert(r);
 				refreshModule(name);
+
+				if(updateQueue.length>0)
+					updateModule(updateQueue.shift());
 			}
 		}, absolute_path+'zk/modules/update-file', 'module='+encodeURIComponent(name)+'&file='+encodeURIComponent(file), 'c_id='+c_id, name);
 	}else{

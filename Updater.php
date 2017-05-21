@@ -2,6 +2,9 @@
 namespace Model;
 
 class Updater extends Module{
+	/** @var bool|array */
+	private $queue = false;
+
 	/**
 	 * Get a list of the current installed modules
 	 * If $get_updates is true, check on the repository if a new version is available
@@ -198,7 +201,7 @@ class Updater extends Module{
 	 * @param bool $onlyEmpties
 	 * @return bool
 	 */
-	function deleteDirectory($folder, $onlyEmpties=false){
+	private function deleteDirectory($folder, $onlyEmpties=false){
 		if(!file_exists(INCLUDE_PATH.$folder))
 			return true;
 
@@ -225,7 +228,7 @@ class Updater extends Module{
 	 * @param string $dest
 	 * @return bool
 	 */
-	function recursiveCopy($source, $dest){
+	private function recursiveCopy($source, $dest){
 		$folder = INCLUDE_PATH.$source.'/';
 		$ff = glob($folder.'*');
 		foreach($ff as $f){
@@ -240,5 +243,108 @@ class Updater extends Module{
 		}
 
 		return true;
+	}
+
+	/**
+	 * Module update via CLI
+	 *
+	 * @param array $files
+	 * @param array $queue
+	 */
+	public function cliUpdate($module){
+		$this->checkUpdateQueue($module);
+
+		echo "--------------------\n";
+		echo "Updating ".$module."\n";
+		echo "--------------------\n";
+
+		$files = $this->getModuleFileList($module);
+
+		if(!$files){
+			echo "File list not found\n";
+		}elseif(!$files['update'] and !$files['delete']){
+			echo "Nothing to update\n";
+		}else{
+			$cf = 0;
+			$tot_steps = count($files['update'])+2;
+
+			foreach($files['update'] as $f){
+				$cf++;
+
+				$this->showCliPercentage('Downloading '.$f, $cf, $tot_steps);
+
+				if(!$this->updateFile($module, $f)){
+					die("Error in file download, aborting.\n");
+				}
+			}
+
+			$cf++;
+			$this->showCliPercentage('Finalizing update', $cf, $tot_steps);
+
+			if(!$this->finalizeUpdate($module, $files['delete']))
+				die("Error in finalizing update, aborting.\n");
+
+			$cf++;
+			$this->showCliPercentage('Update successful', $cf, $tot_steps);
+		}
+
+		if(count($this->queue)>0){
+			$this->cliUpdate($this->queue[0]);
+		}
+	}
+
+	/**
+	 * Calculates and nicely prints current percentage
+	 *
+	 * @param string $string
+	 * @param int $c
+	 * @param int $tot_steps
+	 */
+	public function showCliPercentage($string, $c, $tot_steps){
+		$perc = round($c/$tot_steps*100);
+
+		echo str_pad($string, 60, ' ', STR_PAD_RIGHT);
+		echo str_pad(implode('', array_fill(0, $perc, '*')), 100, ' ', STR_PAD_RIGHT).'  ';
+		echo $perc."%\n";
+	}
+
+	/**
+	 * Checks if the next module is the one in the update queue, and eventually removes it
+	 *
+	 * @param string $module
+	 * @return bool
+	 */
+	public function checkUpdateQueue($module){
+		$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
+
+		if($this->queue===false)
+			$this->getUpdateQueue();
+
+		if(count($this->queue)>0 and $this->queue[0]==$module){
+			array_shift($this->queue);
+			file_put_contents($queue_file, "<?php\n\$queue = ".var_export($this->queue, true).";");
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	/**
+	 * Returns current update queue
+	 *
+	 * @return array
+	 */
+	public function getUpdateQueue(){
+		$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
+
+		if($this->queue===false){
+			if(file_exists($queue_file)){
+				include($queue_file);
+				$this->queue = $queue;
+			}else{
+				$this->queue = [];
+			}
+		}
+		return $this->queue;
 	}
 }
