@@ -91,25 +91,22 @@ class ZkController extends \Model\Controller {
 						}
 						break;
 					case 'update':
-						$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
-						if(file_exists($queue_file)){
-							include($queue_file);
-							if($queue[0]==$_GET['module']){
-								array_shift($queue);
-								file_put_contents($queue_file, "<?php\n\$queue = ".var_export($queue, true).";");
-							}
-						}
-
-						$files = $this->updater->getModuleFileList($_GET['module']);
-						if(!$files)
-							die('File list not found');
-
 						if($this->model->isCLI()){
-							die('CLI module updating not yet supported');
+							$this->updater->cliUpdate($this->model->getInput('module'));
 						}else{
-							$_SESSION[SESSION_ID]['delete-from-module-'.$_GET['module']] = $files['delete'];
+							$this->updater->checkUpdateQueue($this->model->getInput('module'));
+
+							$files = $this->updater->getModuleFileList($this->model->getInput('module'));
+							if(!$files){
+								die("File list not found\n");
+							}elseif(!$files['update'] and !$files['delete']){
+								die("Nothing to update\n");
+							}
+
+							$_SESSION[SESSION_ID]['delete-from-module-'.$this->model->getInput('module')] = $files['delete'];
 							$this->model->sendJSON($files['update'], false);
 						}
+
 						die();
 						break;
 					case 'update-file':
@@ -189,13 +186,14 @@ class ZkController extends \Model\Controller {
 							$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
 						}
 
-						$this->viewOptions['modules'] = $modules;
+						$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
 
-						$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
-						if(file_exists($queue_file)){
-							include($queue_file);
-							$this->viewOptions['update-queue'] = $queue;
+						if($this->model->isCLI() and count($this->viewOptions['update-queue'])>0){
+							$this->updater->cliUpdate($this->viewOptions['update-queue'][0]);
+							$modules = $this->updater->getModules(true);
 						}
+
+						$this->viewOptions['modules'] = $modules;
 						break;
 				}
 				break;
@@ -303,7 +301,7 @@ class ZkController extends \Model\Controller {
 	 * @param string $name
 	 * @return \Model\Module_Config|bool
 	 */
-	function getConfigClassFor($name){
+	public function getConfigClassFor($name){
 		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')) {
 			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $name . '_Config.php');
 			$configClass = '\\Model\\' . $name . '_Config';
