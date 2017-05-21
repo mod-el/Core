@@ -91,7 +91,18 @@ class ZkController extends \Model\Controller {
 						}
 						break;
 					case 'update':
+						$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
+						if(file_exists($queue_file)){
+							include($queue_file);
+							if($queue[0]==$_GET['module']){
+								array_shift($queue);
+								file_put_contents($queue_file, "<?php\n\$queue = ".var_export($queue, true).";");
+							}
+						}
+
 						$files = $this->updater->getModuleFileList($_GET['module']);
+						if(!$files)
+							die('File list not found');
 
 						if($this->model->isCLI()){
 							die('CLI module updating not yet supported');
@@ -179,6 +190,12 @@ class ZkController extends \Model\Controller {
 						}
 
 						$this->viewOptions['modules'] = $modules;
+
+						$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
+						if(file_exists($queue_file)){
+							include($queue_file);
+							$this->viewOptions['update-queue'] = $queue;
+						}
 						break;
 				}
 				break;

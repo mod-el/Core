@@ -79,3 +79,12 @@
 		</div>
 	</div>
 </div>
+
+<?php
+if(isset($this->options['update-queue'])){
+	?>
+    <script>
+		var updateQueue = <?=json_encode($this->options['update-queue'])?>;
+    </script>
+	<?php
+}
