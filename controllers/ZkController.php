@@ -235,10 +235,7 @@ class ZkController extends \Model\Controller {
 				die();
 				break;
 			default:
-				if($this->model->isCLI())
-					die('Invalid request.'.PHP_EOL);
-				else
-					$this->model->redirect(PATH.'zk/modules');
+				$this->model->redirect(PATH.'zk/modules');
 				break;
 		}
 	}
