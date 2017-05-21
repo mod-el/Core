@@ -4,6 +4,13 @@ namespace Model;
 class Updater extends Module{
 	/** @var bool|array */
 	private $queue = false;
+	/** @var string */
+	private $queue_file;
+
+	function __construct(Core $front, $idx, $options){
+		parent::__construct($front, $idx, $options);
+		$this->queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
+	}
 
 	/**
 	 * Get a list of the current installed modules
@@ -315,14 +322,12 @@ class Updater extends Module{
 	 * @return bool
 	 */
 	public function checkUpdateQueue($module){
-		$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
-
 		if($this->queue===false)
 			$this->getUpdateQueue();
 
 		if(count($this->queue)>0 and $this->queue[0]==$module){
 			array_shift($this->queue);
-			file_put_contents($queue_file, "<?php\n\$queue = ".var_export($this->queue, true).";");
+			file_put_contents($this->queue_file, "<?php\n\$queue = ".var_export($this->queue, true).";");
 			return true;
 		}else{
 			return false;
@@ -335,11 +340,9 @@ class Updater extends Module{
 	 * @return array
 	 */
 	public function getUpdateQueue(){
-		$queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
-
 		if($this->queue===false){
-			if(file_exists($queue_file)){
-				include($queue_file);
+			if(file_exists($this->queue_file)){
+				include($this->queue_file);
 				$this->queue = $queue;
 			}else{
 				$this->queue = [];
