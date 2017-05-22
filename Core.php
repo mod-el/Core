@@ -213,7 +213,7 @@ class Core implements \JsonSerializable{
 	 * @param string $name
 	 * @param mixed $idx
 	 * @param bool $autoload
-	 * @return mixed
+	 * @return Module|null
 	 */
 	public function getModule($name, $idx=false, $autoload=true){
 		if($idx===false){
