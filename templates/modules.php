@@ -72,7 +72,7 @@
         </div>
 	<?php } ?>
     <div class="modulo" style="width: 100%">
-        <div id="module-new" class="clickable" onclick="zkPopup({'url':'<?=PATH?>zk/new-module'})">
+        <div id="module-new" class="clickable" onclick="lightboxNewModule()">
             <div>
                 <b>Install new module</b>
             </div>

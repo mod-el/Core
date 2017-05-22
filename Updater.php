@@ -350,4 +350,29 @@ class Updater extends Module{
 		}
 		return $this->queue;
 	}
+
+	/**
+	 * List of installable modules from repository
+	 *
+	 * @return array
+	 */
+	public function downloadableModules(){
+		$config = $this->model->_Core->retrieveConfig();
+
+		$modules = $this->getModules();
+
+		$remote_str = file_get_contents($config['repository'].'?act=get-modules&key='.urlencode($config['license']));
+		$remote = json_decode($remote_str, true);
+		if($remote!==null){
+			$return = array();
+			foreach($remote as $m=>$mod){
+				if(array_key_exists($m, $modules))
+					continue;
+				$return[$m] = $mod;
+			}
+			return $return;
+		}else{
+			return [];
+		}
+	}
 }

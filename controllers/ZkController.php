@@ -139,6 +139,12 @@ class ZkController extends \Model\Controller {
 						$this->viewOptions['template'] = 'module';
 						$this->viewOptions['module'] = $modules[$_GET['module']];
 						break;
+					case 'new':
+						$this->viewOptions['showLayout'] = false;
+						$this->viewOptions['template'] = 'new-module';
+						$modules = $this->updater->downloadableModules();
+						$this->viewOptions['modules'] = $modules;
+						break;
 					default:
 						$modules = $this->updater->getModules(true);
 
@@ -258,7 +264,23 @@ class ZkController extends \Model\Controller {
 	function outputCLI(){
 		switch($this->model->getRequest(1)){
 			case 'modules':
-				$this->model->sendJSON($this->viewOptions['modules']);
+				switch($this->model->getRequest(2)){
+					case 'new':
+						echo "Downloadable modules:\n";
+						break;
+				}
+
+				if(count($this->viewOptions['modules'])>0){
+					foreach($this->viewOptions['modules'] as $m){
+						if(is_array($m)){
+							echo '* '.$m['name']." (v".$m['current_version'].")\n";
+						}else{
+							echo '* '.$m->name." (v".$m->version.")\n";
+						}
+					}
+				}else{
+					echo "No module found\n";
+				}
 				break;
 			default:
 				die('CLI not supported for the request.');

@@ -160,3 +160,47 @@ window.addEventListener('load', function(){
 	if(updateQueue.length>0)
 		updateModule(updateQueue.shift());
 });
+
+function lightbox(html){
+	var lightbox = document.getElementById('lightbox');
+
+	if(!lightbox){
+		var contLightbox = document.createElement('div');
+		contLightbox.id = 'lightbox-bg';
+		contLightbox.addEventListener('click', closeLightbox);
+		document.body.appendChild(contLightbox);
+
+		lightbox = document.createElement('div');
+		lightbox.id = 'lightbox';
+		lightbox.innerHTML = html;
+		document.body.appendChild(lightbox);
+	}
+
+	return lightbox;
+}
+
+function closeLightbox(){
+	var lightbox = document.getElementById('lightbox');
+	if(lightbox)
+		lightbox.parentNode.removeChild(lightbox);
+	var contLightbox = document.getElementById('lightbox-bg');
+	if(contLightbox)
+		contLightbox.parentNode.removeChild(contLightbox);
+}
+
+function lightboxNewModule(){
+	var lb = lightbox('');
+	loading(lb);
+	ajax(lb, absolute_path+'zk/modules/new', '', '');
+}
+
+function selectDownloadableModule(el){
+	var selected = document.getElementById('.list-module.selected');
+	if(selected)
+		selected.className = 'list-module';
+	el.className = 'list-module selected';
+
+	var div = document.getElementById('downloadable-module-details');
+	var name = el.dataset.name;
+	div.innerHTML = '<div><div class="versione">'+el.dataset.version+'</div><b>'+name+'</b></div><p><i>'+el.dataset.description+'</i></p><div style="text-align: right"><input type="button" value="Scarica e installa" onclick="newModule(\''+name+'\')" /></div>';
+}
