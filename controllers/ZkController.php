@@ -19,8 +19,8 @@ class ZkController extends \Model\Controller {
 
 				switch($this->model->getRequest(2)){
 					case 'config':
-					case 'install':
-						if($this->model->getRequest(2)=='install'){ // Check if already installed
+					case 'init':
+						if($this->model->getRequest(2)=='init'){ // Check if already installed
 							$checkModule = new \Model\ReflectionModule($this->model->getRequest(3), $this->model);
 							if($checkModule->installed){
 								if($this->model->isCLI()){
@@ -56,7 +56,7 @@ class ZkController extends \Model\Controller {
 										if($configClass->saveConfig('config', $data))
 											echo "Configuration saved\n";
 										break;
-									case 'install':
+									case 'init':
 										if($configClass->install($data)){
 											$this->updater->markAsInstalled($this->model->getRequest(3));
 											echo "Module ".$this->model->getRequest(3)." initialized\n";
@@ -71,20 +71,20 @@ class ZkController extends \Model\Controller {
 							}else {
 								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 								if ($this->viewOptions['template'] === null) {
-									if ($this->model->getRequest(2) == 'install') {
+									if ($this->model->getRequest(2) == 'init') {
 										$installation = $configClass->install();
 										if ($installation) {
 											$this->updater->markAsInstalled($this->model->getRequest(3));
 											$this->model->redirect(PATH . 'zk/modules');
 										} else {
-											$this->viewOptions['errors'][] = 'Something is wrong, can\'t install module ' . $this->model->getRequest(3);
+											$this->viewOptions['errors'][] = 'Something is wrong, can\'t initialize module ' . $this->model->getRequest(3);
 										}
 									}
 								}
 								$this->viewOptions['config'] = $config;
 							}
 						}else{
-							if($this->model->getRequest(2)=='install'){
+							if($this->model->getRequest(2)=='init'){
 								$this->updater->markAsInstalled($this->model->getRequest(3));
 								$this->model->redirect(PATH.'zk/modules');
 							}
@@ -189,7 +189,7 @@ class ZkController extends \Model\Controller {
 							});
 
 							$first = reset($toBeInstalled);
-							$this->model->redirect(PATH.'zk/modules/install/'.$first->folder_name);
+							$this->model->redirect(PATH.'zk/modules/init/'.$first->folder_name);
 						}
 
 						$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
@@ -293,7 +293,7 @@ class ZkController extends \Model\Controller {
 			case 'modules':
 				switch ($this->model->getRequest(2)) {
 					case 'config':
-					case 'install':
+					case 'init':
 						$configClass = $this->getConfigClassFor($this->model->getRequest(3));
 						if($configClass){
 							switch ($this->model->getRequest(2)) {
@@ -301,7 +301,7 @@ class ZkController extends \Model\Controller {
 									if($configClass->saveConfig($this->model->getRequest(2), $_POST))
 										$this->viewOptions['messages'][] = 'Configuration saved.';
 									break;
-								case 'install':
+								case 'init':
 									if($configClass->install($_POST)){
 										$this->updater->markAsInstalled($this->model->getRequest(3));
 										$this->model->redirect(PATH.'zk/modules');
