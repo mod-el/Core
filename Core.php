@@ -83,10 +83,7 @@ class Core implements \JsonSerializable{
 
 		set_error_handler(array($this, 'errorHandler'));
 
-		$cacheFile = $this->retrieveCacheFile();
-		Autoloader::$classes = $cacheFile['classes'];
-		$this->rules = $cacheFile['rules'];
-		$this->availableModules = $cacheFile['modules'];
+		$this->reloadCacheFile();
 
 		$this->modules['Core'][0] = $this;
 
@@ -96,7 +93,19 @@ class Core implements \JsonSerializable{
 	}
 
 	/**
+	 * Reloads the internal cache file
+	 */
+	public function reloadCacheFile(){
+		$cacheFile = $this->retrieveCacheFile();
+		Autoloader::$classes = $cacheFile['classes'];
+		$this->rules = $cacheFile['rules'];
+		$this->availableModules = $cacheFile['modules'];
+	}
+
+	/**
 	 * Looks for the internal cache file, and attempts to generate it if not found (e.g. first runs, or accidental cache wipes)
+	 *
+	 * @return array
 	 */
 	private function retrieveCacheFile(){
 		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';

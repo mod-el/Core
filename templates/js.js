@@ -153,7 +153,20 @@ function resetModuleLoadingBar(name){
 function refreshModule(name){
 	var cont = document.getElementById('module-'+name);
 	loading(cont);
-	ajax(cont, absolute_path+'zk/modules/refresh', 'module='+encodeURIComponent(name), '', cont);
+	ajax(function(r, cont){
+		if(typeof r=='object'){
+			switch(r.action){
+				case 'init':
+					document.location.href = absolute_path+'zk/modules/init/'+r.module;
+					break;
+				default:
+					alert('Unknown response');
+					break;
+			}
+		}else{
+			cont.innerHTML = r;
+		}
+	}, absolute_path+'zk/modules/refresh', 'module='+encodeURIComponent(name), '', cont);
 }
 
 window.addEventListener('load', function(){
@@ -191,7 +204,7 @@ function closeLightbox(){
 function lightboxNewModule(){
 	var lb = lightbox('');
 	loading(lb);
-	ajax(lb, absolute_path+'zk/modules/new', '', '');
+	ajax(lb, absolute_path+'zk/modules/install', '', '');
 }
 
 function selectDownloadableModule(el){
@@ -202,5 +215,17 @@ function selectDownloadableModule(el){
 
 	var div = document.getElementById('downloadable-module-details');
 	var name = el.dataset.name;
-	div.innerHTML = '<div><div class="versione">'+el.dataset.version+'</div><b>'+name+'</b></div><p><i>'+el.dataset.description+'</i></p><div style="text-align: right"><input type="button" value="Scarica e installa" onclick="newModule(\''+name+'\')" /></div>';
+	div.innerHTML = '<div><div class="versione">'+el.dataset.version+'</div><b>'+name+'</b></div><p><i>'+el.dataset.description+'</i></p><div style="text-align: right"><input type="button" value="Scarica e installa" onclick="installModule(\''+name+'\')" /></div>';
+}
+
+function installModule(name){
+	loading(document.getElementById('lightbox'));
+
+	ajax(function(r){
+		if(r=='ok'){
+			document.location.reload();
+		}else{
+			document.getElementById('lightbox').innerHTML = r;
+		}
+	}, absolute_path+'zk/modules/install/'+encodeURIComponent(name), '', 'c_id='+c_id);
 }

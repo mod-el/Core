@@ -110,6 +110,8 @@ $cache = '.var_export($cache, true).';
 		if(!$scrittura)
 			return false;
 
+		$this->model->reloadCacheFile();
+
 		return true;
 	}
 

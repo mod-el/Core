@@ -121,6 +121,9 @@ $config = '.var_export($data, true).';
 	 * @return bool
 	 */
 	public function postUpdate($from, $to){
+		if($from=='0.0.0') // Fresh installation
+			return true;
+
 		$methods = $this->getPostUpdateMethods();
 
 		foreach($methods as $idx=>$method){

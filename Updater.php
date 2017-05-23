@@ -184,6 +184,9 @@ class Updater extends Module{
 		if(!$this->deleteDirectory('model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'temp'))
 			return false;
 
+		$coreConfig = new Core_Config($this->model);
+		$coreConfig->makeCache();
+
 		$configClassFileName = $name.'_Config';
 		$configClassName = '\\Model\\'.$configClassFileName;
 		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$configClassFileName.'.php')){
@@ -352,6 +355,18 @@ class Updater extends Module{
 	}
 
 	/**
+	 * Sets the update queue
+	 *
+	 * @param array $queue
+	 * @return bool
+	 */
+	public function setUpdateQueue($queue){
+		$this->queue = $queue;
+		$w = file_put_contents($this->queue_file, "<?php\n\$queue = ".var_export($queue, true).";\n");
+		return (bool) $w;
+	}
+
+	/**
 	 * List of installable modules from repository
 	 *
 	 * @return array
@@ -374,5 +389,72 @@ class Updater extends Module{
 		}else{
 			return [];
 		}
+	}
+
+	/**
+	 * @param string $name
+	 * @return \Model\Module_Config|bool
+	 */
+	public function getConfigClassFor($name){
+		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')) {
+			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $name . '_Config.php');
+			$configClass = '\\Model\\' . $name . '_Config';
+			$configClass = new $configClass($this->model);
+			return $configClass;
+		}else{
+			return false;
+		}
+	}
+
+	/**
+	 * Module configuration via CLI
+	 *
+	 * @param string $module
+	 * @param string $type
+	 * @return bool
+	 */
+	public function cliConfig($module, $type){
+		$configClass = $this->getConfigClassFor($module);
+		if(!$configClass)
+			return true;
+
+		$configData = $configClass->getConfigData();
+
+		$data = [];
+		if($configData){
+			echo "-------------------\nConfiguration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
+			$handle = fopen ("php://stdin","r");
+			foreach($configData as $k=>$d){
+				echo $d['label'].($d['default']!==null ? ' (default '.$d['default'].')' : '').': ';
+				$line = trim(fgets($handle));
+				if($line)
+					$data[$k] = $line;
+				else
+					$data[$k] = $d['default'];
+			}
+			fclose($handle);
+		}
+
+		switch ($type) {
+			case 'config':
+				if($configClass->saveConfig('config', $data)){
+					echo "Configuration saved\n";
+					return true;
+				}
+				break;
+			case 'init':
+				if($configClass->install($data)){
+					$this->markAsInstalled($module);
+					echo "----------------------\n";
+					echo "Module ".$module." initialized\n";
+					echo "----------------------\n";
+					return true;
+				}else{
+					echo "Some error occurred while installing.\n";
+				}
+				break;
+		}
+
+		return false;
 	}
 }
