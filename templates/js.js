@@ -153,10 +153,79 @@ function resetModuleLoadingBar(name){
 function refreshModule(name){
 	var cont = document.getElementById('module-'+name);
 	loading(cont);
-	ajax(cont, absolute_path+'zk/modules/refresh', 'module='+encodeURIComponent(name), '', cont);
+	ajax(function(r, cont){
+		if(typeof r=='object'){
+			switch(r.action){
+				case 'init':
+					document.location.href = absolute_path+'zk/modules/init/'+r.module;
+					break;
+				default:
+					alert('Unknown response');
+					break;
+			}
+		}else{
+			cont.innerHTML = r;
+		}
+	}, absolute_path+'zk/modules/refresh', 'module='+encodeURIComponent(name), '', cont);
 }
 
 window.addEventListener('load', function(){
 	if(updateQueue.length>0)
 		updateModule(updateQueue.shift());
 });
+
+function lightbox(html){
+	var lightbox = document.getElementById('lightbox');
+
+	if(!lightbox){
+		var contLightbox = document.createElement('div');
+		contLightbox.id = 'lightbox-bg';
+		contLightbox.addEventListener('click', closeLightbox);
+		document.body.appendChild(contLightbox);
+
+		lightbox = document.createElement('div');
+		lightbox.id = 'lightbox';
+		lightbox.innerHTML = html;
+		document.body.appendChild(lightbox);
+	}
+
+	return lightbox;
+}
+
+function closeLightbox(){
+	var lightbox = document.getElementById('lightbox');
+	if(lightbox)
+		lightbox.parentNode.removeChild(lightbox);
+	var contLightbox = document.getElementById('lightbox-bg');
+	if(contLightbox)
+		contLightbox.parentNode.removeChild(contLightbox);
+}
+
+function lightboxNewModule(){
+	var lb = lightbox('');
+	loading(lb);
+	ajax(lb, absolute_path+'zk/modules/install', '', '');
+}
+
+function selectDownloadableModule(el){
+	var selected = document.getElementById('.list-module.selected');
+	if(selected)
+		selected.className = 'list-module';
+	el.className = 'list-module selected';
+
+	var div = document.getElementById('downloadable-module-details');
+	var name = el.dataset.name;
+	div.innerHTML = '<div><div class="versione">'+el.dataset.version+'</div><b>'+name+'</b></div><p><i>'+el.dataset.description+'</i></p><div style="text-align: right"><input type="button" value="Scarica e installa" onclick="installModule(\''+name+'\')" /></div>';
+}
+
+function installModule(name){
+	loading(document.getElementById('lightbox'));
+
+	ajax(function(r){
+		if(r=='ok'){
+			document.location.reload();
+		}else{
+			document.getElementById('lightbox').innerHTML = r;
+		}
+	}, absolute_path+'zk/modules/install/'+encodeURIComponent(name), '', 'c_id='+c_id);
+}

@@ -110,6 +110,8 @@ $cache = '.var_export($cache, true).';
 		if(!$scrittura)
 			return false;
 
+		$this->model->reloadCacheFile();
+
 		return true;
 	}
 
@@ -135,7 +137,7 @@ $cache = '.var_export($cache, true).';
 	}
 
 	/**
-	 * Save the configuration
+	 * Saves the configuration
 	 *
 	 * @param string $type
 	 * @param array $data
