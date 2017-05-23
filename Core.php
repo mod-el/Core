@@ -167,7 +167,12 @@ class Core implements \JsonSerializable{
 		}
 
 		if($module['load']){
-			$className = '\\Model\\'.$name;
+			if($module['custom']){
+				$className = $name;
+			}else{
+				$className = '\\Model\\'.$name;
+			}
+
 			$this->modules[$name][$idx] = new $className($this, $idx, $options);
 
 			foreach($this->modules[$name][$idx]->methods as $m_name){
