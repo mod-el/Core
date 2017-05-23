@@ -483,7 +483,8 @@ class Core implements \JsonSerializable{
 			if($name=='Core')
 				continue;
 			foreach($modules as $m){
-				$m->terminate();
+				if(is_object($m))
+					$m->terminate();
 			}
 		}
 	}
