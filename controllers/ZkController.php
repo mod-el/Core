@@ -6,6 +6,11 @@ class ZkController extends \Model\Controller {
 	function init(){
 		$this->viewOptions['template-path'] = 'model/Core/templates';
 		$this->updater = new \Model\Updater($this->model, 0, []);
+
+		if($this->model->isLoaded('Output')){
+			$this->model->_Output->wipeCSS();
+			$this->model->_Output->wipeJS();
+		}
 	}
 
 	function index(){
@@ -223,11 +228,9 @@ class ZkController extends \Model\Controller {
 				try {
 					$modules = $this->updater->getModules();
 
-					$Core_Config = new \Model\Core_Config($this->model);
-					if (!$Core_Config->makeCache())
-						$this->model->error('Error: can\'t make cache for the Core.');
-
-					$modulesConfigs = [];
+					$modulesConfigs = [
+						'\\Model\\Core_Config'=>false,
+					];
 					foreach ($modules as $mIdx => $m) {
 						if ($mIdx == 'Core')
 							continue;

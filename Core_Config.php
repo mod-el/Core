@@ -19,66 +19,79 @@ class Core_Config extends Module_Config {
 		$modules = [];
 
 		$dirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
-		foreach($dirs as $d){
-			if(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
-				$d_info = pathinfo($d);
-				$modules[$d_info['filename']] = [
-					'path'=>substr($d, strlen(INCLUDE_PATH)),
-					'load'=>file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'.php'),
-				];
 
+		$customDirs = glob(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');;
+		foreach($customDirs as $d)
+			$dirs[] = $d;
+
+		foreach($dirs as $d){
+			$d_info = pathinfo($d);
+			$modules[$d_info['filename']] = [
+				'path'=>substr($d, strlen(INCLUDE_PATH)),
+				'load'=>file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'.php'),
+				'custom'=>in_array($d, $customDirs),
+				'js'=>[],
+				'css'=>[],
+			];
+
+			if(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
 				require($d.DIRECTORY_SEPARATOR.'model.php');
 				if(isset($moduleData['autoload']) and !$moduleData['autoload'])
 					$modules[$d_info['filename']]['autoload'] = false;
+				if(isset($moduleData['js']))
+					$modules[$d_info['filename']]['js'] = $moduleData['js'];
+				if(isset($moduleData['css']))
+					$modules[$d_info['filename']]['css'] = $moduleData['css'];
+			}
 
-				$files = glob($d.DIRECTORY_SEPARATOR.'*');
+			$files = glob($d.DIRECTORY_SEPARATOR.'*');
+			foreach($files as $f){
+				if(is_dir($f))
+					continue;
+				$file = pathinfo($f);
+				if($file['extension']!='php' or $file['basename']=='model.php' or $file['basename']=='README.md')
+					continue;
+
+				$classes[$file['filename']] = $f;
+			}
+
+			if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){
+				$files = glob($d.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
 				foreach($files as $f){
 					if(is_dir($f))
 						continue;
 					$file = pathinfo($f);
-					if($file['extension']!='php' or $file['basename']=='model.php' or $file['basename']=='README.md')
+					if($file['extension']!='php')
 						continue;
 
 					$classes[$file['filename']] = $f;
 				}
+			}
 
-				if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){
-					$files = glob($d.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
-					foreach($files as $f){
-						if(is_dir($f))
-							continue;
-						$file = pathinfo($f);
-						if($file['extension']!='php')
-							continue;
+			if(file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php')){
+				include_once($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php');
+				$configClassName = '\\Model\\'.$d_info['filename'].'_Config';
+				$configClass = new $configClassName($this->model);
 
-						$classes[$file['filename']] = $f;
-					}
+				$moduleRules = $configClass->getRules();
+				if(!is_array($moduleRules))
+					throw new \Exception('The module '.$d_info['filename'].' returned a non-array as rules.');
+
+				foreach($moduleRules as $rIdx => $r){
+					if(isset($rules[$r['rule']]))
+						continue;
+					$rules[$r['rule']] = [
+						'module'=>$d_info['filename'],
+						'controller'=>$r['controller'],
+						'idx'=>$rIdx,
+					];
 				}
 
-				if(file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php')){
-					include_once($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php');
-					$configClassName = '\\Model\\'.$d_info['filename'].'_Config';
-					$configClass = new $configClassName($this->model);
+				$moduleClasses = $configClass->getClasses();
+				if(!is_array($moduleClasses))
+					throw new \Exception('The module '.$d_info['filename'].' returned a non-array as classes.');
 
-					$moduleRules = $configClass->getRules();
-					if(!is_array($moduleRules))
-						throw new \Exception('The module '.$d_info['filename'].' returned a non-array as rules.');
-
-					foreach($moduleRules as $rIdx=>$r){
-						if(isset($rules[$r]))
-							continue;
-						$rules[$r] = [
-							'module'=>$d_info['filename'],
-							'idx'=>$rIdx,
-						];
-					}
-
-					$moduleClasses = $configClass->getClasses();
-					if(!is_array($moduleClasses))
-						throw new \Exception('The module '.$d_info['filename'].' returned a non-array as classes.');
-
-					$classes = array_merge($classes, $moduleClasses);
-				}
+				$classes = array_merge($classes, $moduleClasses);
 			}
 		}
 
@@ -122,7 +135,10 @@ $cache = '.var_export($cache, true).';
 	 */
 	public function getRules(){
 		return [
-			'zk'=>'zk',
+			'zk'=>[
+				'rule'=>'zk',
+				'controller'=>'Zk',
+			],
 		];
 	}
 
