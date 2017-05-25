@@ -30,12 +30,18 @@ class Core_Config extends Module_Config {
 				'path'=>substr($d, strlen(INCLUDE_PATH)),
 				'load'=>file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'.php'),
 				'custom'=>in_array($d, $customDirs),
+				'js'=>[],
+				'css'=>[],
 			];
 
 			if(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
 				require($d.DIRECTORY_SEPARATOR.'model.php');
 				if(isset($moduleData['autoload']) and !$moduleData['autoload'])
 					$modules[$d_info['filename']]['autoload'] = false;
+				if(isset($moduleData['js']))
+					$modules[$d_info['filename']]['js'] = $moduleData['js'];
+				if(isset($moduleData['css']))
+					$modules[$d_info['filename']]['css'] = $moduleData['css'];
 			}
 
 			$files = glob($d.DIRECTORY_SEPARATOR.'*');

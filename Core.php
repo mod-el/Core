@@ -194,13 +194,16 @@ class Core implements \JsonSerializable{
 
 				$this->boundProperties[$p_name] = $name;
 			}
-
-			return $this->modules[$name][$idx];
 		}else{
 			$this->modules[$name][$idx] = true;
 		}
 
-		return true;
+		foreach($module['js'] as $js)
+			$this->_Output->addJS('model/'.$name.'/'.$js);
+		foreach($module['css'] as $css)
+			$this->_Output->addCSS('model/'.$name.'/'.$css);
+
+		return $this->modules[$name][$idx];
 	}
 
 	/**
