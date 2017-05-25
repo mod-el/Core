@@ -6,6 +6,11 @@ class ZkController extends \Model\Controller {
 	function init(){
 		$this->viewOptions['template-path'] = 'model/Core/templates';
 		$this->updater = new \Model\Updater($this->model, 0, []);
+
+		if($this->model->isLoaded('Output')){
+			$this->model->_Output->wipeCSS();
+			$this->model->_Output->wipeJS();
+		}
 	}
 
 	function index(){
