@@ -16,6 +16,8 @@ class Core implements \JsonSerializable{
 	public $leadingModule;
 	/** @var string */
 	public $controllerName;
+	/** @var array|bool */
+	private $request = false;
 	/** @var string */
 	private $requestPrefix = '';
 	/** @var array */
@@ -389,6 +391,7 @@ class Core implements \JsonSerializable{
 					$this->error('Recursion error: module '.$module.' is trying to redirect to the same request.');
 
 				$request = $controllerData['redirect'];
+				$this->request = $controllerData['redirect'];
 				continue;
 			}
 
@@ -575,24 +578,26 @@ class Core implements \JsonSerializable{
 	 * @return array|string|null
 	 */
 	public function getRequest($i=false){
-		if ($this->isCLI()) {
-			global $argv;
-			if(!is_array($argv))
-				return $i===false ? [] : null;
+		if($this->request===false){
+			if ($this->isCLI()) {
+				global $argv;
+				if(!is_array($argv))
+					return $i===false ? [] : null;
 
-			if(array_key_exists(1, $argv)){
-				$req = explode('/', $argv[1]);
+				if(array_key_exists(1, $argv)){
+					$this->request = explode('/', $argv[1]);
+				}else{
+					$this->request = [];
+				}
 			}else{
-				$req = [];
+				$this->request = isset($_GET['url']) ? explode('/', trim($_GET['url'], '/')) : array();
 			}
-		}else{
-			$req = isset($_GET['url']) ? explode('/', trim($_GET['url'], '/')) : array();
 		}
 
 		if($i===false){
-			return $req;
+			return $this->request;
 		}else{
-			return array_key_exists($i, $req) ? $req[$i] : null;
+			return array_key_exists($i, $this->request) ? $this->request[$i] : null;
 		}
 	}
 
