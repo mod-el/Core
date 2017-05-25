@@ -77,11 +77,12 @@ class Core_Config extends Module_Config {
 				if(!is_array($moduleRules))
 					throw new \Exception('The module '.$d_info['filename'].' returned a non-array as rules.');
 
-				foreach($moduleRules as $rIdx=>$r){
-					if(isset($rules[$r]))
+				foreach($moduleRules as $rIdx => $r){
+					if(isset($rules[$r['rule']]))
 						continue;
-					$rules[$r] = [
+					$rules[$r['rule']] = [
 						'module'=>$d_info['filename'],
+						'controller'=>$r['controller'],
 						'idx'=>$rIdx,
 					];
 				}
@@ -134,7 +135,10 @@ $cache = '.var_export($cache, true).';
 	 */
 	public function getRules(){
 		return [
-			'zk'=>'zk',
+			'zk'=>[
+				'rule'=>'zk',
+				'controller'=>'Zk',
+			],
 		];
 	}
 

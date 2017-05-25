@@ -18,6 +18,8 @@ class Core implements \JsonSerializable{
 	public $controllerName;
 	/** @var string */
 	private $requestPrefix = '';
+	/** @var array */
+	private $prefixMakers = [];
 	/** @var Controller */
 	public $controller;
 	/** @var array */
@@ -120,7 +122,7 @@ class Core implements \JsonSerializable{
 			require($cacheFile);
 			return $cache;
 		}else{
-			$this->model->error('Cannot generate Core cache file.');
+			$this->error('Cannot generate Core cache file.');
 		}
 	}
 
@@ -343,68 +345,75 @@ class Core implements \JsonSerializable{
 		/*
 		 * I look in the registered rules for the ones matching with current request.
 		 * If there is no rule matching, I redirect to a 404 Not Found error.
-		 * If more than one rule is matching, I assign a score to each one (the more specific is the rule, the higher is the score) and pick the highest one.
 		 * So I'll found the module in charge to handle the current request.
-		 * */
-
-		$matchedRules = [];
-		if(empty($request)){ // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
-			if(isset($this->rules['']))
-				$matchedRules[''] = 0;
-		}else{
-			foreach($this->rules as $r=>$module){
-				$rArr = explode('/', $r);
-				$score = 0;
-				foreach($rArr as $i=>$sr){
-					if(!isset($request[$i]))
-						continue 2;
-					if(!preg_match('/^'.$sr.'$/i', $request[$i]))
-						continue 2;
-
-					$score = $i*2;
-					if(strpos($sr, '[')===false)
-						$score += 1;
-				}
-				$matchedRules[$r] = $score;
-			}
-		}
-
-		if(count($matchedRules)==0){
-			$module = 'Core';
-			$ruleFound = '404';
-			$this->viewOptions['404-reason'] = 'No rule matched the request.';
-		}else{
-			if(count($matchedRules)>1)
-				krsort($matchedRules);
-
-			$module = $this->rules[key($matchedRules)]['module'];
-			$ruleFound = $this->rules[key($matchedRules)]['idx'];
-		}
-
-		$this->leadingModule = $module;
-
-		$this->trigger('Core', 'leadingModuleFound', ['module'=>$module]);
-
-		/*
 		 * Next step, I ask the module in charge which controller should I load
 		 * The module can also return a prefix to keep in mind for building future requests (defaults to PATH)
-		 * Then, I check if it really exists and I load it. I pass it the default View Options as well
+		 * A "redirect" to another request can also be returned, and this will repeat the process for the new request
+		 * Then, I check if it really exists and I load it. I pass the default View Options to it as well
 		 * */
 
 		$this->requestPrefix = PATH;
 
-		$controllerData = $this->getModule($module)->getController($ruleFound);
-		if($controllerData and is_array($controllerData) and isset($controllerData['controller'])) {
-			$controllerName = $controllerData['controller'];
-			if(isset($controllerData['prefix']) and $controllerData['prefix']){
-				$this->requestPrefix .= $controllerData['prefix'].'/';
+		$preventInfiniteLoop = 0;
+		while(true){
+			$preventInfiniteLoop++;
+
+			$match = $this->matchRule($request);
+
+			if($match===false){
+				$module = 'Core';
+				$controllerName = 'Err404';
+				$this->viewOptions['404-reason'] = 'No rule matched the request.';
+				break;
+			}else{
+				$module = $match['module'];
+				$ruleFound = $match['idx'];
 			}
-		}else{
-			$controllerName = 'Err404';
-			$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
+
+			$this->trigger('Core', 'leadingModuleFound', ['module'=>$module]);
+
+			$controllerData = $this->getModule($module)->getController($request, $ruleFound);
+
+			if(!is_array($controllerData)){
+				$module = 'Core';
+				$controllerName = 'Err404';
+				$this->viewOptions['404-reason'] = 'Module '.$module.' can\'t return a controller name.';
+				break;
+			}
+
+			if(isset($controllerData['prefix']) and $controllerData['prefix'])
+				$this->requestPrefix .= $controllerData['prefix'].'/';
+
+			if(isset($controllerData['redirect'])){
+				if($controllerData['redirect']===$request)
+					$this->error('Recursion error: module '.$module.' is trying to redirect to the same request.');
+
+				$request = $controllerData['redirect'];
+				continue;
+			}
+
+			$controllerName = false;
+			if(isset($controllerData['controller']) and $controllerData['controller']) {
+				$controllerName = $controllerData['controller'];
+			}else{
+				$module = 'Core';
+				$controllerName = 'Err404';
+				$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
+				break;
+			}
+
+			if($controllerName){
+				$this->trigger('Core', 'controllerFound', ['controller'=>$controllerName]);
+				break;
+			}
+
+			if($preventInfiniteLoop){
+				$this->error('Infinite loop while trying to find the controller.');
+				break;
+			}
 		}
 
-		$this->trigger('Core', 'controllerFound', ['controller'=>$controllerName]);
+		$this->leadingModule = $module;
 
 		$controllerClassName = '\\'.$controllerName.'Controller';
 
@@ -492,13 +501,56 @@ class Core implements \JsonSerializable{
 		}
 	}
 
+	/* REQUEST AND INPUT MANAGEMENT */
+
+	/**
+	 * Checks if a request matches one (or more) of the rules
+	 * If more than one rule is matching, I assign a score to each one (the more specific is the rule, the higher is the score) and pick the highest one.
+	 *
+	 * @param array $request
+	 * @return bool|array
+	 */
+	private function matchRule($request){
+		$matchedRules = [];
+		if(empty($request)){ // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
+			if(isset($this->rules['']))
+				$matchedRules[''] = 0;
+		}else{
+			foreach($this->rules as $r=>$ruleData){
+				$rArr = explode('/', $r);
+				$score = 0;
+				foreach($rArr as $i=>$sr){
+					if(!isset($request[$i]))
+						continue 2;
+					if(!preg_match('/^'.$sr.'$/i', $request[$i]))
+						continue 2;
+
+					$score = $i*2;
+					if(strpos($sr, '[')===false)
+						$score += 1;
+				}
+				$matchedRules[$r] = $score;
+			}
+		}
+
+		if(count($matchedRules)==0){
+			return false;
+		}else{
+			if(count($matchedRules)>1)
+				krsort($matchedRules);
+
+			return $this->rules[key($matchedRules)];
+		}
+	}
+
 	/**
 	 * Returns the controller needed for the rules for which the Core module is in charge (currently only "zk" for the management panel)
 	 *
+	 * @param string $request
 	 * @param string $rule
 	 * @return array
 	 */
-	public function getController($rule){
+	public function getController($request, $rule){
 		switch($rule){
 			case 'zk':
 				return [
@@ -507,13 +559,11 @@ class Core implements \JsonSerializable{
 				break;
 			default:
 				return [
-					'controller'=>'Zk',
+					'controller'=>'Err404',
 				];
 				break;
 		}
 	}
-
-	/* REQUEST AND INPUT MANAGEMENT */
 
 	/**
 	 * Returns the current request.
@@ -536,7 +586,7 @@ class Core implements \JsonSerializable{
 				$req = [];
 			}
 		}else{
-			$req = isset($_GET['url']) ? explode('/', $_GET['url']) : array();
+			$req = isset($_GET['url']) ? explode('/', trim($_GET['url'], '/')) : array();
 		}
 
 		if($i===false){
@@ -604,12 +654,81 @@ class Core implements \JsonSerializable{
 	 *
 	 * @return string
 	 */
-	public function prefix($withoutPath=false){
-		$prefix = $this->requestPrefix;
-		if($withoutPath){
-			$prefix = substr($prefix, strlen(PATH));
+	public function prefix($tags=[], $opt=[]){
+		$opt = array_merge([
+			'path'=>true,
+		], $opt);
+
+		if($tags){ // If no tag is given, returns the current prefix, otherwise it generates a new prefix dynamically
+			$prefix = $opt['path'] ? PATH : '';
+			foreach($this->prefixMakers as $m){
+				$partial = $this->getModule($m)->getPrefix($tags, $opt);
+				if($partial)
+					$prefix .= $partial.'/';
+			}
+		}else{
+			$prefix = $this->requestPrefix;
+			if(!$opt['path']){
+				$prefix = substr($prefix, strlen(PATH));
+			}
 		}
 		return $prefix;
+	}
+
+	/**
+	 * Some modules can prepend something to generated urls/requests, if that's the case, they need to call this method to let the Core know
+	 *
+	 * @param string $module
+	 * @return bool
+	 */
+	public function addPrefixMaker($module){
+		if(!in_array($module, $this->prefixMakers))
+			$this->prefixMakers[] = $module;
+		return true;
+	}
+
+	/**
+	 * Builds a request url based on the given parameters
+	 *
+	 * @param string|bool $controller
+	 * @param int|bool $id
+	 * @param array $tags
+	 * @param array $opt
+	 * @return bool|string
+	 */
+	public function getUrl($controller=false, $id=false, $tags=[], $opt=[]){
+		if($controller===false)
+			$controller = $this->controllerName;
+
+		$opt = array_merge([
+			'prefix'=>true,
+			'path'=>true,
+		], $opt);
+
+		if(!is_array($tags))
+			$tags = ['lang'=>$tags];
+
+		if($opt['prefix']){
+			$prefix = $this->prefix($tags, $opt);
+		}else{
+			if($opt['path'])
+				$prefix = PATH;
+			else
+				$prefix = '';
+		}
+
+		if($controller=='Zk')
+			return $prefix.'zk';
+
+		$module = false;
+		foreach($this->rules as $r=>$ruleData){
+			if($ruleData['controller']==$controller){
+				$module = $ruleData['module'];
+			}
+		}
+
+		$url = $module ? $this->getModule($module)->getUrl($controller, $id, $tags, $opt) : false;
+		return $url!==false ? $prefix.$url : false;
 	}
 
 	/* ERRORS MANAGEMENT */

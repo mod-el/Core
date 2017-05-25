@@ -33,6 +33,9 @@ class Module_Config{
 
 	/**
 	 * If this module needs to register rules, this is the method that should return them.
+	 * The sintax is: [
+	 * 		'idx'=>['rule'=>'rule', 'controller'=>'controller'],
+	 * ]
 	 *
 	 * @return array
 	 */
