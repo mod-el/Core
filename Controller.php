@@ -4,8 +4,6 @@ namespace Model;
 class Controller{
 	/** @var \FrontController */
 	protected $model;
-	/** @var \Model\Router */
-	protected $router;
 	/** @var array */
 	public $viewOptions = array(
 		'header' => [
@@ -22,7 +20,6 @@ class Controller{
 
 	function __construct(\FrontController $model){
 		$this->model = $model;
-		$this->router = $model->_Router;
 	}
 
 	/**
