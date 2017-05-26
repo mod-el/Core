@@ -920,6 +920,42 @@ class Core implements \JsonSerializable{
 	}
 
 	/**
+	 * Returns debug data
+	 *
+	 * @return array
+	 */
+	public function getDebugData(){
+		$debug = array(
+			'prefix'=>$this->prefix([], ['path'=>false]),
+			'request'=>implode('/', $this->getRequest()),
+			'execution_time'=>microtime(true)-START_TIME,
+			'module'=>$this->leadingModule,
+			'controller'=>$this->controllerName,
+			'modules'=>array_keys($this->allModules()),
+			'zk_loading_id'=>ZK_LOADING_ID,
+		);
+
+		if($this->isLoaded('Db')){
+			$debug['n_query'] = $this->_Db->n_query;
+			$debug['n_prepared'] = $this->_Db->n_prepared;
+			$debug['query_per_table'] = $this->_Db->n_tables;
+		}
+
+		if($this->isLoaded('Router')){
+			$pageId = $this->_Router->pageId;
+			if($pageId)
+				$debug['pageId'] = $pageId;
+		}
+
+		if(is_object($this->element)){
+			$debug['elementType'] = get_class($this->element);
+			$debug['elementId'] = $this->element[$this->element->settings['primary']];
+		}
+
+		return $debug;
+	}
+
+	/**
 	 * Retrieves the Core config (as for any other module)
 	 */
 	public function retrieveConfig(){
