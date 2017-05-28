@@ -3,7 +3,7 @@ class ZkController extends \Model\Controller {
 	/** @var \Model\Updater */
 	private $updater;
 
-	function init(){
+	public function init(){
 		$this->viewOptions['template-path'] = 'model/Core/templates';
 		$this->updater = new \Model\Updater($this->model, 0, []);
 
@@ -13,7 +13,7 @@ class ZkController extends \Model\Controller {
 		}
 	}
 
-	function index(){
+	public function index(){
 		switch($this->model->getRequest(1)){
 			case 'modules':
 				$this->viewOptions['template'] = 'modules';
@@ -280,7 +280,7 @@ class ZkController extends \Model\Controller {
 		}
 	}
 
-	function outputCLI(){
+	public function outputCLI($asFallback=false){
 		switch($this->model->getRequest(1)){
 			case 'modules':
 				switch($this->model->getRequest(2)){
@@ -310,7 +310,7 @@ class ZkController extends \Model\Controller {
 		}
 	}
 
-	function post(){
+	public function post(){
 		switch($this->model->getRequest(1)) {
 			case 'modules':
 				switch ($this->model->getRequest(2)) {

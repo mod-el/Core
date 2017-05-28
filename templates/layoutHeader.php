@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <title>Model Framework Control Panel - <?=NOME_SITO?></title>
+    <title>Model Framework Control Panel - <?=APP_NAME?></title>
     [:head]
 </head>
 

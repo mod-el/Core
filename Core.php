@@ -51,6 +51,9 @@ class Core implements \JsonSerializable{
 
 			include(realpath(dirname(__FILE__)).'/../../data/config/config.php');
 
+			define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
+			define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
+
 			if(isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN']=='69')
 				define('DEBUG_MODE', 1);
 			else

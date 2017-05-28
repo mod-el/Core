@@ -185,7 +185,7 @@ $config = '.var_export($config, true).';
 		return [
 			'repository' => [
 				'label' => 'Repository',
-				'default' => isset($config['repository']) ? $config['repository'] : 'http://www.netrails.net',
+				'default' => isset($config['repository']) ? $config['repository'] : 'https://www.netrails.net/repository',
 			],
 			'license' => [
 				'label' => 'License Key',

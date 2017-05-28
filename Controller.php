@@ -4,8 +4,6 @@ namespace Model;
 class Controller{
 	/** @var \FrontController */
 	protected $model;
-	/** @var \Model\Router */
-	protected $router;
 	/** @var array */
 	public $viewOptions = array(
 		'header' => [
@@ -22,7 +20,6 @@ class Controller{
 
 	function __construct(\FrontController $model){
 		$this->model = $model;
-		$this->router = $model->_Router;
 	}
 
 	/**
@@ -54,6 +51,7 @@ class Controller{
 	/**
 	 * Outputs the content
 	 * It uses Output model, by default, but this behaviour can be customized by extending the method
+	 * If Output module is not installed, it tries to execute outputCLI (only works if "outputCLI" was customized)
 	 */
 	public function output(){
 		/* Backward compatibility */
@@ -66,14 +64,24 @@ class Controller{
 			$this->viewOptions['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr(get_class($this), 0, -10)));
 		}
 
-		$this->model->_Output->render($this->viewOptions);
+		if($this->model->moduleExists('Output')){
+			$this->model->_Output->render($this->viewOptions);
+		}else{
+			echo '<pre>';
+			$this->outputCLI(true);
+			echo '</pre>';
+		}
 	}
 
 	/**
 	 * Optionally, this method can be expanded by the controller to override the default output method, if model is executed in a CLI environment
+	 * If it's called as a fallback for a missing Output module, it will not output anything
+	 *
+	 * @param bool $asFallback
 	 */
-	public function outputCLI(){
-		$this->output();
+	public function outputCLI($asFallback=false){
+		if(!$asFallback)
+			$this->output();
 	}
 
 	/**
