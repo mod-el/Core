@@ -36,8 +36,8 @@ class Core_Config extends Module_Config {
 
 			if(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
 				require($d.DIRECTORY_SEPARATOR.'model.php');
-				if(isset($moduleData['autoload']) and !$moduleData['autoload'])
-					$modules[$d_info['filename']]['autoload'] = false;
+				if(isset($moduleData['load']) and !$moduleData['load'])
+					$modules[$d_info['filename']]['load'] = false;
 				if(isset($moduleData['js']))
 					$modules[$d_info['filename']]['js'] = $moduleData['js'];
 				if(isset($moduleData['css']))
