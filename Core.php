@@ -969,10 +969,4 @@ class Core implements \JsonSerializable{
 			return [];
 		}
 	}
-
-	/* BACKWARD COMPATIBILITY */
-
-	public function loaded($name, $idx=false){ return $this->isLoaded($name, $idx); }
-	public function loadOnce($name, $options=array(), $idx=null, $error=null){ return $this->load($name, $options, $idx); }
-	public function loadIfNot($name, $options=array(), $idx=null, $error=null){ return $this->load($name, $options, $idx); }
 }
