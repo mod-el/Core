@@ -401,7 +401,6 @@ class Core implements \JsonSerializable{
 				continue;
 			}
 
-			$controllerName = false;
 			if(isset($controllerData['controller']) and $controllerData['controller']) {
 				$controllerName = $controllerData['controller'];
 			}else{
@@ -423,6 +422,21 @@ class Core implements \JsonSerializable{
 		}
 
 		$this->leadingModule = $module;
+
+		// A controller can be nested inside a folder, for better order
+		$folderCheck = explode(DIRECTORY_SEPARATOR, $controllerName);
+		if(count($folderCheck)==2){
+			if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php')){
+				require_once(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php');
+				$controllerName = $folderCheck[1];
+			}else{
+				$controllerName = 'Err404';
+				$this->viewOptions['404-reason'] = '"'.$folderCheck[1].'" controller not found in "'.$folderCheck[0].'" folder';
+			}
+		}elseif(count($folderCheck)>2){
+			$controllerName = 'Err404';
+			$this->viewOptions['404-reason'] = 'Too many folder nesting for the controller.';
+		}
 
 		$controllerClassName = '\\'.$controllerName.'Controller';
 
