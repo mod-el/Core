@@ -383,9 +383,9 @@ class Core implements \JsonSerializable{
 			$controllerData = $this->getModule($module)->getController($request, $ruleFound);
 
 			if(!is_array($controllerData)){
+				$this->viewOptions['404-reason'] = 'Module '.$module.' can\'t return a controller name.';
 				$module = 'Core';
 				$controllerName = 'Err404';
-				$this->viewOptions['404-reason'] = 'Module '.$module.' can\'t return a controller name.';
 				break;
 			}
 
@@ -405,9 +405,9 @@ class Core implements \JsonSerializable{
 			if(isset($controllerData['controller']) and $controllerData['controller']) {
 				$controllerName = $controllerData['controller'];
 			}else{
+				$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
 				$module = 'Core';
 				$controllerName = 'Err404';
-				$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
 				break;
 			}
 

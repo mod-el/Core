@@ -93,5 +93,7 @@ class Module{
 	/**
 	 * Meant to be extended if needed
 	 */
-	public function getController($request, $rule){}
+	public function getController($request, $rule){
+		return false;
+	}
 }
