@@ -12,6 +12,8 @@ class Core implements \JsonSerializable{
 	protected $availableModules = [];
 	/** @var string[] */
 	protected $rules = [];
+	/** @var string[] */
+	protected $controllers = [];
 	/** @var string */
 	public $leadingModule;
 	/** @var string */
@@ -106,6 +108,7 @@ class Core implements \JsonSerializable{
 		$cacheFile = $this->retrieveCacheFile();
 		Autoloader::$classes = $cacheFile['classes'];
 		$this->rules = $cacheFile['rules'];
+		$this->controllers = $cacheFile['controllers'];
 		$this->availableModules = $cacheFile['modules'];
 	}
 
@@ -729,9 +732,10 @@ class Core implements \JsonSerializable{
 			return $prefix.'zk';
 
 		$module = false;
-		foreach($this->rules as $r=>$ruleData){
-			if($ruleData['controller']==$controller){
-				$module = $ruleData['module'];
+		foreach($this->controllers as $c=>$cModule){
+			if($c==$controller){
+				$module = $cModule;
+				break;
 			}
 		}
 

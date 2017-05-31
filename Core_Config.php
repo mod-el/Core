@@ -16,6 +16,7 @@ class Core_Config extends Module_Config {
 	public function makeCache(){
 		$classes = [];
 		$rules = [];
+		$controllers = [];
 		$modules = [];
 
 		$dirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
@@ -74,17 +75,22 @@ class Core_Config extends Module_Config {
 				$configClass = new $configClassName($this->model);
 
 				$moduleRules = $configClass->getRules();
-				if(!is_array($moduleRules))
-					throw new \Exception('The module '.$d_info['filename'].' returned a non-array as rules.');
+				if(!is_array($moduleRules) or !isset($moduleRules['rules'], $moduleRules['controllers']))
+					throw new \Exception('The module '.$d_info['filename'].' returned an invalid format for rules.');
 
-				foreach($moduleRules as $rIdx => $r){
-					if(isset($rules[$r['rule']]))
+				foreach($moduleRules['rules'] as $rIdx => $r){
+					if(isset($rules[$r]))
 						continue;
-					$rules[$r['rule']] = [
+					$rules[$r] = [
 						'module'=>$d_info['filename'],
-						'controller'=>$r['controller'],
 						'idx'=>$rIdx,
 					];
+				}
+
+				foreach($moduleRules['controllers'] as $c){
+					if(isset($controllers[$c]))
+						continue;
+					$controllers[$c] = $d_info['filename'];
 				}
 
 				$moduleClasses = $configClass->getClasses();
@@ -109,6 +115,7 @@ class Core_Config extends Module_Config {
 		$cache = [
 			'classes' => $classes,
 			'rules' => $rules,
+			'controllers' => $controllers,
 			'modules' => $modules,
 		];
 
@@ -135,9 +142,11 @@ $cache = '.var_export($cache, true).';
 	 */
 	public function getRules(){
 		return [
-			'zk'=>[
-				'rule'=>'zk',
-				'controller'=>'Zk',
+			'rules'=>[
+				'zk'=>'zk',
+			],
+			'controllers'=>[
+				'Zk',
 			],
 		];
 	}

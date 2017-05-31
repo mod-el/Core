@@ -34,13 +34,19 @@ class Module_Config{
 	/**
 	 * If this module needs to register rules, this is the method that should return them.
 	 * The sintax is: [
-	 * 		'idx'=>['rule'=>'rule', 'controller'=>'controller'],
+	 * 		'rules'=>[
+	 * 			'idx'=>'rule',
+	 *		],
+	 * 		'controllers'=>[
+	 * 			'Controller1',
+	 * 			'Controller2',
+	 *		],
 	 * ]
 	 *
 	 * @return array
 	 */
 	public function getRules(){
-		return [];
+		return ['rules'=>[], 'controllers'=>[]];
 	}
 
 	/**
