@@ -26,9 +26,6 @@ function entities($text, $br = false){
  * @return string
  */
 function textCutOff($text, $limit, $options=array(), $safe = true){
-	if(!is_array($options)) // Retrocompatibilità
-		$options = array('other'=>$options, 'safe'=>$safe);
-
 	$options = array_merge(array(
 		'other'=>false,
 		'safe'=>true,
@@ -78,9 +75,6 @@ function textCutOff($text, $limit, $options=array(), $safe = true){
  * @return string
  */
 function makePrice($p, $options=array()){
-	if(is_bool($options)) // Retrocompatibilità
-		$options = array('show_currency'=>true);
-
 	$options = array_merge(array(
 		'show_currency'=>true,
 		'decimal_separator'=>',',
