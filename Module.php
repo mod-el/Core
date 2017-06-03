@@ -89,4 +89,11 @@ class Module{
 	 * A loaded module can, optionally, put content in the "head" section of the page
 	 */
 	public function headings(){}
+
+	/**
+	 * Meant to be extended if needed
+	 */
+	public function getController($request, $rule){
+		return false;
+	}
 }
