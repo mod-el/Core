@@ -101,6 +101,7 @@ class ZkController extends \Model\Controller {
 										}
 									}
 								}
+								$this->viewOptions['config-class'] = $configClass;
 								$this->viewOptions['config'] = $config;
 							}
 						}else{
