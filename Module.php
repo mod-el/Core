@@ -92,6 +92,10 @@ class Module{
 
 	/**
 	 * Meant to be extended if needed
+	 *
+	 * @param array $request
+	 * @param string $rule
+	 * @return string|bool
 	 */
 	public function getController($request, $rule){
 		return false;
