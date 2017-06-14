@@ -92,8 +92,25 @@ class Module{
 
 	/**
 	 * Meant to be extended if needed
+	 *
+	 * @param array $request
+	 * @param string $rule
+	 * @return string|bool
 	 */
 	public function getController($request, $rule){
+		return false;
+	}
+
+	/**
+	 * Meant to be extended if needed
+	 *
+	 * @param string|bool $controller
+	 * @param int|bool $id
+	 * @param array $tags
+	 * @param array $opt
+	 * @return bool|string
+	 */
+	public function getUrl($controller=false, $id=false, $tags=[], $opt=[]){
 		return false;
 	}
 }
