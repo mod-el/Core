@@ -19,6 +19,9 @@ class Core_Config extends Module_Config {
 		$controllers = [];
 		$modules = [];
 
+		if(!is_dir(INCLUDE_PATH.'app-data'))
+			mkdir(INCLUDE_PATH.'app-data');
+
 		$dirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
 
 		$customDirs = glob(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');;
