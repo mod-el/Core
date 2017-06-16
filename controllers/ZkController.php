@@ -94,7 +94,7 @@ class ZkController extends \Model\Controller {
 									if ($this->model->getRequest(2) == 'init') {
 										$installation = $configClass->install();
 										if ($installation) {
-											$this->updater->markAsInstalled($this->model->getRequest(3));
+											$this->updater->firstInit($this->model->getRequest(3));
 											$this->model->redirect(PATH . 'zk/modules');
 										} else {
 											$this->viewOptions['errors'][] = 'Something is wrong, can\'t initialize module ' . $this->model->getRequest(3);
@@ -106,7 +106,7 @@ class ZkController extends \Model\Controller {
 							}
 						}else{
 							if($this->model->getRequest(2)=='init'){
-								$this->updater->markAsInstalled($this->model->getRequest(3));
+								$this->updater->firstInit($this->model->getRequest(3));
 								$this->model->redirect(PATH.'zk/modules');
 							}
 						}
@@ -326,7 +326,7 @@ class ZkController extends \Model\Controller {
 									break;
 								case 'init':
 									if($configClass->install($_POST)){
-										$this->updater->markAsInstalled($this->model->getRequest(3));
+										$this->updater->firstInit($this->model->getRequest(3));
 										$this->model->redirect(PATH.'zk/modules');
 									}else{
 										$this->viewOptions['errors'][] = 'Some error occurred while installing.';

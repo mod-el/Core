@@ -69,7 +69,7 @@ class Updater extends Module{
 	 * @param $name
 	 * @return bool
 	 */
-	public function markAsInstalled($name){
+	public function firstInit($name){
 		if(!file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'))
 			mkdir(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data');
 		$file_path = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
@@ -82,10 +82,21 @@ class Updater extends Module{
 		$text = file_get_contents($file_path);
 
 		if(stripos($text, '$installed')!==false){
-			return (bool) file_put_contents($file_path, preg_replace('/\$installed ?=.+;/i', '$installed = true;', $text));
+			$return = (bool) file_put_contents($file_path, preg_replace('/\$installed ?=.+;/i', '$installed = true;', $text));
 		}else{
-			return (bool) file_put_contents($file_path, $text."\n".'$installed = true;'."\n");
+			$return  = (bool) file_put_contents($file_path, $text."\n".'$installed = true;'."\n");
 		}
+
+		$configClass = $this->getConfigClassFor($name);
+		if($configClass){
+			try{
+				$configClass->makeCache();
+			}catch(\Exception $e){
+
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -444,7 +455,7 @@ class Updater extends Module{
 				break;
 			case 'init':
 				if($configClass->install($data)){
-					$this->markAsInstalled($module);
+					$this->firstInit($module);
 					echo "----------------------\n";
 					echo "Module ".$module." initialized\n";
 					echo "----------------------\n";
