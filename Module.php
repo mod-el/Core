@@ -69,7 +69,7 @@ class Module{
 	 * @param array $data
 	 * @return bool
 	 */
-	protected function trigger($event, $data = []){
+	protected function trigger($event, array $data = []){
 		return $this->model->trigger($this->getClass(), $event, $data);
 	}
 
@@ -97,7 +97,7 @@ class Module{
 	 * @param string $rule
 	 * @return string|bool
 	 */
-	public function getController($request, $rule){
+	public function getController(array $request, $rule){
 		return false;
 	}
 
@@ -110,7 +110,7 @@ class Module{
 	 * @param array $opt
 	 * @return bool|string
 	 */
-	public function getUrl($controller=false, $id=false, $tags=[], $opt=[]){
+	public function getUrl($controller=false, $id=false, array $tags=[], array $opt=[]){
 		return false;
 	}
 }

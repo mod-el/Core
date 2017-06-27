@@ -160,7 +160,7 @@ $cache = '.var_export($cache, true).';
 	 * @param array $request
 	 * @return string
 	 */
-	public function getTemplate($request){
+	public function getTemplate(array $request){
 		return $request[2]=='config' ? INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'config' : null;
 	}
 
@@ -171,7 +171,7 @@ $cache = '.var_export($cache, true).';
 	 * @param array $data
 	 * @return bool
 	 */
-	public function saveConfig($type, $data){
+	public function saveConfig($type, array $data){
 		$config = $this->retrieveConfig();
 
 		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
