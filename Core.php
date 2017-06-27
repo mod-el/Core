@@ -161,7 +161,7 @@ class Core implements \JsonSerializable{
 	 * @param mixed $idx
 	 * @return mixed
 	 */
-	public function load($name, $options=array(), $idx=0){
+	public function load($name, array $options=array(), $idx=0){
 		if(isset($this->modules[$name][$idx])){
 			return $this->modules[$name][$idx];
 		}
@@ -326,7 +326,7 @@ class Core implements \JsonSerializable{
 	 * @param array $arguments
 	 * @return mixed
 	 */
-	function __call($name, $arguments){
+	function __call($name, array $arguments){
 		if(isset($this->boundMethods[$name])){
 			$module = $this->getModule($this->boundMethods[$name]);
 			return call_user_func_array(array($module, $name), $arguments);
@@ -533,7 +533,7 @@ class Core implements \JsonSerializable{
 	 * @param array $request
 	 * @return bool|array
 	 */
-	private function matchRule($request){
+	private function matchRule(array $request){
 		$matchedRules = [];
 		if(empty($request)){ // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
 			if(isset($this->rules['']))
@@ -721,7 +721,7 @@ class Core implements \JsonSerializable{
 	 * @param array $opt
 	 * @return bool|string
 	 */
-	public function getUrl($controller=false, $id=false, $tags=[], $opt=[]){
+	public function getUrl($controller=false, $id=false, array $tags=[], array $opt=[]){
 		if($controller===false)
 			$controller = $this->controllerName;
 
@@ -837,7 +837,7 @@ class Core implements \JsonSerializable{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger($module, $event, $data=[]){
+	public function trigger($module, $event, array $data=[]){
 		if(!$this->eventsOn)
 			return true;
 

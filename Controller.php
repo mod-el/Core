@@ -92,7 +92,7 @@ class Controller{
 	 * @param mixed $idx
 	 * @return mixed
 	 */
-	private function load($name, $options=array(), $idx=0){
+	private function load($name, array $options=array(), $idx=0){
 		return $this->model->load($name, $options, $idx);
 	}
 }

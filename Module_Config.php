@@ -64,7 +64,7 @@ class Module_Config{
 	 * @param array $request
 	 * @return string
 	 */
-	public function getTemplate($request){
+	public function getTemplate(array $request){
 		return null;
 	}
 
@@ -74,7 +74,7 @@ class Module_Config{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function install($data=[]){
+	public function install(array $data=[]){
 		return true;
 	}
 
@@ -85,7 +85,7 @@ class Module_Config{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function saveConfig($type, $data){
+	public function saveConfig($type, array $data){
 		$classname = $this->getClass();
 
 		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php';

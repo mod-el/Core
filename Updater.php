@@ -178,7 +178,7 @@ class Updater extends Module{
 	 * @param array $delete
 	 * @return bool
 	 */
-	public function finalizeUpdate($name, $delete){
+	public function finalizeUpdate($name, array $delete){
 		$old_version = null;
 		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'model.php')){
 			include(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'model.php');
@@ -269,8 +269,7 @@ class Updater extends Module{
 	/**
 	 * Module update via CLI
 	 *
-	 * @param array $files
-	 * @param array $queue
+	 * @param string $module
 	 */
 	public function cliUpdate($module){
 		$this->checkUpdateQueue($module);
@@ -371,7 +370,7 @@ class Updater extends Module{
 	 * @param array $queue
 	 * @return bool
 	 */
-	public function setUpdateQueue($queue){
+	public function setUpdateQueue(array $queue){
 		$this->queue = $queue;
 		$w = file_put_contents($this->queue_file, "<?php\n\$queue = ".var_export($queue, true).";\n");
 		return (bool) $w;
