@@ -209,9 +209,9 @@ class Core implements \JsonSerializable{
 		}
 
 		foreach($module['js'] as $js)
-			$this->_Output->addJS('model/'.$name.'/'.$js, ['custom'=>false]);
+			$this->_Output->addJS(strtolower(substr($js, 0, 4))=='http' ? $js : 'model/'.$name.'/'.$js, ['custom'=>false]);
 		foreach($module['css'] as $css)
-			$this->_Output->addCSS('model/'.$name.'/'.$css, ['custom'=>false]);
+			$this->_Output->addCSS(strtolower(substr($css, 0, 4))=='http' ? $css : 'model/'.$name.'/'.$css, ['custom'=>false]);
 
 		return $this->modules[$name][$idx];
 	}
