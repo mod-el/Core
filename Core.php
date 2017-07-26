@@ -798,6 +798,9 @@ class Core implements \JsonSerializable{
 	 * @return bool
 	 */
 	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext=false){
+		if(error_reporting()===0)
+			return true;
+
 		$backtrace = zkBacktrace(true);
 		array_shift($backtrace);
 
