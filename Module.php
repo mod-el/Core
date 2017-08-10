@@ -10,6 +10,8 @@ class Module{
 	public $methods = array();
 	/** @var array */
 	public $properties = array();
+	/** @var mixed */
+	private $configCache = null;
 
 	/**
 	 * Module constructor.
@@ -51,14 +53,18 @@ class Module{
 	 * @return array
 	 */
 	public function retrieveConfig(){
-		$classname = $this->getClass();
+		if($this->configCache===null){
+			$classname = $this->getClass();
 
-		if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
-			require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
-			return $config;
-		}else{
-			return [];
+			if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
+				require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
+				$this->configCache = $config;
+			}else{
+				$this->configCache = [];
+			}
 		}
+
+		return $this->configCache;
 	}
 
 	/**
