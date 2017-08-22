@@ -248,7 +248,7 @@ class ZkController extends \Model\Controller {
 								$modulesConfigs[$className] = $moduleConfig->makeCache();
 							} catch (Exception $e) {
 								$modulesConfigs[$className] = false;
-								$cacheErrors[$className] = $e->getMessage();
+								$cacheErrors[$className] = getErr($e);
 							}
 						}
 					}
