@@ -172,7 +172,7 @@ function zkBacktrace($return = false){
  * @return bool
  */
 function isErr($el){
-	if(is_object($el) and get_class($el)=='ZkException') return true;
+	if(is_object($el) and get_class($el)=='Model\\ZkException') return true;
 	else return false;
 }
 
