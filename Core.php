@@ -840,19 +840,19 @@ class Core implements \JsonSerializable{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger($module, $event, array $data=[]){
+	public function trigger($module, $event, array $data = []){
 		if(!$this->eventsOn)
 			return true;
 
 		$this->eventsHistory[] = [
-			'module'=>$module,
-			'event'=>$event,
-			'data'=>$data,
-			'time'=>microtime(true),
+			'module' => $module,
+			'event' => $event,
+			'data' => $data,
+			'time' => microtime(true),
 		];
 
-		if(isset($this->registeredListeners['_'.$event])){
-			foreach($this->registeredListeners['_'.$event] as $callback){
+		if(isset($this->registeredListeners[$event])){
+			foreach($this->registeredListeners[$event] as $callback){
 				call_user_func($callback, $data);
 			}
 		}
