@@ -104,6 +104,14 @@ class Core_Config extends Module_Config {
 			}
 		}
 
+		uksort($rules, function($a, $b){
+			if($a==='')
+				return 1;
+			if($b==='')
+				return -1;
+			return 0;
+		});
+
 		$files = glob(INCLUDE_PATH.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
 		foreach($files as $f){
 			if(is_dir($f))
