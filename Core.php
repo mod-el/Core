@@ -669,6 +669,9 @@ class Core implements \JsonSerializable{
 					$arr = $_REQUEST;
 					break;
 			}
+
+			if($type!=='post' and isset($arr['url']))
+				unset($arr['url']);
 		}
 
 		if($i===false){

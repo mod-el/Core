@@ -432,17 +432,26 @@ class Updater extends Module{
 
 		$data = [];
 		if($configData){
-			echo "-------------------\nConfiguration of ".$this->model->getRequest(3)."...\nLeave data empty to keep defaults\n\n";
-			$handle = fopen ("php://stdin","r");
+			echo "-------------------\nConfiguration of ".$this->model->getRequest(3)."...\n";
+			if(!$this->model->getInput('skip-input'))
+				echo "Leave data empty to keep defaults\n";
+			echo "\n";
+			if(!$this->model->getInput('skip-input'))
+				$handle = fopen ("php://stdin","r");
 			foreach($configData as $k=>$d){
-				echo $d['label'].($d['default']!==null ? ' (default '.$d['default'].')' : '').': ';
-				$line = trim(fgets($handle));
-				if($line)
-					$data[$k] = $line;
-				else
+				if($this->model->getInput('skip-input')){
 					$data[$k] = $d['default'];
+				}else{
+					echo $d['label'].($d['default']!==null ? ' (default '.$d['default'].')' : '').': ';
+					$line = trim(fgets($handle));
+					if($line)
+						$data[$k] = $line;
+					else
+						$data[$k] = $d['default'];
+				}
 			}
-			fclose($handle);
+			if(!$this->model->getInput('skip-input'))
+				fclose($handle);
 		}
 
 		switch ($type) {
