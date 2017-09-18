@@ -14,6 +14,10 @@ class ZkController extends \Model\Controller {
 	}
 
 	public function index(){
+		$qry_string = http_build_query($this->model->getInput(false, 'get'));
+		if($qry_string)
+			$qry_string = '?'.$qry_string;
+
 		switch($this->model->getRequest(1)){
 			case 'modules':
 				$this->viewOptions['template'] = 'modules';
@@ -76,7 +80,7 @@ class ZkController extends \Model\Controller {
 								if($this->model->isCLI()){
 									die("Module already installed\n");
 								}else{
-									$this->model->redirect(PATH.'zk/modules');
+									$this->model->redirect(PATH.'zk/modules'.$qry_string);
 								}
 							}
 						}
@@ -84,7 +88,7 @@ class ZkController extends \Model\Controller {
 						if($configClass){
 							if($this->model->isCLI()){
 								if($this->updater->cliConfig($this->model->getRequest(3), $this->model->getRequest(2)))
-									$this->model->redirect(PATH . 'zk/modules');
+									$this->model->redirect(PATH . 'zk/modules'.$qry_string);
 								die();
 							}else {
 								$config = $configClass->retrieveConfig();
@@ -95,7 +99,7 @@ class ZkController extends \Model\Controller {
 										$installation = $configClass->install();
 										if ($installation) {
 											$this->updater->firstInit($this->model->getRequest(3));
-											$this->model->redirect(PATH . 'zk/modules');
+											$this->model->redirect(PATH . 'zk/modules'.$qry_string);
 										} else {
 											$this->viewOptions['errors'][] = 'Something is wrong, can\'t initialize module ' . $this->model->getRequest(3);
 										}
@@ -107,7 +111,7 @@ class ZkController extends \Model\Controller {
 						}else{
 							if($this->model->getRequest(2)=='init'){
 								$this->updater->firstInit($this->model->getRequest(3));
-								$this->model->redirect(PATH.'zk/modules');
+								$this->model->redirect(PATH.'zk/modules'.$qry_string);
 							}
 						}
 						break;
@@ -211,7 +215,7 @@ class ZkController extends \Model\Controller {
 							$this->viewOptions['module'] = $modules[$_GET['module']];
 						}else{
 							if($nextToInstall)
-								$this->model->redirect(PATH.'zk/modules/init/'.$nextToInstall->folder_name);
+								$this->model->redirect(PATH.'zk/modules/init/'.$nextToInstall->folder_name.$qry_string);
 
 							$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
 
@@ -276,7 +280,7 @@ class ZkController extends \Model\Controller {
 				die();
 				break;
 			default:
-				$this->model->redirect(PATH.'zk/modules');
+				$this->model->redirect(PATH.'zk/modules'.$qry_string);
 				break;
 		}
 	}
@@ -312,6 +316,10 @@ class ZkController extends \Model\Controller {
 	}
 
 	public function post(){
+		$qry_string = http_build_query($this->model->getInput(false, 'get'));
+		if($qry_string)
+			$qry_string = '?'.$qry_string;
+
 		switch($this->model->getRequest(1)) {
 			case 'modules':
 				switch ($this->model->getRequest(2)) {
@@ -327,7 +335,7 @@ class ZkController extends \Model\Controller {
 								case 'init':
 									if($configClass->install($_POST)){
 										$this->updater->firstInit($this->model->getRequest(3));
-										$this->model->redirect(PATH.'zk/modules');
+										$this->model->redirect(PATH.'zk/modules'.$qry_string);
 									}else{
 										$this->viewOptions['errors'][] = 'Some error occurred while installing.';
 									}
