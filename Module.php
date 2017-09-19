@@ -84,7 +84,7 @@ class Module{
 	 *
 	 * @return string
 	 */
-	private function getClass(){
+	protected function getClass(){
 		$classname = get_class($this);
 		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
 			$classname = substr($classname, $pos + 1);
