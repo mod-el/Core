@@ -30,13 +30,13 @@ class Autoloader{
 		}
 
 		$path = explode('\\', $className);
-
-		if(count($path)==2 and $path[0]=='Model')
+		if($path[0]==='Model')
 			array_shift($path);
+		$path = implode('\\', $path);
 
-		if(isset(self::$classes[$path[0]])){
-			if(file_exists(self::$classes[$path[0]])){
-				require_once(self::$classes[$path[0]]);
+		if(isset(self::$classes[$path])){
+			if(file_exists(self::$classes[$path])){
+				require_once(self::$classes[$path]);
 			}else{
 				return false;
 			}
