@@ -58,8 +58,9 @@ function ajax(handler, indirizzo, parametri_get, parametri_post, campi_addiziona
 	return n;
 }
 
-function loading(cont){
-	cont.innerHTML = '<img src="'+base_path+'model/Output/files/loading.gif" alt="" />';
+Element.prototype.loading = function(){
+	this.innerHTML = '<img src="'+base_path+'model/Output/files/loading.gif" alt="" class="loading-gif" />';
+	return this;
 }
 
 function cmd(cmd, post){
@@ -68,7 +69,7 @@ function cmd(cmd, post){
 	if(!div)
 		return false;
 	var ex = div.innerHTML;
-	loading(div);
+	div.loading();
 	ajax(function(r, dati){
 		alert(r);
 		dati.div.innerHTML = dati.html;
@@ -77,7 +78,7 @@ function cmd(cmd, post){
 
 function updateModule(name){
 	var cont = document.getElementById('module-'+name);
-	loading(cont);
+	cont.loading();
 
 	var bar = document.getElementById('loading-bar-'+name);
 	bar.style.visibility = 'visible';
@@ -152,7 +153,7 @@ function resetModuleLoadingBar(name){
 
 function refreshModule(name){
 	var cont = document.getElementById('module-'+name);
-	loading(cont);
+	cont.loading();
 	ajax(function(r, cont){
 		if(typeof r=='object'){
 			switch(r.action){
@@ -203,7 +204,7 @@ function closeLightbox(){
 
 function lightboxNewModule(){
 	var lb = lightbox('');
-	loading(lb);
+	lb.loading();
 	ajax(lb, absolute_path+'zk/modules/install', '', '');
 }
 
@@ -219,7 +220,7 @@ function selectDownloadableModule(el){
 }
 
 function installModule(name){
-	loading(document.getElementById('lightbox'));
+	document.getElementById('lightbox').loading();
 
 	ajax(function(r){
 		if(r=='ok'){
