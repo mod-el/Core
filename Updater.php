@@ -23,10 +23,11 @@ class Updater extends Module{
 	public function getModules($get_updates=false, $base_dir=''){
 		$modules = array();
 
-		$dirs = glob(INCLUDE_PATH.$base_dir.'model/*');
+		$dirs = glob(INCLUDE_PATH.$base_dir.'model'.DIRECTORY_SEPARATOR.'*');
 		foreach($dirs as $f){
-			if(is_dir($f) and file_exists($f.'/model.php')){
-				$name = explode('/', $f); $name = end($name);
+			if(is_dir($f) and file_exists($f.DIRECTORY_SEPARATOR.'model.php')){
+				$name = explode(DIRECTORY_SEPARATOR, $f);
+				$name = end($name);
 				$modules[$name] = new ReflectionModule($name, $this->model, $base_dir);
 			}
 		}
@@ -148,13 +149,13 @@ class Updater extends Module{
 		if($content=='File not found')
 			$this->model->error('File '.$file.' not found');
 
-		$arr_path = explode('/', $file);
+		$arr_path = explode(DIRECTORY_SEPARATOR, $file);
 		$buildingPath = '';
 		foreach($arr_path as $f){
 			if(stripos($f, '.')!==false) break; // File
 			if(!is_dir(INCLUDE_PATH.$buildingPath.$f))
 				mkdir(INCLUDE_PATH.$buildingPath.$f);
-			$buildingPath .= $f.'/';
+			$buildingPath .= $f.DIRECTORY_SEPARATOR;
 		}
 
 		$temppath = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file;
@@ -250,16 +251,16 @@ class Updater extends Module{
 	 * @return bool
 	 */
 	private function recursiveCopy($source, $dest){
-		$folder = INCLUDE_PATH.$source.'/';
+		$folder = INCLUDE_PATH.$source.DIRECTORY_SEPARATOR;
 		$ff = glob($folder.'*');
 		foreach($ff as $f){
 			$name = substr($f, strlen($folder));
 			if(is_dir($f)){
-				if(!file_exists(INCLUDE_PATH.$dest.'/'.$name))
-					mkdir(INCLUDE_PATH.$dest.'/'.$name);
-				$this->recursiveCopy($source.'/'.$name, $dest.'/'.$name);
+				if(!file_exists(INCLUDE_PATH.$dest.DIRECTORY_SEPARATOR.$name))
+					mkdir(INCLUDE_PATH.$dest.DIRECTORY_SEPARATOR.$name);
+				$this->recursiveCopy($source.DIRECTORY_SEPARATOR.$name, $dest.DIRECTORY_SEPARATOR.$name);
 			}else{
-				copy($f, INCLUDE_PATH.$dest.'/'.$name);
+				copy($f, INCLUDE_PATH.$dest.DIRECTORY_SEPARATOR.$name);
 			}
 		}
 
