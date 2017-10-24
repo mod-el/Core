@@ -128,7 +128,7 @@ class Updater extends Module{
 
 		$module = new ReflectionModule($name, $this->model);
 		foreach($module->files as $f){
-			if(!in_array($f['path'], $filesArr))
+			if(!in_array(str_replace(DIRECTORY_SEPARATOR, '/', $f['path']), $filesArr))
 				$filesToDelete[] = $f['path'];
 		}
 
