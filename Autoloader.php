@@ -18,7 +18,7 @@ class Autoloader{
 	 * @return bool
 	 * @throws \Exception
 	 */
-	static function autoload($className, $errors=true){
+	static function autoload($className, $errors = true){
 		if($className=='FrontController'){
 			require_once(realpath(dirname(__FILE__)).'/../../data/FrontController.php');
 			return true;
@@ -47,12 +47,8 @@ class Autoloader{
 		$realClassName = '\\'.$className;
 
 		if(!class_exists($realClassName, false) and !interface_exists($realClassName, false)){
-			if($errors){
-				if(DEBUG_MODE)
-					throw new \Exception('Esiste il file, ma non la classe "'.$className.'". Controllare i nomi!');
-				else
-					throw new \Exception('Errore tecnico durante il caricamento di una parte del sito ('.$className.'), si prega di riprovare fra un po\'. Se il problema persiste, contattare gentilmente il supporto.');
-			}
+			if($errors)
+				throw new \Exception('The file for "'.$className.'" exists, but the class/interface does not. Check the definition spelling inside that file!!');
 			return false;
 		}
 
