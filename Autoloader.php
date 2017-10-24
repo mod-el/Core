@@ -46,7 +46,7 @@ class Autoloader{
 
 		$realClassName = '\\'.$className;
 
-		if(!class_exists($realClassName, false)){
+		if(!class_exists($realClassName, false) and !interface_exists($realClassName, false)){
 			if($errors){
 				if(DEBUG_MODE)
 					throw new \Exception('Esiste il file, ma non la classe "'.$className.'". Controllare i nomi!');
