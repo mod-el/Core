@@ -114,15 +114,15 @@ class Updater extends Module{
 		if(!$files)
 			return false;
 
-		$filesToUdate = []; $filesToDelete = []; $filesArr = [];
+		$filesToUpdate = []; $filesToDelete = []; $filesArr = [];
 		foreach($files as $f){
 			$filesArr[] = $f['path'];
 			if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f['path'])){
 				$md5 = md5(file_get_contents(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f['path']));
 				if($md5!=$f['md5'])
-					$filesToUdate[] = $f['path'];
+					$filesToUpdate[] = $f['path'];
 			}else{
-				$filesToUdate[] = $f['path'];
+				$filesToUpdate[] = $f['path'];
 			}
 		}
 
@@ -132,7 +132,7 @@ class Updater extends Module{
 				$filesToDelete[] = $f['path'];
 		}
 
-		return ['update'=>$filesToUdate, 'delete'=>$filesToDelete];
+		return ['update'=>$filesToUpdate, 'delete'=>$filesToDelete];
 	}
 
 	/**

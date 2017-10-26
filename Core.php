@@ -38,55 +38,51 @@ class Core implements \JsonSerializable{
 	private $eventsOn = true;
 
 	/**
-	 * Core constructor.
-	 *
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
-	function __construct(){
+	public function preInit(){
+		if(version_compare(phpversion(), '5.4.0', '<'))
+			die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
+
+		DEFINE('START_TIME', microtime(true));
+
 		$this->trigger('Core', 'start');
 
-		if(!defined('START_TIME')){
-			DEFINE('START_TIME', microtime(true));
+		include(realpath(dirname(__FILE__)).'/../../data/config/config.php');
 
-			if(version_compare(phpversion(), '5.4.0', '<'))
-				die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
+		define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
+		define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
 
-			include(realpath(dirname(__FILE__)).'/../../data/config/config.php');
+		if(isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN']=='69')
+			define('DEBUG_MODE', 1);
+		else
+			define('DEBUG_MODE', MAIN_DEBUG_MODE);
 
-			define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
-			define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
+		error_reporting(E_ALL);
+		ini_set('display_errors', DEBUG_MODE);
 
-			if(isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN']=='69')
-				define('DEBUG_MODE', 1);
-			else
-				define('DEBUG_MODE', MAIN_DEBUG_MODE);
+		header('Content-type: text/html; charset=utf-8');
+		mb_internal_encoding('utf-8');
 
-			error_reporting(E_ALL);
-			ini_set('display_errors', DEBUG_MODE);
+		if(DEBUG_MODE and version_compare(phpversion(), '5.5.0', '>=') and function_exists('opcache_reset'))
+			opcache_reset();
 
-			header('Content-type: text/html; charset=utf-8');
-			mb_internal_encoding('utf-8');
+		define('SESSION_ID', md5(PATH));
+		if(!isset($_SESSION[SESSION_ID]))
+			$_SESSION[SESSION_ID] = [];
 
-			if(DEBUG_MODE and version_compare(phpversion(), '5.5.0', '>=') and function_exists('opcache_reset'))
-				opcache_reset();
-
-			define('SESSION_ID', md5(PATH));
-			if(!isset($_SESSION[SESSION_ID]))
-				$_SESSION[SESSION_ID] = [];
-
-			if(!isset($_COOKIE['ZKID'])){
-				$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0;
-				$zkid = sha1($ip.time());
-				setcookie('ZKID', $zkid, time()+60*60*24*30, PATH);
-			}
-
-			setcookie('ZK', PATH, time()+(60*60*24*365), PATH);
-
-			define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
+		if(!isset($_COOKIE['ZKID'])){
+			$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0;
+			$zkid = sha1($ip.time());
+			setcookie('ZKID', $zkid, time()+60*60*24*30, PATH);
 		}
 
+		setcookie('ZK', PATH, time()+(60*60*24*365), PATH);
+
+		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
+
 		$model = $this;
-		register_shutdown_function(function() use($model){ // Poco prima del termine dell'esecuzione dello script - non importa se fine naturale, o tramite end o fatal error - , chiamo la funzione terminate, che serve a chiudere tutte le eventuali transazioni aperte
+		register_shutdown_function(function() use($model){
 			$model->terminate();
 		});
 
@@ -496,6 +492,7 @@ class Core implements \JsonSerializable{
 	 */
 	public function run(){
 		try{
+			$this->preInit();
 			$this->init();
 			$this->exec();
 			$this->end();
