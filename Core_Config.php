@@ -24,7 +24,7 @@ class Core_Config extends Module_Config {
 
 		$dirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
 
-		$customDirs = glob(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');;
+		$customDirs = glob(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');
 		foreach($customDirs as $d)
 			$dirs[] = $d;
 
