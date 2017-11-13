@@ -828,14 +828,24 @@ class Core implements \JsonSerializable{
 	 * Registers a closure to be called when a particular event is triggered.
 	 * The event signature should be provided in the form of Module_Event or just _Event (if it can come from any module)
 	 * The callback should accept a $data parameter, which will contain the data of the event
+	 * If $retroactive is true and the event has already happened, it will be immediately triggered
 	 *
 	 * @param string $event
 	 * @param \Closure $callback
+	 * @param bool $retroactive
 	 */
-	public function on($event, \Closure $callback){
+	public function on($event, \Closure $callback, $retroactive = false){
 		if(!isset($this->registeredListeners[$event]))
 			$this->registeredListeners[$event] = [];
 		$this->registeredListeners[$event][] = $callback;
+
+		if($retroactive){
+			foreach($this->eventsHistory as $e){
+				if($e['module'].'_'.$e['event']===$event or $e['event']===$event){
+					call_user_func($callback, $e['data']);
+				}
+			}
+		}
 	}
 
 	/**
