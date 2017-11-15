@@ -56,8 +56,8 @@ class Module{
 		if($this->configCache===null){
 			$classname = $this->getClass();
 
-			if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
-				require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
+			if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
+				require(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
 				$this->configCache = $config;
 			}else{
 				$this->configCache = [];
