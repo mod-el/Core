@@ -216,6 +216,13 @@ $config = '.var_export($config, true).';
 
 	public function postUpdate_2_1_0(){
 		if(file_exists(INCLUDE_PATH.'data'))
-			rename(INCLUDE_PATH.'data', INCLUDE_PATH.'app');
+			return rename(INCLUDE_PATH.'data', INCLUDE_PATH.'app');
+		return true;
+	}
+
+	public function postUpdate_2_1_0_Backup(){
+		if(file_exists(INCLUDE_PATH.'app'))
+			return rename(INCLUDE_PATH.'app', INCLUDE_PATH.'data');
+		return true;
 	}
 }
