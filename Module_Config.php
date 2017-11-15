@@ -88,7 +88,7 @@ class Module_Config{
 	public function saveConfig($type, array $data){
 		$classname = $this->getClass();
 
-		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php';
+		$configFile = INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php';
 
 		$w = file_put_contents($configFile, '<?php
 $config = '.var_export($data, true).';
@@ -105,8 +105,8 @@ $config = '.var_export($data, true).';
 	public function retrieveConfig(){
 		$classname = $this->getClass();
 
-		if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php')){
-			require(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php');
+		if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php')){
+			require(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php');
 			return $config;
 		}else{
 			return [];

@@ -48,7 +48,7 @@ class Core implements \JsonSerializable{
 
 		$this->trigger('Core', 'start');
 
-		include(realpath(dirname(__FILE__)).'/../../data/config/config.php');
+		include(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php');
 
 		define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
 		define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
@@ -422,9 +422,9 @@ class Core implements \JsonSerializable{
 		// A controller can be nested inside a folder, for better order
 		$folderCheck = explode(DIRECTORY_SEPARATOR, $controllerName);
 		if(count($folderCheck)==2){
-			if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0])){
-				if(file_exists(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php')){
-					require_once(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php');
+			if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0])){
+				if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php')){
+					require_once(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php');
 					$controllerName = $folderCheck[1];
 				}else{
 					$controllerName = 'Err404';
@@ -999,8 +999,8 @@ class Core implements \JsonSerializable{
 	 * Retrieves the Core config (as for any other module)
 	 */
 	public function retrieveConfig(){
-		if(file_exists(INCLUDE_PATH.'data/config/Core/config.php')){
-			require(INCLUDE_PATH.'data/config/Core/config.php');
+		if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php')){
+			require(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php');
 			return $config;
 		}else{
 			return [];

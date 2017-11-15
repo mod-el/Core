@@ -24,7 +24,7 @@ class Core_Config extends Module_Config {
 
 		$dirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
 
-		$customDirs = glob(INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');
+		$customDirs = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');
 		foreach($customDirs as $d)
 			$dirs[] = $d;
 
@@ -112,7 +112,7 @@ class Core_Config extends Module_Config {
 			return 0;
 		});
 
-		$files = glob(INCLUDE_PATH.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
+		$files = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
 		foreach($files as $f){
 			if(is_dir($f))
 				continue;
@@ -182,7 +182,7 @@ $cache = '.var_export($cache, true).';
 	public function saveConfig($type, array $data){
 		$config = $this->retrieveConfig();
 
-		$configFile = INCLUDE_PATH.'data'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
+		$configFile = INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
 
 		$dataKeys = $this->getConfigData();
 		foreach($dataKeys as $k=>$d){
@@ -212,5 +212,10 @@ $config = '.var_export($config, true).';
 				'default' => isset($config['license']) ? $config['license'] : '',
 			],
 		];
+	}
+
+	public function postUpdate_2_1_0(){
+		if(file_exists(INCLUDE_PATH.'data'))
+			rename(INCLUDE_PATH.'data', INCLUDE_PATH.'app');
 	}
 }

@@ -20,12 +20,12 @@ class Autoloader{
 	 */
 	static function autoload($className, $errors = true){
 		if($className=='FrontController'){
-			require_once(realpath(dirname(__FILE__)).'/../../data/FrontController.php');
+			require_once(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'FrontController.php');
 			return true;
 		}
 
 		if($className=='Model\Core'){
-			require_once(realpath(dirname(__FILE__)).'/Core.php');
+			require_once(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'Core.php');
 			return true;
 		}
 
