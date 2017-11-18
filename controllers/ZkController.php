@@ -234,12 +234,12 @@ class ZkController extends \Model\Controller {
 					$modules = $this->updater->getModules();
 
 					$modulesConfigs = [
-						'\\Model\\Core_Config'=>false,
+						'\\Model\\Core_Config' => false,
 					];
 					foreach ($modules as $mIdx => $m) {
 						if ($mIdx == 'Core')
 							continue;
-						if ($m->hasConfigClass) {
+						if ($m->hasConfigClass()) {
 							$modulesConfigs['\\Model\\' . $mIdx . '_Config'] = false;
 						}
 					}

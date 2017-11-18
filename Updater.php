@@ -20,22 +20,22 @@ class Updater extends Module{
 	 * @param string $base_dir
 	 * @return ReflectionModule[]
 	 */
-	public function getModules($get_updates=false, $base_dir=''){
-		$modules = array();
+	public function getModules($get_updates = false, $base_dir = ''){
+		$modules = [];
 
 		$dirs = glob(INCLUDE_PATH.$base_dir.'model'.DIRECTORY_SEPARATOR.'*');
 		foreach($dirs as $f){
-			if(is_dir($f) and file_exists($f.DIRECTORY_SEPARATOR.'model.php')){
-				$name = explode(DIRECTORY_SEPARATOR, $f);
-				$name = end($name);
-				$modules[$name] = new ReflectionModule($name, $this->model, $base_dir);
-			}
+			$name = explode(DIRECTORY_SEPARATOR, $f);
+			$name = end($name);
+			$module = new ReflectionModule($name, $this->model, $base_dir);
+			if($module->exists)
+				$modules[$name] = $module;
 		}
 
 		if($get_updates){
 			$config = $this->model->_Core->retrieveConfig();
 
-			$modules_arr = array();
+			$modules_arr = [];
 			foreach($modules as $m)
 				$modules_arr[] = $m->folder_name.'|'.$m->version;
 
@@ -181,10 +181,9 @@ class Updater extends Module{
 	 */
 	public function finalizeUpdate($name, array $delete){
 		$old_version = null;
-		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'model.php')){
-			include(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'model.php');
-			$old_version = $moduleData['version'];
-		}
+
+		$module = new ReflectionModule($name, $this->model);
+		$old_version = $module->version;
 
 		foreach($delete as $f){
 			unlink(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f);
@@ -199,14 +198,11 @@ class Updater extends Module{
 		$coreConfig = new Core_Config($this->model);
 		$coreConfig->makeCache();
 
-		$configClassFileName = $name.'_Config';
-		$configClassName = '\\Model\\'.$configClassFileName;
-		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$configClassFileName.'.php')){
-			$module = new ReflectionModule($name, $this->model);
+		$module = new ReflectionModule($name, $this->model);
+		if($module->hasConfigClass()){
 			$new_version = $module->version;
 
-			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$configClassFileName.'.php');
-			$configClass = new $configClassName($this->model);
+			$configClass = new $module->configClass;
 			$postUpdate = $configClass->postUpdate($old_version, $new_version);
 			if(!$postUpdate)
 				return false;

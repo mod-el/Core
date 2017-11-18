@@ -6,6 +6,8 @@ class ReflectionModule{
 	protected $base_dir = '';
 	/** @var string */
 	protected $path;
+	/** @var bool */
+	public $exists = false;
 	/** @var Core */
 	protected $model;
 	/** @var string|bool */
@@ -26,10 +28,8 @@ class ReflectionModule{
 	public $md5 = false;
 	/** @var bool */
 	public $official = null;
-	/** @var bool */
-	public $hasConfigClass = false;
-	/** @var bool */
-	public $configurable = false;
+	/** @var Module_Config */
+	public $configClass = null;
 
 	/** @var bool */
 	public $new_version = false;
@@ -38,29 +38,29 @@ class ReflectionModule{
 	/** @var bool */
 	public $corrupted = false;
 
-	function __construct($name, Core $model, $base_dir=''){
+	/**
+	 * @param string $name
+	 * @param Core $model
+	 * @param string $base_dir
+	 */
+	function __construct($name, Core $model, $base_dir = ''){
 		$this->folder_name = $name;
 		$this->model = $model;
 		$this->base_dir = $base_dir;
-
 		$this->path = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR;
-		$vars_file = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
-		$this->files = $this->getFiles($this->path);
 
-		require($this->path.'model.php');
-		if(file_exists(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')){
-			require_once(INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php');
-			$this->hasConfigClass = true;
-			$configClass = '\\Model\\'.$name.'_Config';
-			$configClass = new $configClass($this->model);
-			$this->configurable = $configClass->configurable;
+		$manifestExists = $this->loadManifest();
+
+		if($manifestExists){
+			$this->exists = true;
+		}else{
+			$this->exists = false;
+			return false;
 		}
 
-		$this->name = $moduleData['name'];
-		$this->description = $moduleData['description'];
-		$this->version = $moduleData['version'];
-		$this->dependencies = $moduleData['dependencies'];
+		$this->files = $this->getFiles($this->path);
 
+		$vars_file = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
 		if(file_exists($vars_file)){
 			require($vars_file);
 			if(isset($installed))
@@ -75,12 +75,59 @@ class ReflectionModule{
 	}
 
 	/**
+	 * Loads the module manifest file
+	 *
+	 * @return bool
+	 */
+	private function loadManifest(){
+		if(file_exists($this->path.'manifest.json'))
+			return $this->loadNewManifest();
+		elseif(file_exists($this->path.'model.php'))
+			return $this->loadOldManifest();
+		else
+			return false;
+	}
+
+	/**
+	 * Loads the new module manifest.json file
+	 *
+	 * @return bool
+	 */
+	private function loadNewManifest(){
+		$moduleData = json_decode(file_get_contents($this->path.'manifest.json'), true);
+		if($moduleData===null)
+			return false;
+
+		$this->name = $moduleData['name'];
+		$this->description = $moduleData['description'];
+		$this->version = $moduleData['version'];
+		$this->dependencies = $moduleData['dependencies'];
+
+		return true;
+	}
+
+	/**
+	 * Loads the old module model.php file
+	 *
+	 * @return bool
+	 */
+	private function loadOldManifest(){
+		require($this->path.'model.php');
+		$this->name = $moduleData['name'];
+		$this->description = $moduleData['description'];
+		$this->version = $moduleData['version'];
+		$this->dependencies = $moduleData['dependencies'];
+
+		return true;
+	}
+
+	/**
 	 * Returns an array with all the files of the module and their MD5
 	 *
-	 * @param $folder
+	 * @param string $folder
 	 * @return array
 	 */
-	function getFiles($folder){
+	private function getFiles($folder){
 		$files = array();
 		$ff = glob($folder.'*');
 		foreach($ff as $f){
@@ -102,5 +149,63 @@ class ReflectionModule{
 		}
 
 		return $files;
+	}
+
+	/**
+	 * Returns true or false, whether the module is configurable or not
+	 *
+	 * @return bool
+	 */
+	public function isConfigurable(){
+		if($this->configClass === null)
+			$this->loadConfigClass();
+
+		if($this->configClass){
+			return $this->configClass->configurable;
+		}else{
+			return false;
+		}
+	}
+
+	private function loadConfigClass(){
+		$configClassPath = $this->getConfigClassPath();
+		if(file_exists($configClassPath)){
+			require_once($configClassPath);
+
+			$configClass = '\\Model\\'.$this->folder_name.'\\Config';
+			if(!class_exists($configClass, false)){
+				$configClass = '\\Model\\'.$this->folder_name.'_Config'; // Old config class path - deprecated
+			}
+			if(class_exists($configClass, false)) {
+				$this->configClass = new $configClass($this->model);
+			}else{
+				$this->configClass = false;
+			}
+		}else{
+			$this->configClass = false;
+		}
+	}
+
+	/**
+	 * Does a config class file exist?
+	 */
+	public function hasConfigClass(){
+		$configClassPath = $this->getConfigClassPath();
+		return file_exists($configClassPath);
+	}
+
+	/**
+	 * Returns path for the eventual config class
+	 * Currently checks for both new and old paths
+	 *
+	 * @return string
+	 */
+	private function getConfigClassPath(){
+		$newPath = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$this->folder_name.DIRECTORY_SEPARATOR.'Config.php';
+		$oldPath = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$this->folder_name.DIRECTORY_SEPARATOR.$this->folder_name.'_Config.php';
+		if(file_exists($oldPath))
+			return $oldPath;
+		else
+			return $newPath;
 	}
 }
