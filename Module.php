@@ -17,12 +17,10 @@ class Module{
 	 * Module constructor.
 	 * @param Core $front
 	 * @param mixed $idx
-	 * @param mixed $options
 	 */
-	function __construct(Core $front, $idx = 0, $options = []){
+	function __construct(Core $front, $idx = 0){
 		$this->model = $front;
 		$this->module_id = $idx;
-		$this->init($options);
 	}
 
 	/**

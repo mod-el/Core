@@ -157,7 +157,7 @@ class Core implements \JsonSerializable{
 	 * @param mixed $idx
 	 * @return mixed
 	 */
-	public function load($name, array $options=array(), $idx=0){
+	public function load($name, array $options = [], $idx = 0){
 		if(isset($this->modules[$name][$idx])){
 			return $this->modules[$name][$idx];
 		}
@@ -179,7 +179,8 @@ class Core implements \JsonSerializable{
 				$className = '\\Model\\'.$name;
 			}
 
-			$this->modules[$name][$idx] = new $className($this, $idx, $options);
+			$this->modules[$name][$idx] = new $className($this, $idx);
+			$this->modules[$name][$idx]->init($options);
 
 			foreach($this->modules[$name][$idx]->methods as $m_name){
 				if(method_exists($this, $m_name))
