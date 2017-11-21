@@ -29,7 +29,7 @@ class ReflectionModule{
 	/** @var bool */
 	public $official = null;
 	/** @var Module_Config */
-	public $configClass = null;
+	private $configClass = null;
 
 	/** @var bool */
 	public $new_version = false;
@@ -167,6 +167,9 @@ class ReflectionModule{
 		}
 	}
 
+	/**
+	 * @return bool
+	 */
 	private function loadConfigClass(){
 		$configClassPath = $this->getConfigClassPath();
 		if(file_exists($configClassPath)){
@@ -178,12 +181,23 @@ class ReflectionModule{
 			}
 			if(class_exists($configClass, false)) {
 				$this->configClass = new $configClass($this->model);
+				return true;
 			}else{
 				$this->configClass = false;
+				return false;
 			}
 		}else{
 			$this->configClass = false;
+			return false;
 		}
+	}
+
+	/**
+	 * @return Module_Config
+	 */
+	public function getConfigClass(){
+		$this->loadConfigClass();
+		return $this->configClass;
 	}
 
 	/**
