@@ -202,10 +202,13 @@ class Updater extends Module{
 		if($module->hasConfigClass()){
 			$new_version = $module->version;
 
-			$postUpdate = $module->configClass->postUpdate($old_version, $new_version);
-			if(!$postUpdate)
-				return false;
-			$module->configClass->makeCache();
+			$configClass = $module->getConfigClass();
+			if($configClass){
+				$postUpdate = $configClass->postUpdate($old_version, $new_version);
+				if(!$postUpdate)
+					return false;
+				$configClass->makeCache();
+			}
 		}
 
 		return true;
