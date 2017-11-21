@@ -31,11 +31,11 @@ class Core_Config extends Module_Config {
 		foreach($dirs as $d){
 			$d_info = pathinfo($d);
 			$modules[$d_info['filename']] = [
-				'path'=>substr($d, strlen(INCLUDE_PATH)),
-				'load'=>file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'.php'),
-				'custom'=>in_array($d, $customDirs),
-				'js'=>[],
-				'css'=>[],
+				'path' => substr($d, strlen(INCLUDE_PATH)),
+				'load' => file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'.php'),
+				'custom' => in_array($d, $customDirs),
+				'js' => [],
+				'css' => [],
 			];
 
 			if(file_exists($d.DIRECTORY_SEPARATOR.'manifest.json')){
@@ -45,15 +45,15 @@ class Core_Config extends Module_Config {
 			}else{
 				$moduleData = null;
 			}
-			if($moduleData===null)
-				throw new \Exception('Error in retrieving meta data for module '.$d_info['filename']);
 
-			if(isset($moduleData['load']) and !$moduleData['load'])
-				$modules[$d_info['filename']]['load'] = false;
-			if(isset($moduleData['js']))
-				$modules[$d_info['filename']]['js'] = $moduleData['js'];
-			if(isset($moduleData['css']))
-				$modules[$d_info['filename']]['css'] = $moduleData['css'];
+			if($moduleData!==null){
+				if(isset($moduleData['load']) and !$moduleData['load'])
+					$modules[$d_info['filename']]['load'] = false;
+				if(isset($moduleData['js']))
+					$modules[$d_info['filename']]['js'] = $moduleData['js'];
+				if(isset($moduleData['css']))
+					$modules[$d_info['filename']]['css'] = $moduleData['css'];
+			}
 
 			$files = glob($d.DIRECTORY_SEPARATOR.'*');
 			foreach($files as $f){
