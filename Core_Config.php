@@ -38,24 +38,32 @@ class Core_Config extends Module_Config {
 				'css'=>[],
 			];
 
-			if(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
+			if(file_exists($d.DIRECTORY_SEPARATOR.'manifest.json')){
+				$moduleData = json_decode(file_get_contents($d.DIRECTORY_SEPARATOR.'manifest.json'), true);
+			}elseif(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
 				require($d.DIRECTORY_SEPARATOR.'model.php');
-				if(isset($moduleData['load']) and !$moduleData['load'])
-					$modules[$d_info['filename']]['load'] = false;
-				if(isset($moduleData['js']))
-					$modules[$d_info['filename']]['js'] = $moduleData['js'];
-				if(isset($moduleData['css']))
-					$modules[$d_info['filename']]['css'] = $moduleData['css'];
+			}else{
+				$moduleData = null;
 			}
+			if($moduleData===null)
+				throw new \Exception('Error in retrieving meta data for module '.$d_info['filename']);
+
+			if(isset($moduleData['load']) and !$moduleData['load'])
+				$modules[$d_info['filename']]['load'] = false;
+			if(isset($moduleData['js']))
+				$modules[$d_info['filename']]['js'] = $moduleData['js'];
+			if(isset($moduleData['css']))
+				$modules[$d_info['filename']]['css'] = $moduleData['css'];
 
 			$files = glob($d.DIRECTORY_SEPARATOR.'*');
 			foreach($files as $f){
 				if(is_dir($f))
 					continue;
 				$file = pathinfo($f);
-				if($file['extension']!='php' or $file['basename']=='model.php' or $file['basename']=='README.md')
+				if($file['extension']!='php' or $file['basename']=='model.php')
 					continue;
 
+				$classes[$d_info['filename'].'\\'.$file['filename']] = $f;
 				$classes[$file['filename']] = $f;
 			}
 
