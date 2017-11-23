@@ -1,7 +1,8 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
-class Core_Config extends Module_Config {
+use Model\Core\Module_Config;
+
+class Config extends Module_Config {
 	public $configurable = true;
 
 	/**
@@ -15,6 +16,7 @@ class Core_Config extends Module_Config {
 	 */
 	public function makeCache(){
 		$classes = [];
+		$classesAliases = [];
 		$rules = [];
 		$controllers = [];
 		$modules = [];
@@ -60,11 +62,12 @@ class Core_Config extends Module_Config {
 				if(is_dir($f))
 					continue;
 				$file = pathinfo($f);
-				if($file['extension']!='php' or $file['basename']=='model.php')
+				if($file['extension']!='php')
 					continue;
 
-				$classes[$d_info['filename'].'\\'.$file['filename']] = $f;
-				$classes[$file['filename']] = $f;
+				$fullClassName = 'Model\\'.$d_info['filename'].'\\'.$file['filename'];
+				$classes[$fullClassName] = $f;
+				$classesAliases[$file['filename']] = $fullClassName;
 			}
 
 			if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){
@@ -80,9 +83,9 @@ class Core_Config extends Module_Config {
 				}
 			}
 
-			if(file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php')){
-				include_once($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php');
-				$configClassName = '\\Model\\'.$d_info['filename'].'_Config';
+			if(file_exists($d.DIRECTORY_SEPARATOR.'Config.php')){
+				require_once($d.DIRECTORY_SEPARATOR.'Config.php');
+				$configClassName = '\\Model\\' . $d_info['filename'] . '\\Config';
 				$configClass = new $configClassName($this->model);
 
 				$moduleRules = $configClass->getRules();
@@ -133,6 +136,7 @@ class Core_Config extends Module_Config {
 
 		$cache = [
 			'classes' => $classes,
+			'aliases' => $classesAliases,
 			'rules' => $rules,
 			'controllers' => $controllers,
 			'modules' => $modules,
@@ -231,6 +235,17 @@ $config = '.var_export($config, true).';
 	public function postUpdate_2_1_0_Backup(){
 		if(file_exists(INCLUDE_PATH.'app'))
 			return rename(INCLUDE_PATH.'app', INCLUDE_PATH.'data');
+		return true;
+	}
+
+	public function postUpdate_2_2_0(){
+		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
+		if(file_exists($cacheFile))
+			unlink($cacheFile);
+		return true;
+	}
+
+	public function postUpdate_2_2_0_Backup(){
 		return true;
 	}
 }

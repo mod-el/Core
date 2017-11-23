@@ -1,5 +1,4 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
 class ReflectionModule{
 	/** @var string */
@@ -176,9 +175,6 @@ class ReflectionModule{
 			require_once($configClassPath);
 
 			$configClass = '\\Model\\'.$this->folder_name.'\\Config';
-			if(!class_exists($configClass, false)){
-				$configClass = '\\Model\\'.$this->folder_name.'_Config'; // Old config class path - deprecated
-			}
 			if(class_exists($configClass, false)) {
 				$this->configClass = new $configClass($this->model);
 				return true;
@@ -210,16 +206,10 @@ class ReflectionModule{
 
 	/**
 	 * Returns path for the eventual config class
-	 * Currently checks for both new and old paths
 	 *
 	 * @return string
 	 */
 	private function getConfigClassPath(){
-		$newPath = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$this->folder_name.DIRECTORY_SEPARATOR.'Config.php';
-		$oldPath = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$this->folder_name.DIRECTORY_SEPARATOR.$this->folder_name.'_Config.php';
-		if(file_exists($oldPath))
-			return $oldPath;
-		else
-			return $newPath;
+		return INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$this->folder_name.DIRECTORY_SEPARATOR.'Config.php';
 	}
 }
