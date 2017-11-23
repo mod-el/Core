@@ -1,5 +1,4 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
 class Module{
 	/** @var Core */

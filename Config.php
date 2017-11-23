@@ -1,7 +1,8 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
-class Core_Config extends Module_Config {
+use Model\Core\Module_Config;
+
+class Config extends Module_Config {
 	public $configurable = true;
 
 	/**
@@ -63,7 +64,7 @@ class Core_Config extends Module_Config {
 				if($file['extension']!='php' or $file['basename']=='model.php')
 					continue;
 
-				$classes[$d_info['filename'].'\\'.$file['filename']] = $f;
+				$classes['Model\\'.$d_info['filename'].'\\'.$file['filename']] = $f;
 				$classes[$file['filename']] = $f;
 			}
 
@@ -80,9 +81,9 @@ class Core_Config extends Module_Config {
 				}
 			}
 
-			if(file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php')){
-				include_once($d.DIRECTORY_SEPARATOR.$d_info['filename'].'_Config.php');
-				$configClassName = '\\Model\\'.$d_info['filename'].'_Config';
+			if(file_exists($d.DIRECTORY_SEPARATOR.'Config.php')){
+				require_once($d.DIRECTORY_SEPARATOR.'Config.php');
+				$configClassName = '\\Model\\' . $d_info['filename'] . '\\Config';
 				$configClass = new $configClassName($this->model);
 
 				$moduleRules = $configClass->getRules();

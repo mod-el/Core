@@ -1,5 +1,4 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
 class Module_Config{
 	/** @var Core */
@@ -86,7 +85,7 @@ class Module_Config{
 	 * @return bool
 	 */
 	public function saveConfig($type, array $data){
-		$classname = $this->getClass();
+		$classname = $this->getModuleName();
 
 		$configFile = INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php';
 
@@ -103,7 +102,7 @@ $config = '.var_export($data, true).';
 	 * @return array
 	 */
 	public function retrieveConfig(){
-		$classname = $this->getClass();
+		$classname = $this->getModuleName();
 
 		if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php')){
 			require(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.$classname.DIRECTORY_SEPARATOR.'config.php');
@@ -179,14 +178,12 @@ $config = '.var_export($data, true).';
 	}
 
 	/**
-	 * Returns the non-namespaced class name of this module.
+	 * Returns the module name
 	 *
 	 * @return string
 	 */
-	private function getClass(){
-		$classname = get_class($this);
-		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
-			$classname = substr($classname, $pos + 1);
-		return substr($classname, 0, -7);
+	private function getModuleName(){
+		$reflector = new \ReflectionClass(get_class($this));
+		return pathinfo(dirname($reflector->getFileName()), PATHINFO_FILENAME);
 	}
 }

@@ -1,5 +1,4 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
 class Core implements \JsonSerializable{
 	/** @var array[] */
@@ -117,8 +116,8 @@ class Core implements \JsonSerializable{
 		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
 		if(!file_exists($cacheFile)){
 			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Module_Config.php');
-			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Core_Config.php');
-			$configClass = new Core_Config($this);
+			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Config.php');
+			$configClass = new Config($this);
 			$configClass->makeCache();
 		}
 
@@ -176,7 +175,7 @@ class Core implements \JsonSerializable{
 			if($module['custom']){
 				$className = $name;
 			}else{
-				$className = '\\Model\\'.$name;
+				$className = '\\Model\\'.$name.'\\'.$name;
 			}
 
 			$this->modules[$name][$idx] = new $className($this, $idx);
@@ -437,7 +436,7 @@ class Core implements \JsonSerializable{
 			$this->viewOptions['404-reason'] = 'Too many folder nesting for the controller.';
 		}
 
-		$controllerClassName = '\\'.$controllerName.'Controller';
+		$controllerClassName = $controllerName.'Controller';
 
 		if(!class_exists($controllerClassName)){
 			$controllerName = 'Err404';
@@ -684,9 +683,11 @@ class Core implements \JsonSerializable{
 	/**
 	 * Returns the requests prefix
 	 *
+	 * @param array $tags
+	 * @param array $opt
 	 * @return string
 	 */
-	public function prefix($tags=[], $opt=[]){
+	public function prefix(array $tags = [], array $opt = []){
 		$opt = array_merge([
 			'path'=>true,
 		], $opt);
@@ -922,6 +923,9 @@ class Core implements \JsonSerializable{
 
 	/**
 	 * Shortcut for redirecting
+	 *
+	 * @param string $path
+	 * @throws \Exception
 	 */
 	function redirect($path){
 		if($this->isCLI()){

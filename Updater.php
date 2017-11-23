@@ -1,14 +1,15 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
-class Updater extends Module{
+class Updater {
 	/** @var bool|array */
 	private $queue = false;
 	/** @var string */
 	private $queue_file;
+	/** @var Core */
+	private $model;
 
-	function __construct(Core $front, $idx, $options){
-		parent::__construct($front, $idx, $options);
+	function __construct(Core $model){
+		$this->model = $model;
 		$this->queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
 	}
 
@@ -33,7 +34,7 @@ class Updater extends Module{
 		}
 
 		if($get_updates){
-			$config = $this->model->_Core->retrieveConfig();
+			$config = $this->model->retrieveConfig();
 
 			$modules_arr = [];
 			foreach($modules as $m)
@@ -107,7 +108,7 @@ class Updater extends Module{
 	 * @return array|bool
 	 */
 	public function getModuleFileList($name){
-		$config = $this->model->_Core->retrieveConfig();
+		$config = $this->model->retrieveConfig();
 
 		$files = file_get_contents($config['repository'].'?act=get-files&module='.urlencode($name).'&key='.urlencode($config['license']).'&md5');
 		$files = json_decode($files, true);
@@ -143,7 +144,7 @@ class Updater extends Module{
 	 * @return bool
 	 */
 	public function updateFile($name, $file){
-		$config = $this->model->_Core->retrieveConfig();
+		$config = $this->model->retrieveConfig();
 
 		$content = file_get_contents($config['repository'].'?act=get-file&module='.urlencode($name).'&file='.urlencode($file).'&key='.urlencode($config['license']));
 		if($content=='File not found')
@@ -195,7 +196,7 @@ class Updater extends Module{
 		if(!$this->deleteDirectory('model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'temp'))
 			return false;
 
-		$coreConfig = new Core_Config($this->model);
+		$coreConfig = new Config($this->model);
 		$coreConfig->makeCache();
 
 		$module = new ReflectionModule($name, $this->model);
@@ -381,7 +382,7 @@ class Updater extends Module{
 	 * @return array
 	 */
 	public function downloadableModules(){
-		$config = $this->model->_Core->retrieveConfig();
+		$config = $this->model->retrieveConfig();
 
 		$modules = $this->getModules();
 
@@ -402,12 +403,14 @@ class Updater extends Module{
 
 	/**
 	 * @param string $name
-	 * @return \Model\Module_Config|bool
+	 * @return \Model\Core\Module_Config|bool
 	 */
 	public function getConfigClassFor($name){
-		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$name.'_Config.php')) {
-			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $name . '_Config.php');
-			$configClass = '\\Model\\' . $name . '_Config';
+		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'Config.php')) {
+			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php');
+			$configClass = '\\Model\\' . $name . '\\Config';
+			if(!class_exists($configClass, false))
+				return false;
 			$configClass = new $configClass($this->model);
 			return $configClass;
 		}else{

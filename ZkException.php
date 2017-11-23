@@ -1,5 +1,4 @@
-<?php
-namespace Model;
+<?php namespace Model\Core;
 
 class ZkException extends \Exception{
 	public $_mex = '';

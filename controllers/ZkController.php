@@ -1,11 +1,11 @@
 <?php
-class ZkController extends \Model\Controller {
-	/** @var \Model\Updater */
+class ZkController extends \Model\Core\Controller {
+	/** @var \Model\Core\Updater */
 	private $updater;
 
 	public function init(){
 		$this->viewOptions['template-path'] = 'model/Core/templates';
-		$this->updater = new \Model\Updater($this->model, 0, []);
+		$this->updater = new \Model\Core\Updater($this->model, 0, []);
 
 		if($this->model->isLoaded('Output')){
 			$this->model->_Output->wipeCSS();
@@ -75,7 +75,7 @@ class ZkController extends \Model\Controller {
 					case 'config':
 					case 'init':
 						if($this->model->getRequest(2)=='init'){ // Check if already installed
-							$checkModule = new \Model\ReflectionModule($this->model->getRequest(3), $this->model);
+							$checkModule = new \Model\Core\ReflectionModule($this->model->getRequest(3), $this->model);
 							if($checkModule->installed){
 								if($this->model->isCLI()){
 									die("Module already installed\n");
@@ -234,13 +234,13 @@ class ZkController extends \Model\Controller {
 					$modules = $this->updater->getModules();
 
 					$modulesConfigs = [
-						'\\Model\\Core_Config' => false,
+						'\\Model\\Core\\Config' => false,
 					];
 					foreach ($modules as $mIdx => $m) {
 						if ($mIdx == 'Core')
 							continue;
 						if ($m->hasConfigClass()) {
-							$modulesConfigs['\\Model\\' . $mIdx . '_Config'] = false;
+							$modulesConfigs['\\Model\\'.$mIdx.'\\Config'] = false;
 						}
 					}
 
