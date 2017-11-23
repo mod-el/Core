@@ -4,6 +4,8 @@ class Autoloader{
 	/** @var string[] */
 	public static $classes = [];
 	/** @var string[] */
+	public static $aliases = [];
+	/** @var string[] */
 	public static $namespaces = [];
 
 	/**
@@ -30,12 +32,12 @@ class Autoloader{
 			return true;
 		}
 
-		if(isset(self::$classes[$className])){
-			if(file_exists(self::$classes[$className])){
-				require_once(self::$classes[$className]);
-				$full = self::lookForFullyQualifiedName($className);
-				if($full)
-					$className = $full;
+		$realClassName = self::getRealClassName($className);
+
+		if($realClassName and isset(self::$classes[$realClassName])){
+			if(file_exists(self::$classes[$realClassName])){
+				require_once(self::$classes[$realClassName]);
+				$className = $realClassName;
 			}else{
 				return false;
 			}
@@ -85,18 +87,16 @@ class Autoloader{
 	}
 
 	/**
-	 * Temporary function, transition period to psr-4 autoload
+	 * Classes can be loaded through aliases (usually is the class identifier without namespace)
 	 *
 	 * @param string $className
 	 * @return string
 	 */
-	private static function lookForFullyQualifiedName($className){
+	public static function getRealClassName($className){
 		if(isset(self::$classes[$className])){
-			$path = self::$classes[$className];
-			foreach(self::$classes as $cl => $p){
-				if($p===$path and strlen($cl)>strlen($className))
-					return $cl;
-			}
+			return $className;
+		}elseif(isset(self::$aliases[$className])){
+			return self::$aliases[$className];
 		}else{
 			return null;
 		}
