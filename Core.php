@@ -40,7 +40,7 @@ class Core implements \JsonSerializable{
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
 	public function preInit(){
-		if(version_compare(phpversion(), '5.4.0', '<'))
+		if(version_compare(phpversion(), '5.5.0', '<'))
 			die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
 
 		DEFINE('START_TIME', microtime(true));
