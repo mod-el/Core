@@ -7,4 +7,6 @@ class Core_Config {
 			unlink($cacheFile);
 		file_put_contents(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'FrontController.php', str_replace('FrontController extends \\Model\\Core', 'FrontController extends \\Model\\Core\\Core', file_get_contents(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'FrontController.php')));
 	}
+
+	public function makeCache(){}
 }
