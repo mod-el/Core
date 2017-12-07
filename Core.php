@@ -112,6 +112,8 @@ class Core implements \JsonSerializable{
 	 * Looks for the internal cache file, and attempts to generate it if not found (e.g. first runs, or accidental cache wipes)
 	 *
 	 * @return array
+	 * @throws ZkException
+	 * @throws \Exception
 	 */
 	private function retrieveCacheFile(){
 		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
@@ -156,6 +158,7 @@ class Core implements \JsonSerializable{
 	 * @param array $options
 	 * @param mixed $idx
 	 * @return mixed
+	 * @throws ZkException
 	 */
 	public function load($name, array $options = [], $idx = 0){
 		if(isset($this->modules[$name][$idx])){
@@ -163,8 +166,8 @@ class Core implements \JsonSerializable{
 		}
 
 		$this->trigger('Core', 'loadModule', [
-			'module'=>$name,
-			'idx'=>$idx,
+			'module' => $name,
+			'idx' => $idx,
 		]);
 
 		$module = $this->moduleExists($name);
@@ -173,11 +176,7 @@ class Core implements \JsonSerializable{
 		}
 
 		if($module['load']){
-			if($module['custom']){
-				$className = $name;
-			}else{
-				$className = '\\Model\\'.$name.'\\'.$name;
-			}
+			$className = '\\Model\\'.$name.'\\'.$name;
 
 			$this->modules[$name][$idx] = new $className($this, $idx);
 			$this->modules[$name][$idx]->init($options);
@@ -238,6 +237,7 @@ class Core implements \JsonSerializable{
 	 * @param mixed $idx
 	 * @param bool $autoload
 	 * @return Module|null
+	 * @throws ZkException
 	 */
 	public function getModule($name, $idx=false, $autoload=true){
 		if($idx===false){
@@ -296,6 +296,7 @@ class Core implements \JsonSerializable{
 	 *
 	 * @param $i
 	 * @return mixed
+	 * @throws ZkException
 	 */
 	function __get($i){
 		if(preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)){
@@ -322,6 +323,7 @@ class Core implements \JsonSerializable{
 	 * @param string $name
 	 * @param array $arguments
 	 * @return mixed
+	 * @throws ZkException
 	 */
 	function __call($name, array $arguments){
 		if(isset($this->boundMethods[$name])){
@@ -687,6 +689,7 @@ class Core implements \JsonSerializable{
 	 * @param array $tags
 	 * @param array $opt
 	 * @return string
+	 * @throws ZkException
 	 */
 	public function prefix(array $tags = [], array $opt = []){
 		$opt = array_merge([
@@ -729,6 +732,7 @@ class Core implements \JsonSerializable{
 	 * @param array $tags
 	 * @param array $opt
 	 * @return bool|string
+	 * @throws ZkException
 	 */
 	public function getUrl($controller=false, $id=false, array $tags=[], array $opt=[]){
 		if($controller===false)
@@ -969,6 +973,7 @@ class Core implements \JsonSerializable{
 	 * Returns debug data
 	 *
 	 * @return array
+	 * @throws ZkException
 	 */
 	public function getDebugData(){
 		$debug = array(
