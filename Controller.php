@@ -11,6 +11,8 @@ class Controller{
 		'footer' => [
 			'layoutFooter',
 		],
+		'template-module' => null,
+		'template-module-layout' => null,
 		'template-folder' => [],
 		'template' => false,
 		'errors' => [],

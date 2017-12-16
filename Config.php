@@ -22,10 +22,14 @@ class Config extends Module_Config {
 		if(!is_dir(INCLUDE_PATH.'app-data'))
 			mkdir(INCLUDE_PATH.'app-data');
 
-		$dirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
+		$dirs = [];
 
 		$customDirs = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');
 		foreach($customDirs as $d)
+			$dirs[] = $d;
+
+		$modelDirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
+		foreach($modelDirs as $d)
 			$dirs[] = $d;
 
 		// In the first loop, I look for all the different possible file types
@@ -134,13 +138,13 @@ class Config extends Module_Config {
 					foreach($files as $f => $fPath){
 						if($typeData['class']){
 							$fullName = 'Model\\'.$d_info['filename'].'\\'.$typeData['folder'].'\\'.$f;
+							$classes[$fullName] = $fPath;
 						}else{
-							$fullName = $typeData['folder'].DIRECTORY_SEPARATOR.$f;
+							$fullName = $fPath;
 						}
-						$classes[$fullName] = $fPath;
-						if(isset($fileTypes[$type]['files'][$f]))
-							$this->model->error('Duplicate "'.$f.'" file name registration for type "'.$type.'"');
-						$fileTypes[$type]['files'][$f] = $fullName;
+						if(!isset($fileTypes[$type]['files'][$d_info['filename']]))
+							$fileTypes[$type]['files'][$d_info['filename']] = [];
+						$fileTypes[$type]['files'][$d_info['filename']][$f] = $fullName;
 					}
 				}
 			}
@@ -201,7 +205,7 @@ $cache = '.var_export($cache, true).';
 		foreach($files as $f){
 			$f_info = pathinfo($f);
 			if(is_dir($f)){
-				$subFiles = $this->getModuleFiles($f);
+				$subFiles = $this->getModuleFiles($f, $isClass);
 				foreach($subFiles as $sf => $sfPath){
 					$separator = $isClass ? '\\' : DIRECTORY_SEPARATOR;
 					$return[$f_info['filename'].$separator.$sf] = $sfPath;
@@ -237,7 +241,7 @@ $cache = '.var_export($cache, true).';
 	 * @return string
 	 */
 	public function getTemplate(array $request){
-		return $request[2]=='config' ? INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'templates'.DIRECTORY_SEPARATOR.'config' : null;
+		return $request[2]=='config' ? 'config' : null;
 	}
 
 	/**
