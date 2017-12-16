@@ -102,7 +102,7 @@ class Core implements \JsonSerializable{
 	public function reloadCacheFile(){
 		$cacheFile = $this->retrieveCacheFile();
 		Autoloader::$classes = $cacheFile['classes'];
-		Autoloader::$aliases = $cacheFile['aliases'];
+		Autoloader::$fileTypes = $cacheFile['file-types'];
 		$this->rules = $cacheFile['rules'];
 		$this->controllers = $cacheFile['controllers'];
 		$this->availableModules = $cacheFile['modules'];

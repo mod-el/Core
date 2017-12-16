@@ -1,7 +1,5 @@
 <?php namespace Model\Core;
 
-use Model\Core\Module_Config;
-
 class Config extends Module_Config {
 	public $configurable = true;
 
@@ -16,7 +14,7 @@ class Config extends Module_Config {
 	 */
 	public function makeCache(){
 		$classes = [];
-		$classesAliases = [];
+		$fileTypes = [];
 		$rules = [];
 		$controllers = [];
 		$modules = [];
@@ -30,6 +28,29 @@ class Config extends Module_Config {
 		foreach($customDirs as $d)
 			$dirs[] = $d;
 
+		// In the first loop, I look for all the different possible file types
+		foreach($dirs as $d) {
+			if(!file_exists($d.DIRECTORY_SEPARATOR.'manifest.json'))
+				continue;
+
+			$moduleData = json_decode(file_get_contents($d.DIRECTORY_SEPARATOR.'manifest.json'), true);
+			if($moduleData===null)
+				continue;
+
+			if(isset($moduleData['file-types'])){
+				$d_info = pathinfo($d);
+
+				foreach($moduleData['file-types'] as $type => $typeData){
+					if(isset($fileTypes[$type]))
+						$this->model->error('File type '.$type.' registered by two different modules; can\'t proceed.');
+					$typeData['module'] = $d_info['filename'];
+					$typeData['files'] = [];
+					$fileTypes[$type] = $typeData;
+				}
+			}
+		}
+
+		// In the second loop, I look for everything else (I can now search through the folders for the custom file types, since I know them)
 		foreach($dirs as $d){
 			$d_info = pathinfo($d);
 			$modules[$d_info['filename']] = [
@@ -67,10 +88,9 @@ class Config extends Module_Config {
 
 				$fullClassName = 'Model\\'.$d_info['filename'].'\\'.$file['filename'];
 				$classes[$fullClassName] = $f;
-				$classesAliases[$file['filename']] = $fullClassName;
 			}
 
-			if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){
+			if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){ // TODO: controllers have to become a file type - hence, this has to be removed
 				$files = glob($d.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
 				foreach($files as $f){
 					if(is_dir($f))
@@ -106,12 +126,23 @@ class Config extends Module_Config {
 						continue;
 					$controllers[$c] = $d_info['filename'];
 				}
+			}
 
-				$moduleClasses = $configClass->getClasses();
-				if(!is_array($moduleClasses))
-					throw new \Exception('The module '.$d_info['filename'].' returned a non-array as classes.');
-
-				$classes = array_merge($classes, $moduleClasses);
+			foreach($fileTypes as $type => $typeData){
+				if(is_dir($d.DIRECTORY_SEPARATOR.$typeData['folder'])){
+					$files = $this->getModuleFiles($d.DIRECTORY_SEPARATOR.$typeData['folder'], $typeData['class']);
+					foreach($files as $f => $fPath){
+						if($typeData['class']){
+							$fullName = 'Model\\'.$d_info['filename'].'\\'.$typeData['folder'].'\\'.$f;
+						}else{
+							$fullName = $typeData['folder'].DIRECTORY_SEPARATOR.$f;
+						}
+						$classes[$fullName] = $fPath;
+						if(isset($fileTypes[$type]['files'][$f]))
+							$this->model->error('Duplicate "'.$f.'" file name registration for type "'.$type.'"');
+						$fileTypes[$type]['files'][$f] = $fullName;
+					}
+				}
 			}
 		}
 
@@ -123,7 +154,7 @@ class Config extends Module_Config {
 			return 0;
 		});
 
-		$files = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
+		$files = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*'); // TODO: controllers have to become a file type - hence, this has to be removed
 		foreach($files as $f){
 			if(is_dir($f))
 				continue;
@@ -136,10 +167,10 @@ class Config extends Module_Config {
 
 		$cache = [
 			'classes' => $classes,
-			'aliases' => $classesAliases,
 			'rules' => $rules,
 			'controllers' => $controllers,
 			'modules' => $modules,
+			'file-types' => $fileTypes,
 		];
 
 		$cacheDir = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data';
@@ -156,6 +187,31 @@ $cache = '.var_export($cache, true).';
 		$this->model->reloadCacheFile();
 
 		return true;
+	}
+
+	/**
+	 * @param string $path
+	 * @param bool $isClass
+	 * @return array
+	 */
+	private function getModuleFiles($path, $isClass){
+		$return = [];
+
+		$files = glob($path.DIRECTORY_SEPARATOR.'*');
+		foreach($files as $f){
+			$f_info = pathinfo($f);
+			if(is_dir($f)){
+				$subFiles = $this->getModuleFiles($f);
+				foreach($subFiles as $sf => $sfPath){
+					$separator = $isClass ? '\\' : DIRECTORY_SEPARATOR;
+					$return[$f_info['filename'].$separator.$sf] = $sfPath;
+				}
+			}else{
+				$return[$f_info['filename']] = $f;
+			}
+		}
+
+		return $return;
 	}
 
 	/**
