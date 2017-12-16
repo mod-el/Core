@@ -5,7 +5,7 @@ class ZkController extends \Model\Core\Controller {
 
 	public function init(){
 		$this->viewOptions['template-path'] = 'model/Core/templates';
-		$this->updater = new \Model\Core\Updater($this->model, 0, []);
+		$this->updater = new \Model\Core\Updater($this->model);
 
 		if($this->model->isLoaded('Output')){
 			$this->model->_Output->wipeCSS();
