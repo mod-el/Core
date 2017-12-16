@@ -14,9 +14,7 @@ class Config extends Module_Config {
 	 */
 	public function makeCache(){
 		$classes = [];
-		$classesAliases = []; // TODO: remove ASAP
 		$fileTypes = [];
-		$modulesFiles = [];
 		$rules = [];
 		$controllers = [];
 		$modules = [];
@@ -90,7 +88,6 @@ class Config extends Module_Config {
 
 				$fullClassName = 'Model\\'.$d_info['filename'].'\\'.$file['filename'];
 				$classes[$fullClassName] = $f;
-				$classesAliases[$file['filename']] = $fullClassName; // TODO: remove ASAP
 			}
 
 			if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){ // TODO: controllers have to become a file type - hence, this has to be removed
@@ -129,12 +126,6 @@ class Config extends Module_Config {
 						continue;
 					$controllers[$c] = $d_info['filename'];
 				}
-
-				$moduleClasses = $configClass->getClasses(); // TODO: getClasses doesn't make sense anymore, register a file type via the manifest
-				if(!is_array($moduleClasses))
-					throw new \Exception('The module '.$d_info['filename'].' returned a non-array as classes.');
-
-				$classes = array_merge($classes, $moduleClasses);
 			}
 
 			foreach($fileTypes as $type => $typeData){
@@ -147,6 +138,8 @@ class Config extends Module_Config {
 							$fullName = $typeData['folder'].DIRECTORY_SEPARATOR.$f;
 						}
 						$classes[$fullName] = $fPath;
+						if(isset($fileTypes[$type]['files'][$f]))
+							$this->model->error('Duplicate "'.$f.'" file name registration for type "'.$type.'"');
 						$fileTypes[$type]['files'][$f] = $fullName;
 					}
 				}
@@ -174,12 +167,10 @@ class Config extends Module_Config {
 
 		$cache = [
 			'classes' => $classes,
-			'aliases' => $classesAliases, // TODO: remove ASAP
 			'rules' => $rules,
 			'controllers' => $controllers,
 			'modules' => $modules,
 			'file-types' => $fileTypes,
-			'files' => $modulesFiles,
 		];
 
 		$cacheDir = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data';

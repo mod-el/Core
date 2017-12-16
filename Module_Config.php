@@ -49,15 +49,6 @@ class Module_Config{
 	}
 
 	/**
-	 * If this module has classes to register, this is the method that should return them.
-	 *
-	 * @return array
-	 */
-	public function getClasses(){
-		return [];
-	}
-
-	/**
 	 * If the module has a configuration/installation page in the control panel, it's handled by this method
 	 *
 	 * @param array $request

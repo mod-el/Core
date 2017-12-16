@@ -5,6 +5,8 @@ class Autoloader{
 	public static $classes = [];
 	/** @var string[] */
 	public static $aliases = [];
+	/** @var array */
+	public static $fileTypes = [];
 	/** @var string[] */
 	public static $namespaces = [];
 
@@ -27,17 +29,15 @@ class Autoloader{
 	 * @throws \Exception
 	 */
 	static function autoload($className, $errors = true){
+		clearstatcache();
 		if($className=='FrontController'){
 			require_once(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'FrontController.php');
 			return true;
 		}
 
-		$realClassName = self::getRealClassName($className);
-
-		if($realClassName and isset(self::$classes[$realClassName])){
-			if(file_exists(self::$classes[$realClassName])){
-				require_once(self::$classes[$realClassName]);
-				$className = $realClassName;
+		if(isset(self::$classes[$className])){
+			if(file_exists(self::$classes[$className])){
+				require_once(self::$classes[$className]);
 			}else{
 				return false;
 			}
@@ -87,18 +87,31 @@ class Autoloader{
 	}
 
 	/**
-	 * Classes can be loaded through aliases (usually is the class identifier without namespace)
-	 *
-	 * @param string $className
+	 * @param string $type
+	 * @param string $name
 	 * @return string
 	 */
-	public static function getRealClassName($className){
-		if(isset(self::$classes[$className])){
-			return $className;
-		}elseif(isset(self::$aliases[$className])){
-			return self::$aliases[$className];
+	public static function searchFile($type, $name){
+		if(isset(self::$fileTypes[$type])){
+			if(isset(self::$fileTypes[$type]['files'][$name])){
+				return self::$fileTypes[$type]['files'][$name];
+			}else{
+				return null;
+			}
 		}else{
 			return null;
+		}
+	}
+
+	/**
+	 * @param string $type
+	 * @return array
+	 */
+	public static function getFilesByType($type){
+		if(isset(self::$fileTypes[$type])){
+			return self::$fileTypes[$type]['files'];
+		}else{
+			return [];
 		}
 	}
 }
