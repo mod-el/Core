@@ -95,10 +95,8 @@ class Autoloader{
 	public static function searchFile($type, $name, $module = null){
 		if(isset(self::$fileTypes[$type])){
 			if($module!==null){
-				if(isset(self::$fileTypes[$type])){
-					if(isset(self::$fileTypes[$type]['files'][$module][$name]))
-						return self::$fileTypes[$type]['files'][$module][$name];
-				}
+				if(isset(self::$fileTypes[$type]['files'][$module][$name]))
+					return self::$fileTypes[$type]['files'][$module][$name];
 			}else{
 				foreach(self::$fileTypes[$type]['files'] as $module => $files){
 					if(isset($files[$name]))
