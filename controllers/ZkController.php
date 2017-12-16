@@ -4,7 +4,9 @@ class ZkController extends \Model\Core\Controller {
 	private $updater;
 
 	public function init(){
-		$this->viewOptions['template-path'] = 'model/Core/templates';
+		$this->viewOptions['template-module'] = 'Core';
+		$this->viewOptions['template-module-layout'] = 'Core';
+
 		$this->updater = new \Model\Core\Updater($this->model);
 
 		if($this->model->isLoaded('Output')){
@@ -93,6 +95,7 @@ class ZkController extends \Model\Core\Controller {
 							}else {
 								$config = $configClass->retrieveConfig();
 
+								$this->viewOptions['template-module'] = $this->model->getRequest(3);
 								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 								if ($this->viewOptions['template'] === null) {
 									if ($this->model->getRequest(2) == 'init') {
