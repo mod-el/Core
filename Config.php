@@ -134,13 +134,13 @@ class Config extends Module_Config {
 					foreach($files as $f => $fPath){
 						if($typeData['class']){
 							$fullName = 'Model\\'.$d_info['filename'].'\\'.$typeData['folder'].'\\'.$f;
+							$classes[$fullName] = $fPath;
 						}else{
-							$fullName = $typeData['folder'].DIRECTORY_SEPARATOR.$f;
+							$fullName = $fPath;
 						}
-						$classes[$fullName] = $fPath;
-						if(isset($fileTypes[$type]['files'][$f]))
-							$this->model->error('Duplicate "'.$f.'" file name registration for type "'.$type.'"');
-						$fileTypes[$type]['files'][$f] = $fullName;
+						if(!isset($fileTypes[$type]['files'][$d_info['filename']]))
+							$fileTypes[$type]['files'][$d_info['filename']] = [];
+						$fileTypes[$type]['files'][$d_info['filename']][$f] = $fullName;
 					}
 				}
 			}
