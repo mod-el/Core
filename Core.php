@@ -43,19 +43,9 @@ class Core implements \JsonSerializable{
 		if(version_compare(phpversion(), '5.5.0', '<'))
 			die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
 
-		DEFINE('START_TIME', microtime(true));
-
 		$this->trigger('Core', 'start');
 
-		include(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php');
-
-		define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
-		define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
-
-		if(isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN']=='69')
-			define('DEBUG_MODE', 1);
-		else
-			define('DEBUG_MODE', MAIN_DEBUG_MODE);
+		$this->defineConstants();
 
 		error_reporting(E_ALL);
 		ini_set('display_errors', DEBUG_MODE);
@@ -66,7 +56,6 @@ class Core implements \JsonSerializable{
 		if(DEBUG_MODE and version_compare(phpversion(), '5.5.0', '>=') and function_exists('opcache_reset'))
 			opcache_reset();
 
-		define('SESSION_ID', md5(PATH));
 		if(!isset($_SESSION[SESSION_ID]))
 			$_SESSION[SESSION_ID] = [];
 
@@ -77,8 +66,6 @@ class Core implements \JsonSerializable{
 		}
 
 		setcookie('ZK', PATH, time()+(60*60*24*365), PATH);
-
-		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
 
 		$model = $this;
 		register_shutdown_function(function() use($model){
@@ -94,6 +81,24 @@ class Core implements \JsonSerializable{
 		// Output module, if present, is always loaded, to have its methods bound here
 		if($this->moduleExists('Output'))
 			$this->load('Output');
+	}
+
+	private function defineConstants(){
+		DEFINE('START_TIME', microtime(true));
+
+		include(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php');
+
+		define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
+		define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
+
+		if(isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN']=='69')
+			define('DEBUG_MODE', 1);
+		else
+			define('DEBUG_MODE', MAIN_DEBUG_MODE);
+
+		define('SESSION_ID', md5(PATH));
+
+		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
 	}
 
 	/**
