@@ -94,19 +94,6 @@ class Config extends Module_Config {
 				$classes[$fullClassName] = $f;
 			}
 
-			if(is_dir($d.DIRECTORY_SEPARATOR.'controllers')){ // TODO: controllers have to become a file type - hence, this has to be removed
-				$files = glob($d.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*');
-				foreach($files as $f){
-					if(is_dir($f))
-						continue;
-					$file = pathinfo($f);
-					if($file['extension']!='php')
-						continue;
-
-					$classes[$file['filename']] = $f;
-				}
-			}
-
 			if(file_exists($d.DIRECTORY_SEPARATOR.'Config.php')){
 				require_once($d.DIRECTORY_SEPARATOR.'Config.php');
 				$configClassName = '\\Model\\' . $d_info['filename'] . '\\Config';
@@ -157,17 +144,6 @@ class Config extends Module_Config {
 				return -1;
 			return 0;
 		});
-
-		$files = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.'*'); // TODO: controllers have to become a file type - hence, this has to be removed
-		foreach($files as $f){
-			if(is_dir($f))
-				continue;
-			$file = pathinfo($f);
-			if($file['extension']!='php')
-				continue;
-
-			$classes[$file['filename']] = $f;
-		}
 
 		$cache = [
 			'classes' => $classes,
