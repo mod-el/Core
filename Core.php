@@ -431,6 +431,7 @@ class Core implements \JsonSerializable{
 
 		if(!$controllerClassName or !class_exists($controllerClassName)){
 			$controllerName = 'Err404';
+			$controllerClassName = 'Model\\Core\\Controllers\\Err404Controller';
 			$this->viewOptions['404-reason'] = 'Controller class not found.';
 		}
 
