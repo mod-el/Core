@@ -29,7 +29,6 @@ class Autoloader{
 	 * @throws \Exception
 	 */
 	static function autoload($className, $errors = true){
-		clearstatcache();
 		if($className=='FrontController'){
 			require_once(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'FrontController.php');
 			return true;
