@@ -29,8 +29,8 @@ class ZkController extends Controller {
 				$this->viewOptions['template'] = 'modules';
 				$this->viewOptions['cache'] = false;
 
-				$this->model->addCSS('model/Core/templates/style.css');
-				$this->model->addJS('model/Core/templates/js.js');
+				$this->model->addCSS('model/Core/files/style.css');
+				$this->model->addJS('model/Core/files/js.js');
 
 				switch($this->model->getRequest(2)){
 					case 'install':
