@@ -1,13 +1,17 @@
-<?php
-class ZkController extends \Model\Core\Controller {
-	/** @var \Model\Core\Updater */
+<?php namespace Model\Core\Controllers;
+
+use Model\Core\Controller;
+use Model\Core\Updater;
+
+class ZkController extends Controller {
+	/** @var Updater */
 	private $updater;
 
 	public function init(){
 		$this->viewOptions['template-module'] = 'Core';
 		$this->viewOptions['template-module-layout'] = 'Core';
 
-		$this->updater = new \Model\Core\Updater($this->model);
+		$this->updater = new Updater($this->model);
 
 		if($this->model->isLoaded('Output')){
 			$this->model->_Output->wipeCSS();

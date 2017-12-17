@@ -2,5 +2,11 @@
 	"name": "Core",
 	"description": "",
 	"version": "2.3.0",
-	"dependencies": {}
+	"dependencies": {},
+	"file-types": {
+		"Controller": {
+			"folder": "Controllers",
+			"class": true
+		}
+	}
 }

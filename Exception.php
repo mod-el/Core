@@ -1,6 +1,6 @@
 <?php namespace Model\Core;
 
-class ZkException extends \Exception{
+class Exception extends \Exception{
 	public $_mex = '';
 	public $_code = 'ModEl';
 	public $_details = array();

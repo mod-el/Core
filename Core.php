@@ -117,7 +117,7 @@ class Core implements \JsonSerializable{
 	 * Looks for the internal cache file, and attempts to generate it if not found (e.g. first runs, or accidental cache wipes)
 	 *
 	 * @return array
-	 * @throws ZkException
+	 * @throws Exception
 	 * @throws \Exception
 	 */
 	private function retrieveCacheFile(){
@@ -163,7 +163,7 @@ class Core implements \JsonSerializable{
 	 * @param array $options
 	 * @param mixed $idx
 	 * @return mixed
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	public function load($name, array $options = [], $idx = 0){
 		if(isset($this->modules[$name][$idx])){
@@ -242,7 +242,7 @@ class Core implements \JsonSerializable{
 	 * @param mixed $idx
 	 * @param bool $autoload
 	 * @return Module|null
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	public function getModule($name, $idx=false, $autoload=true){
 		if($idx===false){
@@ -301,7 +301,7 @@ class Core implements \JsonSerializable{
 	 *
 	 * @param $i
 	 * @return mixed
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	function __get($i){
 		if(preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)){
@@ -328,7 +328,7 @@ class Core implements \JsonSerializable{
 	 * @param string $name
 	 * @param array $arguments
 	 * @return mixed
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	function __call($name, array $arguments){
 		if(isset($this->boundMethods[$name])){
@@ -427,29 +427,11 @@ class Core implements \JsonSerializable{
 
 		$this->leadingModule = $module;
 
-		// A controller can be nested inside a folder, for better order
-		$folderCheck = explode(DIRECTORY_SEPARATOR, $controllerName);
-		if(count($folderCheck)==2){
-			if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0])){
-				if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php')){
-					require_once(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'controllers'.DIRECTORY_SEPARATOR.$folderCheck[0].DIRECTORY_SEPARATOR.$folderCheck[1].'Controller.php');
-					$controllerName = $folderCheck[1];
-				}else{
-					$controllerName = 'Err404';
-					$this->viewOptions['404-reason'] = '"'.$folderCheck[1].'" controller not found in "'.$folderCheck[0].'" folder';
-				}
-			}
-		}elseif(count($folderCheck)>2){
-			$controllerName = 'Err404';
-			$this->viewOptions['404-reason'] = 'Too many folder nesting for the controller.';
-		}
+		$controllerClassName = Autoloader::searchFile('Controller', $controllerName.'Controller');
 
-		$controllerClassName = $controllerName.'Controller';
-
-		if(!class_exists($controllerClassName)){
+		if(!$controllerClassName or !class_exists($controllerClassName)){
 			$controllerName = 'Err404';
 			$this->viewOptions['404-reason'] = 'Controller class not found.';
-			$controllerClassName = '\\'.$controllerName.'Controller';
 		}
 
 		$this->controllerName = $controllerName;
@@ -694,7 +676,7 @@ class Core implements \JsonSerializable{
 	 * @param array $tags
 	 * @param array $opt
 	 * @return string
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	public function prefix(array $tags = [], array $opt = []){
 		$opt = array_merge([
@@ -737,7 +719,7 @@ class Core implements \JsonSerializable{
 	 * @param array $tags
 	 * @param array $opt
 	 * @return bool|string
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	public function getUrl($controller=false, $id=false, array $tags=[], array $opt=[]){
 		if($controller===false)
@@ -778,11 +760,11 @@ class Core implements \JsonSerializable{
 	/* ERRORS MANAGEMENT */
 
 	/**
-	 * This will raise a ZkException and it attempts to log it (via errorHandler method).
+	 * This will raise a Exception and it attempts to log it (via errorHandler method).
 	 *
 	 * @param string $gen
 	 * @param string|array $options
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	public function error($gen, $options=''){
 		if(!is_array($options))
@@ -797,7 +779,7 @@ class Core implements \JsonSerializable{
 
 		$this->errorHandler('ModEl', $gen.' - '.$options['mex'], $b[0]['file'], $b[0]['line']); // Log
 
-		$e = new ZkException($gen);
+		$e = new Exception($gen);
 		$e->_code = $options['code'];
 		$e->_mex = $options['mex'];
 		$e->_details = $options['details'];
@@ -978,7 +960,7 @@ class Core implements \JsonSerializable{
 	 * Returns debug data
 	 *
 	 * @return array
-	 * @throws ZkException
+	 * @throws Exception
 	 */
 	public function getDebugData(){
 		$debug = array(
