@@ -1,13 +1,17 @@
-<?php
-class ZkController extends \Model\Core\Controller {
-	/** @var \Model\Core\Updater */
+<?php namespace Model\Core\Controllers;
+
+use Model\Core\Controller;
+use Model\Core\Updater;
+
+class ZkController extends Controller {
+	/** @var Updater */
 	private $updater;
 
 	public function init(){
 		$this->viewOptions['template-module'] = 'Core';
 		$this->viewOptions['template-module-layout'] = 'Core';
 
-		$this->updater = new \Model\Core\Updater($this->model);
+		$this->updater = new Updater($this->model);
 
 		if($this->model->isLoaded('Output')){
 			$this->model->_Output->wipeCSS();
@@ -25,8 +29,8 @@ class ZkController extends \Model\Core\Controller {
 				$this->viewOptions['template'] = 'modules';
 				$this->viewOptions['cache'] = false;
 
-				$this->model->addCSS('model/Core/templates/style.css');
-				$this->model->addJS('model/Core/templates/js.js');
+				$this->model->addCSS('model/Core/files/style.css');
+				$this->model->addJS('model/Core/files/js.js');
 
 				switch($this->model->getRequest(2)){
 					case 'install':

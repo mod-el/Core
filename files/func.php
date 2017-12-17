@@ -166,18 +166,18 @@ function zkBacktrace($return = false){
 }
 
 /**
- * Is a ZkException?
+ * Is a ModEl Exception?
  *
  * @param $el
  * @return bool
  */
 function isErr($el){
-	if(is_object($el) and get_class($el)=='Model\\Core\\ZkException') return true;
+	if(is_object($el) and get_class($el)=='Model\\Core\\Exception') return true;
 	else return false;
 }
 
 /**
- * Gets the string from an Exception, depending if it's a simple Exception or a ZkException
+ * Gets the string from an Exception, depending if it's a simple Exception or a ModEl Exception
  *
  * @param Exception $e
  * @return string

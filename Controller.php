@@ -39,8 +39,12 @@ class Controller{
 	/**
 	 * Meant to be extended
 	 * This should contain the actual business logic of the application
+	 *
+	 * @return mixed
 	 */
-	public function index(){}
+	public function index(){
+		return null;
+	}
 
 	/**
 	 * Optionally, you can specify different behaviours for POST or GET requests
@@ -62,7 +66,8 @@ class Controller{
 			$this->viewOptions['messages'] = $this->viewOptions['messaggi'];
 
 		if($this->viewOptions['template']===false){ // By default, load the template with the same name as the current controller
-			$this->viewOptions['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr(get_class($this), 0, -10)));
+			$classShortName = (new \ReflectionClass($this))->getShortName();
+			$this->viewOptions['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr($classShortName, 0, -10)));
 		}
 
 		if($this->model->moduleExists('Output')){
@@ -92,6 +97,7 @@ class Controller{
 	 * @param array $options
 	 * @param mixed $idx
 	 * @return mixed
+	 * @throws Exception
 	 */
 	private function load($name, array $options=array(), $idx=0){
 		return $this->model->load($name, $options, $idx);
