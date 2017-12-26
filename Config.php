@@ -63,11 +63,12 @@ class Config extends Module_Config {
 				'custom' => in_array($d, $customDirs),
 				'js' => [],
 				'css' => [],
+				'assets-position' => 'head',
 			];
 
 			if(file_exists($d.DIRECTORY_SEPARATOR.'manifest.json')){
 				$moduleData = json_decode(file_get_contents($d.DIRECTORY_SEPARATOR.'manifest.json'), true);
-			}elseif(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
+			}elseif(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){ // TODO: deprecated, to be removed
 				require($d.DIRECTORY_SEPARATOR.'model.php');
 			}else{
 				$moduleData = null;
@@ -80,6 +81,8 @@ class Config extends Module_Config {
 					$modules[$d_info['filename']]['js'] = $moduleData['js'];
 				if(isset($moduleData['css']))
 					$modules[$d_info['filename']]['css'] = $moduleData['css'];
+				if(isset($moduleData['assets-position']))
+					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
 			}
 
 			$files = glob($d.DIRECTORY_SEPARATOR.'*');

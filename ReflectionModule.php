@@ -81,7 +81,7 @@ class ReflectionModule{
 	private function loadManifest(){
 		if(file_exists($this->path.'manifest.json'))
 			return $this->loadNewManifest();
-		elseif(file_exists($this->path.'model.php'))
+		elseif(file_exists($this->path.'model.php')) // TODO: deprecated, to be removed
 			return $this->loadOldManifest();
 		else
 			return false;
@@ -110,7 +110,7 @@ class ReflectionModule{
 	 *
 	 * @return bool
 	 */
-	private function loadOldManifest(){
+	private function loadOldManifest(){ // TODO: deprecated, to be removed
 		require($this->path.'model.php');
 		$this->name = $moduleData['name'];
 		$this->description = $moduleData['description'];
