@@ -63,6 +63,7 @@ class Config extends Module_Config {
 				'custom' => in_array($d, $customDirs),
 				'js' => [],
 				'css' => [],
+				'assets-position' => 'head',
 			];
 
 			if(file_exists($d.DIRECTORY_SEPARATOR.'manifest.json')){
@@ -80,6 +81,8 @@ class Config extends Module_Config {
 					$modules[$d_info['filename']]['js'] = $moduleData['js'];
 				if(isset($moduleData['css']))
 					$modules[$d_info['filename']]['css'] = $moduleData['css'];
+				if(isset($moduleData['assets-position']))
+					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
 			}
 
 			$files = glob($d.DIRECTORY_SEPARATOR.'*');
