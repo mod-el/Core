@@ -68,7 +68,7 @@ class Config extends Module_Config {
 
 			if(file_exists($d.DIRECTORY_SEPARATOR.'manifest.json')){
 				$moduleData = json_decode(file_get_contents($d.DIRECTORY_SEPARATOR.'manifest.json'), true);
-			}elseif(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){
+			}elseif(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){ // TODO: deprecated, to be removed
 				require($d.DIRECTORY_SEPARATOR.'model.php');
 			}else{
 				$moduleData = null;

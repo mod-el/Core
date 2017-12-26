@@ -48,13 +48,13 @@ class ZkController extends Controller {
 									@chmod($dir, 0755);
 								}
 								$tempModuleData = [
-									'name'=>$this->model->getRequest(3),
-									'description'=>'',
-									'version'=>'0.0.0',
-									'dependencies'=>[],
+									'name' => $this->model->getRequest(3),
+									'description' => '',
+									'version' => '0.0.0',
+									'dependencies' => [],
 								];
-								file_put_contents($dir.'/model.php', "<?php\n\$moduleData = ".var_export($tempModuleData, true).";\n");
-								@chmod(INCLUDE_PATH.'model/modules/'.$_GET['new'].'/model.php', 0755);
+								file_put_contents($dir.DIRECTORY_SEPARATOR.'manifest.json', json_encode($tempModuleData, JSON_PRETTY_PRINT));
+								@chmod(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$_GET['new'].DIRECTORY_SEPARATOR.'manifest.json', 0755);
 							}else{
 								$this->viewOptions['errors'][] = 'Module already exists.';
 							}
