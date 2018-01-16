@@ -29,7 +29,7 @@ class Module_Config
 	 *
 	 * @return bool
 	 */
-	public function makeCache()
+	public function makeCache(): bool
 	{
 		return true;
 	}
@@ -48,7 +48,7 @@ class Module_Config
 	 *
 	 * @return array
 	 */
-	public function getRules()
+	public function getRules(): array
 	{
 		return ['rules' => [], 'controllers' => []];
 	}
@@ -70,7 +70,7 @@ class Module_Config
 	 * @param array $data
 	 * @return bool
 	 */
-	public function install(array $data = [])
+	public function install(array $data = []): bool
 	{
 		return true;
 	}
@@ -82,7 +82,7 @@ class Module_Config
 	 * @param array $data
 	 * @return bool
 	 */
-	public function saveConfig($type, array $data)
+	public function saveConfig(string $type, array $data): bool
 	{
 		$classname = $this->getModuleName();
 
@@ -100,7 +100,7 @@ $config = ' . var_export($data, true) . ';
 	 *
 	 * @return array
 	 */
-	public function retrieveConfig()
+	public function retrieveConfig(): array
 	{
 		$classname = $this->getModuleName();
 
@@ -117,7 +117,7 @@ $config = ' . var_export($data, true) . ';
 	 *
 	 * @return array
 	 */
-	public function getConfigData()
+	public function getConfigData(): array
 	{
 		return [];
 	}
@@ -129,7 +129,7 @@ $config = ' . var_export($data, true) . ';
 	 * @param string $to
 	 * @return bool
 	 */
-	public function postUpdate($from, $to)
+	public function postUpdate(string $from, string $to): bool
 	{
 		if ($from == '0.0.0') // Fresh installation
 			return true;
@@ -159,9 +159,9 @@ $config = ' . var_export($data, true) . ';
 	 *
 	 * @return array
 	 */
-	private function getPostUpdateMethods()
+	private function getPostUpdateMethods(): array
 	{
-		$arr = array();
+		$arr = [];
 
 		$reflection = new \ReflectionClass($this);
 		$methods = $reflection->getMethods();
@@ -185,7 +185,7 @@ $config = ' . var_export($data, true) . ';
 	 *
 	 * @return string
 	 */
-	private function getModuleName()
+	private function getModuleName(): string
 	{
 		$reflector = new \ReflectionClass(get_class($this));
 		return pathinfo(dirname($reflector->getFileName()), PATHINFO_FILENAME);

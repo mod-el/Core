@@ -27,9 +27,9 @@ class Module
 	/**
 	 * Meant to be expanded in the specific module.
 	 *
-	 * @param mixed $options
+	 * @param array $options
 	 */
-	public function init($options)
+	public function init(array $options)
 	{
 	}
 
@@ -45,7 +45,7 @@ class Module
 	 *
 	 * @return string
 	 */
-	public function getPath()
+	public function getPath(): string
 	{
 		$rc = new \ReflectionClass(get_class($this));
 		return substr(dirname($rc->getFileName()), strlen(INCLUDE_PATH)) . '/';
@@ -56,7 +56,7 @@ class Module
 	 *
 	 * @return array
 	 */
-	public function retrieveConfig()
+	public function retrieveConfig(): array
 	{
 		if ($this->configCache === null) {
 			$classname = $this->getClass();
@@ -76,11 +76,11 @@ class Module
 	 * This will trigger a new event in the Core, coming from this module.
 	 * Each event has its own name (param $event) and eventually carries a bunch of data in the form of an array (param $data)
 	 *
-	 * @param $event
+	 * @param string $event
 	 * @param array $data
 	 * @return bool
 	 */
-	protected function trigger($event, array $data = [])
+	protected function trigger(string $event, array $data = [])
 	{
 		return $this->model->trigger($this->getClass(), $event, $data);
 	}
@@ -90,7 +90,7 @@ class Module
 	 *
 	 * @return string
 	 */
-	protected function getClass()
+	protected function getClass(): string
 	{
 		$classname = get_class($this);
 		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
@@ -110,9 +110,9 @@ class Module
 	 *
 	 * @param array $request
 	 * @param string $rule
-	 * @return string|bool
+	 * @return array|bool
 	 */
-	public function getController(array $request, $rule)
+	public function getController(array $request, string $rule)
 	{
 		return false;
 	}
@@ -120,13 +120,13 @@ class Module
 	/**
 	 * Meant to be extended if needed
 	 *
-	 * @param string|bool $controller
+	 * @param string $controller
 	 * @param int|bool $id
 	 * @param array $tags
 	 * @param array $opt
 	 * @return bool|string
 	 */
-	public function getUrl($controller = false, $id = false, array $tags = [], array $opt = [])
+	public function getUrl(string $controller = null, $id = false, array $tags = [], array $opt = [])
 	{
 		return false;
 	}

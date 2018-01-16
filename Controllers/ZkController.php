@@ -23,7 +23,7 @@ class ZkController extends Controller
 
 	public function index()
 	{
-		$qry_string = http_build_query($this->model->getInput(false, 'get'));
+		$qry_string = http_build_query($this->model->getInput(null, 'get'));
 		if ($qry_string)
 			$qry_string = '?' . $qry_string;
 
@@ -295,7 +295,7 @@ class ZkController extends Controller
 		}
 	}
 
-	public function outputCLI($asFallback = false)
+	public function outputCLI(bool $asFallback = false)
 	{
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
@@ -328,7 +328,7 @@ class ZkController extends Controller
 
 	public function post()
 	{
-		$qry_string = http_build_query($this->model->getInput(false, 'get'));
+		$qry_string = http_build_query($this->model->getInput(null, 'get'));
 		if ($qry_string)
 			$qry_string = '?' . $qry_string;
 

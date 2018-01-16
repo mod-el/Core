@@ -93,7 +93,7 @@ class Controller
 	 *
 	 * @param bool $asFallback
 	 */
-	public function outputCLI($asFallback = false)
+	public function outputCLI(bool $asFallback = false)
 	{
 		if (!$asFallback)
 			$this->output();
@@ -108,7 +108,7 @@ class Controller
 	 * @return mixed
 	 * @throws Exception
 	 */
-	private function load($name, array $options = array(), $idx = 0)
+	private function load(string $name, array $options = array(), $idx = 0)
 	{
 		return $this->model->load($name, $options, $idx);
 	}

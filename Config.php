@@ -13,7 +13,7 @@ class Config extends Module_Config
 	 * @return bool
 	 * @throws \Exception
 	 */
-	public function makeCache()
+	public function makeCache(): bool
 	{
 		$classes = [];
 		$fileTypes = [];
@@ -205,7 +205,7 @@ $cache = ' . var_export($cache, true) . ';
 	 *
 	 * @return array
 	 */
-	public function getRules()
+	public function getRules(): array
 	{
 		return [
 			'rules' => [
@@ -235,7 +235,7 @@ $cache = ' . var_export($cache, true) . ';
 	 * @param array $data
 	 * @return bool
 	 */
-	public function saveConfig($type, array $data)
+	public function saveConfig(string $type, array $data): bool
 	{
 		$config = $this->retrieveConfig();
 
@@ -256,7 +256,7 @@ $config = ' . var_export($config, true) . ';
 	/**
 	 * @return array
 	 */
-	public function getConfigData()
+	public function getConfigData(): array
 	{
 		$config = $this->retrieveConfig();
 

@@ -23,7 +23,7 @@ class Updater
 	 * @param string $base_dir
 	 * @return ReflectionModule[]
 	 */
-	public function getModules($get_updates = false, $base_dir = '')
+	public function getModules(bool $get_updates = false, string $base_dir = ''): array
 	{
 		$modules = [];
 
@@ -74,7 +74,7 @@ class Updater
 	 * @param $name
 	 * @return bool
 	 */
-	public function firstInit($name)
+	public function firstInit(string $name): bool
 	{
 		if (!file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data'))
 			mkdir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data');
@@ -111,7 +111,7 @@ class Updater
 	 * @param string $name
 	 * @return array|bool
 	 */
-	public function getModuleFileList($name)
+	public function getModuleFileList(string $name)
 	{
 		$config = $this->model->retrieveConfig();
 
@@ -149,8 +149,9 @@ class Updater
 	 * @param string $name
 	 * @param string $file
 	 * @return bool
+	 * @throws Exception
 	 */
-	public function updateFile($name, $file)
+	public function updateFile(string $name, string $file): bool
 	{
 		$config = $this->model->retrieveConfig();
 
@@ -187,8 +188,9 @@ class Updater
 	 * @param string $name
 	 * @param array $delete
 	 * @return bool
+	 * @throws \Exception
 	 */
-	public function finalizeUpdate($name, array $delete)
+	public function finalizeUpdate(string $name, array $delete): bool
 	{
 		$old_version = null;
 
@@ -231,7 +233,7 @@ class Updater
 	 * @param bool $onlyEmpties
 	 * @return bool
 	 */
-	private function deleteDirectory($folder, $onlyEmpties = false)
+	private function deleteDirectory(string $folder, bool $onlyEmpties = false): bool
 	{
 		if (!file_exists(INCLUDE_PATH . $folder))
 			return true;
@@ -259,7 +261,7 @@ class Updater
 	 * @param string $dest
 	 * @return bool
 	 */
-	private function recursiveCopy($source, $dest)
+	private function recursiveCopy(string $source, string $dest): bool
 	{
 		$folder = INCLUDE_PATH . $source . DIRECTORY_SEPARATOR;
 		$ff = glob($folder . '*');
@@ -281,8 +283,9 @@ class Updater
 	 * Module update via CLI
 	 *
 	 * @param string $module
+	 * @throws \Exception
 	 */
-	public function cliUpdate($module)
+	public function cliUpdate(string $module)
 	{
 		$this->checkUpdateQueue($module);
 
@@ -332,7 +335,7 @@ class Updater
 	 * @param int $c
 	 * @param int $tot_steps
 	 */
-	public function showCliPercentage($string, $c, $tot_steps)
+	public function showCliPercentage(string $string, int $c, int $tot_steps)
 	{
 		$perc = round($c / $tot_steps * 100);
 
@@ -347,7 +350,7 @@ class Updater
 	 * @param string $module
 	 * @return bool
 	 */
-	public function checkUpdateQueue($module)
+	public function checkUpdateQueue(string $module): bool
 	{
 		if ($this->queue === false)
 			$this->getUpdateQueue();
@@ -366,7 +369,7 @@ class Updater
 	 *
 	 * @return array
 	 */
-	public function getUpdateQueue()
+	public function getUpdateQueue(): array
 	{
 		if ($this->queue === false) {
 			if (file_exists($this->queue_file)) {
@@ -385,7 +388,7 @@ class Updater
 	 * @param array $queue
 	 * @return bool
 	 */
-	public function setUpdateQueue(array $queue)
+	public function setUpdateQueue(array $queue): bool
 	{
 		$this->queue = $queue;
 		$w = file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($queue, true) . ";\n");
@@ -397,7 +400,7 @@ class Updater
 	 *
 	 * @return array
 	 */
-	public function downloadableModules()
+	public function downloadableModules(): array
 	{
 		$config = $this->model->retrieveConfig();
 
@@ -422,7 +425,7 @@ class Updater
 	 * @param string $name
 	 * @return \Model\Core\Module_Config|bool
 	 */
-	public function getConfigClassFor($name)
+	public function getConfigClassFor(string $name)
 	{
 		if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php')) {
 			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php');
@@ -443,7 +446,7 @@ class Updater
 	 * @param string $type
 	 * @return bool
 	 */
-	public function cliConfig($module, $type)
+	public function cliConfig(string $module, string $type): bool
 	{
 		$configClass = $this->getConfigClassFor($module);
 		if (!$configClass)

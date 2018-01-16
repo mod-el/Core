@@ -15,7 +15,7 @@ class Autoloader
 	 * @param string $ns
 	 * @param string $path
 	 */
-	public static function setNamespace($ns, $path)
+	public static function setNamespace(string $ns, string $path)
 	{
 		if (!isset(self::$namespaces[$ns]))
 			self::$namespaces[$ns] = [];
@@ -30,7 +30,7 @@ class Autoloader
 	 * @return bool
 	 * @throws \Exception
 	 */
-	static function autoload($className, $errors = true)
+	static function autoload(string $className, bool $errors = true): bool
 	{
 		if ($className == 'FrontController') {
 			require_once(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php');
@@ -94,7 +94,7 @@ class Autoloader
 	 * @param string $module
 	 * @return string
 	 */
-	public static function searchFile($type, $name, $module = null)
+	public static function searchFile(string $type, string $name, string $module = null)
 	{
 		if (isset(self::$fileTypes[$type])) {
 			if ($module !== null) {
@@ -114,7 +114,7 @@ class Autoloader
 	 * @param string $type
 	 * @return array
 	 */
-	public static function getFilesByType($type)
+	public static function getFilesByType(string $type): array
 	{
 		if (isset(self::$fileTypes[$type])) {
 			return self::$fileTypes[$type]['files'];

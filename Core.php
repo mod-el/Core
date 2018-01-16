@@ -124,7 +124,7 @@ class Core implements \JsonSerializable
 	 * @throws Exception
 	 * @throws \Exception
 	 */
-	private function retrieveCacheFile()
+	private function retrieveCacheFile(): array
 	{
 		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
 		if (!file_exists($cacheFile)) {
@@ -151,7 +151,7 @@ class Core implements \JsonSerializable
 	 * @param string $name
 	 * @return array|bool
 	 */
-	public function moduleExists($name)
+	public function moduleExists(string $name)
 	{
 		if (isset($this->availableModules[$name]))
 			return $this->availableModules[$name];
@@ -171,7 +171,7 @@ class Core implements \JsonSerializable
 	 * @return mixed
 	 * @throws Exception
 	 */
-	public function load($name, array $options = [], $idx = 0)
+	public function load(string $name, array $options = [], $idx = 0)
 	{
 		if (isset($this->modules[$name][$idx])) {
 			return $this->modules[$name][$idx];
@@ -242,9 +242,9 @@ class Core implements \JsonSerializable
 	 * @param mixed $idx
 	 * @return bool
 	 */
-	public function isLoaded($name, $idx = false)
+	public function isLoaded(string $name, $idx = null): bool
 	{
-		if ($idx === false) {
+		if ($idx === null) {
 			return isset($this->modules[$name]);
 		} else {
 			return isset($this->modules[$name][$idx]);
@@ -262,9 +262,9 @@ class Core implements \JsonSerializable
 	 * @return Module|null
 	 * @throws Exception
 	 */
-	public function getModule($name, $idx = false, $autoload = true)
+	public function getModule(string $name, $idx = null, bool $autoload = true)
 	{
-		if ($idx === false) {
+		if ($idx === null) {
 			if (isset($this->modules[$name])) {
 				reset($this->modules[$name]);
 				$idx = key($this->modules[$name]);
@@ -277,7 +277,7 @@ class Core implements \JsonSerializable
 			return $this->modules[$name][$idx];
 		} else {
 			if ($autoload) {
-				if ($this->load($name, array(), $idx))
+				if ($this->load($name, [], $idx))
 					return $this->modules[$name][$idx];
 				else
 					return null;
@@ -293,9 +293,9 @@ class Core implements \JsonSerializable
 	 * @param mixed $name
 	 * @return array
 	 */
-	public function allModules($name = false)
+	public function allModules(string $name = null): array
 	{
-		if ($name === false) {
+		if ($name === null) {
 			$return = array();
 			foreach ($this->modules as $name => $arr) {
 				if (count($arr) == 1 and key($arr) === 0) {
@@ -323,7 +323,7 @@ class Core implements \JsonSerializable
 	 * @return mixed
 	 * @throws Exception
 	 */
-	function __get($i)
+	function __get(string $i)
 	{
 		if (preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)) {
 			$name = explode('_', substr($i, 1));
@@ -351,7 +351,7 @@ class Core implements \JsonSerializable
 	 * @return mixed
 	 * @throws Exception
 	 */
-	function __call($name, array $arguments)
+	function __call(string $name, array $arguments)
 	{
 		if (isset($this->boundMethods[$name])) {
 			$module = $this->getModule($this->boundMethods[$name]);
@@ -593,11 +593,11 @@ class Core implements \JsonSerializable
 	/**
 	 * Returns the controller needed for the rules for which the Core module is in charge (currently only "zk" for the management panel)
 	 *
-	 * @param string $request
+	 * @param array $request
 	 * @param string $rule
 	 * @return array
 	 */
-	public function getController($request, $rule)
+	public function getController(array $request, string $rule): array
 	{
 		switch ($rule) {
 			case 'zk':
@@ -619,16 +619,16 @@ class Core implements \JsonSerializable
 	 * If $i is given, it returns that index of the request.
 	 * Otherwise, it returns the full array.
 	 *
-	 * @param bool|int $i
+	 * @param int $i
 	 * @return array|string|null
 	 */
-	public function getRequest($i = false)
+	public function getRequest(int $i = null)
 	{
 		if ($this->request === false) {
 			if ($this->isCLI()) {
 				global $argv;
 				if (!is_array($argv))
-					return $i === false ? [] : null;
+					return $i === null ? [] : null;
 
 				if (array_key_exists(1, $argv)) {
 					$this->request = explode('/', $argv[1]);
@@ -640,7 +640,7 @@ class Core implements \JsonSerializable
 			}
 		}
 
-		if ($i === false) {
+		if ($i === null) {
 			return $this->request;
 		} else {
 			return array_key_exists($i, $this->request) ? $this->request[$i] : null;
@@ -649,15 +649,15 @@ class Core implements \JsonSerializable
 
 	/**
 	 * Returns one or all the input variables.
-	 * ModEl framwork can be called either via HTTP request (eg. via browser) or via CLI.
+	 * ModEl framework can be called either via HTTP request (eg. via browser) or via CLI.
 	 * If $i is given, it returns that variable.
 	 * Otherwise, it returns the full array.
 	 *
-	 * @param bool|int $i
+	 * @param string $i
 	 * @param string $type
 	 * @return array|string|null
 	 */
-	public function getInput($i = false, $type = 'request')
+	public function getInput(string $i = null, string $type = 'request')
 	{
 		if ($this->isCLI()) {
 			if ($this->inputVarsCache === false) {
@@ -697,7 +697,7 @@ class Core implements \JsonSerializable
 				unset($arr['url']);
 		}
 
-		if ($i === false) {
+		if ($i === null) {
 			return $arr;
 		} else {
 			return array_key_exists($i, $arr) ? $arr[$i] : null;
@@ -712,7 +712,7 @@ class Core implements \JsonSerializable
 	 * @return string
 	 * @throws Exception
 	 */
-	public function prefix(array $tags = [], array $opt = [])
+	public function prefix(array $tags = [], array $opt = []): string
 	{
 		$opt = array_merge([
 			'path' => true,
@@ -740,7 +740,7 @@ class Core implements \JsonSerializable
 	 * @param string $module
 	 * @return bool
 	 */
-	public function addPrefixMaker($module)
+	public function addPrefixMaker(string $module): bool
 	{
 		if (!in_array($module, $this->prefixMakers))
 			$this->prefixMakers[] = $module;
@@ -803,7 +803,7 @@ class Core implements \JsonSerializable
 	 * @param string|array $options
 	 * @throws Exception
 	 */
-	public function error($gen, $options = '')
+	public function error(string $gen, $options = '')
 	{
 		if (!is_array($options))
 			$options = array('mex' => $options);
@@ -867,7 +867,7 @@ class Core implements \JsonSerializable
 	 * @param \Closure $callback
 	 * @param bool $retroactive
 	 */
-	public function on($event, \Closure $callback, $retroactive = false)
+	public function on(string $event, \Closure $callback, bool $retroactive = false)
 	{
 		if (!isset($this->registeredListeners[$event]))
 			$this->registeredListeners[$event] = [];
@@ -890,7 +890,7 @@ class Core implements \JsonSerializable
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger($module, $event, array $data = [])
+	public function trigger(string $module, string $event, array $data = []): bool
 	{
 		if (!$this->eventsOn)
 			return true;
@@ -922,7 +922,7 @@ class Core implements \JsonSerializable
 	 *
 	 * @return array
 	 */
-	public function getEventsHistory()
+	public function getEventsHistory(): array
 	{
 		return $this->eventsHistory;
 	}
@@ -932,7 +932,7 @@ class Core implements \JsonSerializable
 	 *
 	 * @param bool $set
 	 */
-	public function switchEvents($set)
+	public function switchEvents(bool $set)
 	{
 		$this->eventsOn = $set;
 	}
@@ -953,7 +953,7 @@ class Core implements \JsonSerializable
 	 *
 	 * @return bool
 	 */
-	public function isCLI()
+	public function isCLI(): bool
 	{
 		return (php_sapi_name() == "cli");
 	}
@@ -964,7 +964,7 @@ class Core implements \JsonSerializable
 	 * @param string $path
 	 * @throws \Exception
 	 */
-	function redirect($path)
+	function redirect(string $path)
 	{
 		if ($this->isCLI()) {
 			if (stripos($path, PATH) !== 0)
@@ -1008,7 +1008,7 @@ class Core implements \JsonSerializable
 	 * @return array
 	 * @throws Exception
 	 */
-	public function getDebugData()
+	public function getDebugData(): array
 	{
 		$debug = array(
 			'prefix' => $this->prefix([], ['path' => false]),
@@ -1043,7 +1043,7 @@ class Core implements \JsonSerializable
 	/**
 	 * Retrieves the Core config (as for any other module)
 	 */
-	public function retrieveConfig()
+	public function retrieveConfig(): array
 	{
 		if (file_exists(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'config.php')) {
 			require(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'config.php');

@@ -43,7 +43,7 @@ class ReflectionModule
 	 * @param Core $model
 	 * @param string $base_dir
 	 */
-	function __construct($name, Core $model, $base_dir = '')
+	function __construct(string $name, Core $model, $base_dir = '')
 	{
 		$this->folder_name = $name;
 		$this->model = $model;
@@ -80,7 +80,7 @@ class ReflectionModule
 	 *
 	 * @return bool
 	 */
-	private function loadManifest()
+	private function loadManifest(): bool
 	{
 		if (file_exists($this->path . 'manifest.json'))
 			return $this->loadNewManifest();
@@ -95,7 +95,7 @@ class ReflectionModule
 	 *
 	 * @return bool
 	 */
-	private function loadNewManifest()
+	private function loadNewManifest(): bool
 	{
 		$moduleData = json_decode(file_get_contents($this->path . 'manifest.json'), true);
 		if ($moduleData === null)
@@ -114,7 +114,7 @@ class ReflectionModule
 	 *
 	 * @return bool
 	 */
-	private function loadOldManifest()
+	private function loadOldManifest(): bool
 	{ // TODO: deprecated, to be removed
 		require($this->path . 'model.php');
 		$this->name = $moduleData['name'];
@@ -131,9 +131,9 @@ class ReflectionModule
 	 * @param string $folder
 	 * @return array
 	 */
-	private function getFiles($folder)
+	private function getFiles(string $folder): array
 	{
-		$files = array();
+		$files = [];
 		$ff = glob($folder . '*');
 		foreach ($ff as $f) {
 			if (is_dir($f)) {
@@ -161,7 +161,7 @@ class ReflectionModule
 	 *
 	 * @return bool
 	 */
-	public function isConfigurable()
+	public function isConfigurable(): bool
 	{
 		if ($this->configClass === null)
 			$this->loadConfigClass();
@@ -176,7 +176,7 @@ class ReflectionModule
 	/**
 	 * @return bool
 	 */
-	private function loadConfigClass()
+	private function loadConfigClass(): bool
 	{
 		$configClassPath = $this->getConfigClassPath();
 		if (file_exists($configClassPath)) {
@@ -199,7 +199,7 @@ class ReflectionModule
 	/**
 	 * @return Module_Config
 	 */
-	public function getConfigClass()
+	public function getConfigClass(): Module_Config
 	{
 		$this->loadConfigClass();
 		return $this->configClass;
@@ -219,7 +219,7 @@ class ReflectionModule
 	 *
 	 * @return string
 	 */
-	private function getConfigClassPath()
+	private function getConfigClassPath(): string
 	{
 		return INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
 	}
