@@ -1,5 +1,6 @@
 <?php namespace Model\Core;
 
-class Globals{
+class Globals
+{
 	public static $data = [];
 }

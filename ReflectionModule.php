@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
-class ReflectionModule{
+class ReflectionModule
+{
 	/** @var string */
 	protected $base_dir = '';
 	/** @var string */
@@ -42,32 +43,33 @@ class ReflectionModule{
 	 * @param Core $model
 	 * @param string $base_dir
 	 */
-	function __construct($name, Core $model, $base_dir = ''){
+	function __construct($name, Core $model, $base_dir = '')
+	{
 		$this->folder_name = $name;
 		$this->model = $model;
 		$this->base_dir = $base_dir;
-		$this->path = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR;
+		$this->path = INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR;
 
 		$manifestExists = $this->loadManifest();
 
-		if($manifestExists){
+		if ($manifestExists) {
 			$this->exists = true;
-		}else{
+		} else {
 			$this->exists = false;
 			return false;
 		}
 
 		$this->files = $this->getFiles($this->path);
 
-		$vars_file = INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
-		if(file_exists($vars_file)){
+		$vars_file = INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+		if (file_exists($vars_file)) {
 			require($vars_file);
-			if(isset($installed))
+			if (isset($installed))
 				$this->installed = $installed;
 		}
 
 		$md5 = array();
-		foreach($this->files as $f)
+		foreach ($this->files as $f)
 			$md5[] = $f['md5'];
 		sort($md5);
 		$this->md5 = md5(implode('', $md5));
@@ -78,10 +80,11 @@ class ReflectionModule{
 	 *
 	 * @return bool
 	 */
-	private function loadManifest(){
-		if(file_exists($this->path.'manifest.json'))
+	private function loadManifest()
+	{
+		if (file_exists($this->path . 'manifest.json'))
 			return $this->loadNewManifest();
-		elseif(file_exists($this->path.'model.php')) // TODO: deprecated, to be removed
+		elseif (file_exists($this->path . 'model.php')) // TODO: deprecated, to be removed
 			return $this->loadOldManifest();
 		else
 			return false;
@@ -92,9 +95,10 @@ class ReflectionModule{
 	 *
 	 * @return bool
 	 */
-	private function loadNewManifest(){
-		$moduleData = json_decode(file_get_contents($this->path.'manifest.json'), true);
-		if($moduleData===null)
+	private function loadNewManifest()
+	{
+		$moduleData = json_decode(file_get_contents($this->path . 'manifest.json'), true);
+		if ($moduleData === null)
 			return false;
 
 		$this->name = $moduleData['name'];
@@ -110,8 +114,9 @@ class ReflectionModule{
 	 *
 	 * @return bool
 	 */
-	private function loadOldManifest(){ // TODO: deprecated, to be removed
-		require($this->path.'model.php');
+	private function loadOldManifest()
+	{ // TODO: deprecated, to be removed
+		require($this->path . 'model.php');
 		$this->name = $moduleData['name'];
 		$this->description = $moduleData['description'];
 		$this->version = $moduleData['version'];
@@ -126,23 +131,24 @@ class ReflectionModule{
 	 * @param string $folder
 	 * @return array
 	 */
-	private function getFiles($folder){
+	private function getFiles($folder)
+	{
 		$files = array();
-		$ff = glob($folder.'*');
-		foreach($ff as $f){
-			if(is_dir($f)){
+		$ff = glob($folder . '*');
+		foreach ($ff as $f) {
+			if (is_dir($f)) {
 				$f_name = substr($f, strlen($folder));
-				if(in_array($f_name, ['data', '.git', '.gitignore', 'tests'])) continue;
-				$sub_files = $this->getFiles($f.DIRECTORY_SEPARATOR);
-				foreach($sub_files as $sf){
-					$sf['path'] = $f_name.DIRECTORY_SEPARATOR.$sf['path'];
+				if (in_array($f_name, ['data', '.git', '.gitignore', 'tests'])) continue;
+				$sub_files = $this->getFiles($f . DIRECTORY_SEPARATOR);
+				foreach ($sub_files as $sf) {
+					$sf['path'] = $f_name . DIRECTORY_SEPARATOR . $sf['path'];
 					$files[] = $sf;
 				}
-			}else{
+			} else {
 				$f_name = substr($f, strlen($folder));
 				$files[] = array(
-					'path'=>$f_name,
-					'md5'=>md5(file_get_contents($f)),
+					'path' => $f_name,
+					'md5' => md5(file_get_contents($f)),
 				);
 			}
 		}
@@ -155,13 +161,14 @@ class ReflectionModule{
 	 *
 	 * @return bool
 	 */
-	public function isConfigurable(){
-		if($this->configClass === null)
+	public function isConfigurable()
+	{
+		if ($this->configClass === null)
 			$this->loadConfigClass();
 
-		if($this->configClass){
+		if ($this->configClass) {
 			return $this->configClass->configurable;
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -169,20 +176,21 @@ class ReflectionModule{
 	/**
 	 * @return bool
 	 */
-	private function loadConfigClass(){
+	private function loadConfigClass()
+	{
 		$configClassPath = $this->getConfigClassPath();
-		if(file_exists($configClassPath)){
+		if (file_exists($configClassPath)) {
 			require_once($configClassPath);
 
-			$configClass = '\\Model\\'.$this->folder_name.'\\Config';
-			if(class_exists($configClass, false)) {
+			$configClass = '\\Model\\' . $this->folder_name . '\\Config';
+			if (class_exists($configClass, false)) {
 				$this->configClass = new $configClass($this->model);
 				return true;
-			}else{
+			} else {
 				$this->configClass = false;
 				return false;
 			}
-		}else{
+		} else {
 			$this->configClass = false;
 			return false;
 		}
@@ -191,7 +199,8 @@ class ReflectionModule{
 	/**
 	 * @return Module_Config
 	 */
-	public function getConfigClass(){
+	public function getConfigClass()
+	{
 		$this->loadConfigClass();
 		return $this->configClass;
 	}
@@ -199,7 +208,8 @@ class ReflectionModule{
 	/**
 	 * Does a config class file exist?
 	 */
-	public function hasConfigClass(){
+	public function hasConfigClass()
+	{
 		$configClassPath = $this->getConfigClassPath();
 		return file_exists($configClassPath);
 	}
@@ -209,7 +219,8 @@ class ReflectionModule{
 	 *
 	 * @return string
 	 */
-	private function getConfigClassPath(){
-		return INCLUDE_PATH.$this->base_dir.'model'.DIRECTORY_SEPARATOR.$this->folder_name.DIRECTORY_SEPARATOR.'Config.php';
+	private function getConfigClassPath()
+	{
+		return INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
 	}
 }

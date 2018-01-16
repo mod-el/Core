@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
-class Config extends Module_Config {
+class Config extends Module_Config
+{
 	public $configurable = true;
 
 	/**
@@ -12,41 +13,42 @@ class Config extends Module_Config {
 	 * @return bool
 	 * @throws \Exception
 	 */
-	public function makeCache(){
+	public function makeCache()
+	{
 		$classes = [];
 		$fileTypes = [];
 		$rules = [];
 		$controllers = [];
 		$modules = [];
 
-		if(!is_dir(INCLUDE_PATH.'app-data'))
-			mkdir(INCLUDE_PATH.'app-data');
+		if (!is_dir(INCLUDE_PATH . 'app-data'))
+			mkdir(INCLUDE_PATH . 'app-data');
 
 		$dirs = [];
 
-		$customDirs = glob(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'modules'.DIRECTORY_SEPARATOR.'*');
-		foreach($customDirs as $d)
+		$customDirs = glob(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR . '*');
+		foreach ($customDirs as $d)
 			$dirs[] = $d;
 
-		$modelDirs = glob(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'*');
-		foreach($modelDirs as $d)
+		$modelDirs = glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*');
+		foreach ($modelDirs as $d)
 			$dirs[] = $d;
 
 		// In the first loop, I look for all the different possible file types
-		foreach($dirs as $d) {
-			if(!file_exists($d.DIRECTORY_SEPARATOR.'manifest.json'))
+		foreach ($dirs as $d) {
+			if (!file_exists($d . DIRECTORY_SEPARATOR . 'manifest.json'))
 				continue;
 
-			$moduleData = json_decode(file_get_contents($d.DIRECTORY_SEPARATOR.'manifest.json'), true);
-			if($moduleData===null)
+			$moduleData = json_decode(file_get_contents($d . DIRECTORY_SEPARATOR . 'manifest.json'), true);
+			if ($moduleData === null)
 				continue;
 
-			if(isset($moduleData['file-types'])){
+			if (isset($moduleData['file-types'])) {
 				$d_info = pathinfo($d);
 
-				foreach($moduleData['file-types'] as $type => $typeData){
-					if(isset($fileTypes[$type]))
-						$this->model->error('File type '.$type.' registered by two different modules; can\'t proceed.');
+				foreach ($moduleData['file-types'] as $type => $typeData) {
+					if (isset($fileTypes[$type]))
+						$this->model->error('File type ' . $type . ' registered by two different modules; can\'t proceed.');
 					$typeData['module'] = $d_info['filename'];
 					$typeData['files'] = [];
 					$fileTypes[$type] = $typeData;
@@ -55,84 +57,84 @@ class Config extends Module_Config {
 		}
 
 		// In the second loop, I look for everything else (I can now search through the folders for the custom file types, since I know them)
-		foreach($dirs as $d){
+		foreach ($dirs as $d) {
 			$d_info = pathinfo($d);
 			$modules[$d_info['filename']] = [
 				'path' => substr($d, strlen(INCLUDE_PATH)),
-				'load' => file_exists($d.DIRECTORY_SEPARATOR.$d_info['filename'].'.php'),
+				'load' => file_exists($d . DIRECTORY_SEPARATOR . $d_info['filename'] . '.php'),
 				'custom' => in_array($d, $customDirs),
 				'js' => [],
 				'css' => [],
 				'assets-position' => 'head',
 			];
 
-			if(file_exists($d.DIRECTORY_SEPARATOR.'manifest.json')){
-				$moduleData = json_decode(file_get_contents($d.DIRECTORY_SEPARATOR.'manifest.json'), true);
-			}elseif(file_exists($d.DIRECTORY_SEPARATOR.'model.php')){ // TODO: deprecated, to be removed
-				require($d.DIRECTORY_SEPARATOR.'model.php');
-			}else{
+			if (file_exists($d . DIRECTORY_SEPARATOR . 'manifest.json')) {
+				$moduleData = json_decode(file_get_contents($d . DIRECTORY_SEPARATOR . 'manifest.json'), true);
+			} elseif (file_exists($d . DIRECTORY_SEPARATOR . 'model.php')) { // TODO: deprecated, to be removed
+				require($d . DIRECTORY_SEPARATOR . 'model.php');
+			} else {
 				$moduleData = null;
 			}
 
-			if($moduleData!==null){
-				if(isset($moduleData['load']) and !$moduleData['load'])
+			if ($moduleData !== null) {
+				if (isset($moduleData['load']) and !$moduleData['load'])
 					$modules[$d_info['filename']]['load'] = false;
-				if(isset($moduleData['js']))
+				if (isset($moduleData['js']))
 					$modules[$d_info['filename']]['js'] = $moduleData['js'];
-				if(isset($moduleData['css']))
+				if (isset($moduleData['css']))
 					$modules[$d_info['filename']]['css'] = $moduleData['css'];
-				if(isset($moduleData['assets-position']))
+				if (isset($moduleData['assets-position']))
 					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
 			}
 
-			$files = glob($d.DIRECTORY_SEPARATOR.'*');
-			foreach($files as $f){
-				if(is_dir($f))
+			$files = glob($d . DIRECTORY_SEPARATOR . '*');
+			foreach ($files as $f) {
+				if (is_dir($f))
 					continue;
 				$file = pathinfo($f);
-				if($file['extension']!='php')
+				if ($file['extension'] != 'php')
 					continue;
 
-				$fullClassName = 'Model\\'.$d_info['filename'].'\\'.$file['filename'];
+				$fullClassName = 'Model\\' . $d_info['filename'] . '\\' . $file['filename'];
 				$classes[$fullClassName] = $f;
 			}
 
-			if(file_exists($d.DIRECTORY_SEPARATOR.'Config.php')){
-				require_once($d.DIRECTORY_SEPARATOR.'Config.php');
+			if (file_exists($d . DIRECTORY_SEPARATOR . 'Config.php')) {
+				require_once($d . DIRECTORY_SEPARATOR . 'Config.php');
 				$configClassName = '\\Model\\' . $d_info['filename'] . '\\Config';
 				$configClass = new $configClassName($this->model);
 
 				$moduleRules = $configClass->getRules();
-				if(!is_array($moduleRules) or !isset($moduleRules['rules'], $moduleRules['controllers']))
-					throw new \Exception('The module '.$d_info['filename'].' returned an invalid format for rules.');
+				if (!is_array($moduleRules) or !isset($moduleRules['rules'], $moduleRules['controllers']))
+					throw new \Exception('The module ' . $d_info['filename'] . ' returned an invalid format for rules.');
 
-				foreach($moduleRules['rules'] as $rIdx => $r){
-					if(isset($rules[$r]))
+				foreach ($moduleRules['rules'] as $rIdx => $r) {
+					if (isset($rules[$r]))
 						continue;
 					$rules[$r] = [
-						'module'=>$d_info['filename'],
-						'idx'=>$rIdx,
+						'module' => $d_info['filename'],
+						'idx' => $rIdx,
 					];
 				}
 
-				foreach($moduleRules['controllers'] as $c){
-					if(isset($controllers[$c]))
+				foreach ($moduleRules['controllers'] as $c) {
+					if (isset($controllers[$c]))
 						continue;
 					$controllers[$c] = $d_info['filename'];
 				}
 			}
 
-			foreach($fileTypes as $type => $typeData){
-				if(is_dir($d.DIRECTORY_SEPARATOR.$typeData['folder'])){
-					$files = $this->getModuleFiles($d.DIRECTORY_SEPARATOR.$typeData['folder'], $typeData['class']);
-					foreach($files as $f => $fPath){
-						if($typeData['class']){
-							$fullName = 'Model\\'.$d_info['filename'].'\\'.$typeData['folder'].'\\'.$f;
+			foreach ($fileTypes as $type => $typeData) {
+				if (is_dir($d . DIRECTORY_SEPARATOR . $typeData['folder'])) {
+					$files = $this->getModuleFiles($d . DIRECTORY_SEPARATOR . $typeData['folder'], $typeData['class']);
+					foreach ($files as $f => $fPath) {
+						if ($typeData['class']) {
+							$fullName = 'Model\\' . $d_info['filename'] . '\\' . $typeData['folder'] . '\\' . $f;
 							$classes[$fullName] = $fPath;
-						}else{
+						} else {
 							$fullName = $fPath;
 						}
-						if(!isset($fileTypes[$type]['files'][$d_info['filename']]))
+						if (!isset($fileTypes[$type]['files'][$d_info['filename']]))
 							$fileTypes[$type]['files'][$d_info['filename']] = [];
 						$fileTypes[$type]['files'][$d_info['filename']][$f] = $fullName;
 					}
@@ -140,10 +142,10 @@ class Config extends Module_Config {
 			}
 		}
 
-		uksort($rules, function($a, $b){
-			if($a==='')
+		uksort($rules, function ($a, $b) {
+			if ($a === '')
 				return 1;
-			if($b==='')
+			if ($b === '')
 				return -1;
 			return 0;
 		});
@@ -156,15 +158,15 @@ class Config extends Module_Config {
 			'file-types' => $fileTypes,
 		];
 
-		$cacheDir = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data';
-		if(!is_dir($cacheDir))
+		$cacheDir = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data';
+		if (!is_dir($cacheDir))
 			mkdir($cacheDir, 0777, true);
 
-		$cacheFile = $cacheDir.DIRECTORY_SEPARATOR.'cache.php';
+		$cacheFile = $cacheDir . DIRECTORY_SEPARATOR . 'cache.php';
 		$scrittura = file_put_contents($cacheFile, '<?php
-$cache = '.var_export($cache, true).';
+$cache = ' . var_export($cache, true) . ';
 ');
-		if(!$scrittura)
+		if (!$scrittura)
 			return false;
 
 		$this->model->reloadCacheFile();
@@ -177,19 +179,20 @@ $cache = '.var_export($cache, true).';
 	 * @param bool $isClass
 	 * @return array
 	 */
-	private function getModuleFiles($path, $isClass){
+	private function getModuleFiles($path, $isClass)
+	{
 		$return = [];
 
-		$files = glob($path.DIRECTORY_SEPARATOR.'*');
-		foreach($files as $f){
+		$files = glob($path . DIRECTORY_SEPARATOR . '*');
+		foreach ($files as $f) {
 			$f_info = pathinfo($f);
-			if(is_dir($f)){
+			if (is_dir($f)) {
 				$subFiles = $this->getModuleFiles($f, $isClass);
-				foreach($subFiles as $sf => $sfPath){
+				foreach ($subFiles as $sf => $sfPath) {
 					$separator = $isClass ? '\\' : DIRECTORY_SEPARATOR;
-					$return[$f_info['filename'].$separator.$sf] = $sfPath;
+					$return[$f_info['filename'] . $separator . $sf] = $sfPath;
 				}
-			}else{
+			} else {
 				$return[$f_info['filename']] = $f;
 			}
 		}
@@ -202,12 +205,13 @@ $cache = '.var_export($cache, true).';
 	 *
 	 * @return array
 	 */
-	public function getRules(){
+	public function getRules()
+	{
 		return [
-			'rules'=>[
-				'zk'=>'zk',
+			'rules' => [
+				'zk' => 'zk',
 			],
-			'controllers'=>[
+			'controllers' => [
 				'Zk',
 			],
 		];
@@ -219,8 +223,9 @@ $cache = '.var_export($cache, true).';
 	 * @param array $request
 	 * @return string
 	 */
-	public function getTemplate(array $request){
-		return $request[2]=='config' ? 'config' : null;
+	public function getTemplate(array $request)
+	{
+		return $request[2] == 'config' ? 'config' : null;
 	}
 
 	/**
@@ -230,27 +235,29 @@ $cache = '.var_export($cache, true).';
 	 * @param array $data
 	 * @return bool
 	 */
-	public function saveConfig($type, array $data){
+	public function saveConfig($type, array $data)
+	{
 		$config = $this->retrieveConfig();
 
-		$configFile = INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php';
+		$configFile = INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'config.php';
 
 		$dataKeys = $this->getConfigData();
-		foreach($dataKeys as $k=>$d){
-			if(isset($data[$k]))
+		foreach ($dataKeys as $k => $d) {
+			if (isset($data[$k]))
 				$config[$k] = $data[$k];
 		}
 
 		$w = file_put_contents($configFile, '<?php
-$config = '.var_export($config, true).';
+$config = ' . var_export($config, true) . ';
 ');
-		return (bool) $w;
+		return (bool)$w;
 	}
 
 	/**
 	 * @return array
 	 */
-	public function getConfigData(){
+	public function getConfigData()
+	{
 		$config = $this->retrieveConfig();
 
 		return [
@@ -265,28 +272,32 @@ $config = '.var_export($config, true).';
 		];
 	}
 
-	public function postUpdate_2_1_0(){
-		if(file_exists(INCLUDE_PATH.'data'))
-			return rename(INCLUDE_PATH.'data', INCLUDE_PATH.'app');
+	public function postUpdate_2_1_0()
+	{
+		if (file_exists(INCLUDE_PATH . 'data'))
+			return rename(INCLUDE_PATH . 'data', INCLUDE_PATH . 'app');
 		return true;
 	}
 
-	public function postUpdate_2_1_0_Backup(){
-		if(file_exists(INCLUDE_PATH.'app'))
-			return rename(INCLUDE_PATH.'app', INCLUDE_PATH.'data');
+	public function postUpdate_2_1_0_Backup()
+	{
+		if (file_exists(INCLUDE_PATH . 'app'))
+			return rename(INCLUDE_PATH . 'app', INCLUDE_PATH . 'data');
 		return true;
 	}
 
-	public function postUpdate_2_2_0(){
-		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
-		if(file_exists($cacheFile))
+	public function postUpdate_2_2_0()
+	{
+		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+		if (file_exists($cacheFile))
 			unlink($cacheFile);
-		file_put_contents(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'FrontController.php', str_replace('FrontController extends \\Model\\Core', 'FrontController extends \\Model\\Core\\Core', file_get_contents(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'FrontController.php')));
+		file_put_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php', str_replace('FrontController extends \\Model\\Core', 'FrontController extends \\Model\\Core\\Core', file_get_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php')));
 		return true;
 	}
 
-	public function postUpdate_2_2_0_Backup(){
-		file_put_contents(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'FrontController.php', str_replace('FrontController extends \\Model\\Core\\Core', 'FrontController extends \\Model\\Core', file_get_contents(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'FrontController.php')));
+	public function postUpdate_2_2_0_Backup()
+	{
+		file_put_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php', str_replace('FrontController extends \\Model\\Core\\Core', 'FrontController extends \\Model\\Core', file_get_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php')));
 		return true;
 	}
 }
