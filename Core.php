@@ -42,7 +42,7 @@ class Core implements \JsonSerializable
 	 */
 	public function preInit()
 	{
-		if (version_compare(phpversion(), '5.5.0', '<'))
+		if (version_compare(phpversion(), '7.0.0', '<'))
 			die('PHP version (' . phpversion() . ') is not enough for ModEl framework to run.');
 
 		$this->trigger('Core', 'start');
@@ -55,7 +55,7 @@ class Core implements \JsonSerializable
 		header('Content-type: text/html; charset=utf-8');
 		mb_internal_encoding('utf-8');
 
-		if (DEBUG_MODE and version_compare(phpversion(), '5.5.0', '>=') and function_exists('opcache_reset'))
+		if (DEBUG_MODE and version_compare(phpversion(), '7.0.0', '>=') and function_exists('opcache_reset'))
 			opcache_reset();
 
 		if (!isset($_SESSION[SESSION_ID]))
