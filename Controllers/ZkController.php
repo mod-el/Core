@@ -13,6 +13,9 @@ class ZkController extends Controller
 		$this->viewOptions['template-module'] = 'Core';
 		$this->viewOptions['template-module-layout'] = 'Core';
 
+		if($this->model->moduleExists('CSRF'))
+			$this->model->load('CSRF');
+
 		$this->updater = new Updater($this->model);
 
 		if ($this->model->isLoaded('Output')) {
