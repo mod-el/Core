@@ -1,3 +1,6 @@
+if(typeof c_id==='undefined')
+	var c_id = '';
+
 var updateQueue = [];
 
 var updatingFileList = {};
