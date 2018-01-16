@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
-class Updater {
+class Updater
+{
 	/** @var bool|array */
 	private $queue = false;
 	/** @var string */
@@ -8,9 +9,10 @@ class Updater {
 	/** @var Core */
 	private $model;
 
-	function __construct(Core $model){
+	function __construct(Core $model)
+	{
 		$this->model = $model;
-		$this->queue_file = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'update-queue.php';
+		$this->queue_file = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'update-queue.php';
 	}
 
 	/**
@@ -21,40 +23,41 @@ class Updater {
 	 * @param string $base_dir
 	 * @return ReflectionModule[]
 	 */
-	public function getModules($get_updates = false, $base_dir = ''){
+	public function getModules(bool $get_updates = false, string $base_dir = ''): array
+	{
 		$modules = [];
 
-		$dirs = glob(INCLUDE_PATH.$base_dir.'model'.DIRECTORY_SEPARATOR.'*');
-		foreach($dirs as $f){
+		$dirs = glob(INCLUDE_PATH . $base_dir . 'model' . DIRECTORY_SEPARATOR . '*');
+		foreach ($dirs as $f) {
 			$name = explode(DIRECTORY_SEPARATOR, $f);
 			$name = end($name);
 			$module = new ReflectionModule($name, $this->model, $base_dir);
-			if($module->exists)
+			if ($module->exists)
 				$modules[$name] = $module;
 		}
 
-		if($get_updates){
+		if ($get_updates) {
 			$config = $this->model->retrieveConfig();
 
 			$modules_arr = [];
-			foreach($modules as $m)
-				$modules_arr[] = $m->folder_name.'|'.$m->version;
+			foreach ($modules as $m)
+				$modules_arr[] = $m->folder_name . '|' . $m->version;
 
-			$remote_str = file_get_contents($config['repository'].'?act=get-modules&modules='.urlencode(implode(',', $modules_arr)).'&key='.urlencode($config['license']));
+			$remote_str = file_get_contents($config['repository'] . '?act=get-modules&modules=' . urlencode(implode(',', $modules_arr)) . '&key=' . urlencode($config['license']));
 			$remote = json_decode($remote_str, true);
-			if($remote!==null){
-				foreach($modules as $name=>&$m){
-					if(isset($remote[$name]) and $remote[$name]){
+			if ($remote !== null) {
+				foreach ($modules as $name => &$m) {
+					if (isset($remote[$name]) and $remote[$name]) {
 						$m->official = true;
 
-						if($remote[$name]['old_md5']){
+						if ($remote[$name]['old_md5']) {
 							$m->expected_md5 = $remote[$name]['old_md5'];
-							if($m->md5!=$m->expected_md5)
+							if ($m->md5 != $m->expected_md5)
 								$m->corrupted = true;
 						}
-						if($remote[$name]['current_version'] and version_compare($remote[$name]['current_version'], $m->version, '>'))
+						if ($remote[$name]['current_version'] and version_compare($remote[$name]['current_version'], $m->version, '>'))
 							$m->new_version = $remote[$name]['current_version'];
-					}else{
+					} else {
 						$m->official = false;
 					}
 				}
@@ -71,29 +74,30 @@ class Updater {
 	 * @param $name
 	 * @return bool
 	 */
-	public function firstInit($name){
-		if(!file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'))
-			mkdir(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data');
-		$file_path = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'vars.php';
+	public function firstInit(string $name): bool
+	{
+		if (!file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data'))
+			mkdir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data');
+		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
 
-		if(!file_exists($file_path)){
+		if (!file_exists($file_path)) {
 			file_put_contents($file_path, "<?php\n");
 			@chmod($file_path, 0755);
 		}
 
 		$text = file_get_contents($file_path);
 
-		if(stripos($text, '$installed')!==false){
-			$return = (bool) file_put_contents($file_path, preg_replace('/\$installed ?=.+;/i', '$installed = true;', $text));
-		}else{
-			$return  = (bool) file_put_contents($file_path, $text."\n".'$installed = true;'."\n");
+		if (stripos($text, '$installed') !== false) {
+			$return = (bool)file_put_contents($file_path, preg_replace('/\$installed ?=.+;/i', '$installed = true;', $text));
+		} else {
+			$return = (bool)file_put_contents($file_path, $text . "\n" . '$installed = true;' . "\n");
 		}
 
 		$configClass = $this->getConfigClassFor($name);
-		if($configClass){
-			try{
+		if ($configClass) {
+			try {
 				$configClass->makeCache();
-			}catch(\Exception $e){
+			} catch (\Exception $e) {
 
 			}
 		}
@@ -107,33 +111,36 @@ class Updater {
 	 * @param string $name
 	 * @return array|bool
 	 */
-	public function getModuleFileList($name){
+	public function getModuleFileList(string $name)
+	{
 		$config = $this->model->retrieveConfig();
 
-		$files = file_get_contents($config['repository'].'?act=get-files&module='.urlencode($name).'&key='.urlencode($config['license']).'&md5');
+		$files = file_get_contents($config['repository'] . '?act=get-files&module=' . urlencode($name) . '&key=' . urlencode($config['license']) . '&md5');
 		$files = json_decode($files, true);
-		if(!$files)
+		if (!$files)
 			return false;
 
-		$filesToUpdate = []; $filesToDelete = []; $filesArr = [];
-		foreach($files as $f){
+		$filesToUpdate = [];
+		$filesToDelete = [];
+		$filesArr = [];
+		foreach ($files as $f) {
 			$filesArr[] = $f['path'];
-			if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f['path'])){
-				$md5 = md5(file_get_contents(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f['path']));
-				if($md5!=$f['md5'])
+			if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $f['path'])) {
+				$md5 = md5(file_get_contents(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $f['path']));
+				if ($md5 != $f['md5'])
 					$filesToUpdate[] = $f['path'];
-			}else{
+			} else {
 				$filesToUpdate[] = $f['path'];
 			}
 		}
 
 		$module = new ReflectionModule($name, $this->model);
-		foreach($module->files as $f){
-			if(!in_array(str_replace(DIRECTORY_SEPARATOR, '/', $f['path']), $filesArr))
+		foreach ($module->files as $f) {
+			if (!in_array(str_replace(DIRECTORY_SEPARATOR, '/', $f['path']), $filesArr))
 				$filesToDelete[] = $f['path'];
 		}
 
-		return ['update'=>$filesToUpdate, 'delete'=>$filesToDelete];
+		return ['update' => $filesToUpdate, 'delete' => $filesToDelete];
 	}
 
 	/**
@@ -142,33 +149,35 @@ class Updater {
 	 * @param string $name
 	 * @param string $file
 	 * @return bool
+	 * @throws Exception
 	 */
-	public function updateFile($name, $file){
+	public function updateFile(string $name, string $file): bool
+	{
 		$config = $this->model->retrieveConfig();
 
-		$content = file_get_contents($config['repository'].'?act=get-file&module='.urlencode($name).'&file='.urlencode($file).'&key='.urlencode($config['license']));
-		if($content=='File not found')
-			$this->model->error('File '.$file.' not found');
+		$content = file_get_contents($config['repository'] . '?act=get-file&module=' . urlencode($name) . '&file=' . urlencode($file) . '&key=' . urlencode($config['license']));
+		if ($content == 'File not found')
+			$this->model->error('File ' . $file . ' not found');
 
 		$arr_path = explode(DIRECTORY_SEPARATOR, $file);
 		$buildingPath = '';
-		foreach($arr_path as $f){
-			if(stripos($f, '.')!==false) break; // File
-			if(!is_dir(INCLUDE_PATH.$buildingPath.$f))
-				mkdir(INCLUDE_PATH.$buildingPath.$f);
-			$buildingPath .= $f.DIRECTORY_SEPARATOR;
+		foreach ($arr_path as $f) {
+			if (stripos($f, '.') !== false) break; // File
+			if (!is_dir(INCLUDE_PATH . $buildingPath . $f))
+				mkdir(INCLUDE_PATH . $buildingPath . $f);
+			$buildingPath .= $f . DIRECTORY_SEPARATOR;
 		}
 
-		$temppath = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR.$file;
+		$temppath = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . $file;
 		$path = pathinfo($temppath, PATHINFO_DIRNAME);
 
-		if(!is_dir($path))
+		if (!is_dir($path))
 			mkdir($path, 0755, true);
 		$saving = file_put_contents($temppath, $content);
-		if($saving!==false){
+		if ($saving !== false) {
 			@chmod($temppath, 0755);
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -179,34 +188,36 @@ class Updater {
 	 * @param string $name
 	 * @param array $delete
 	 * @return bool
+	 * @throws \Exception
 	 */
-	public function finalizeUpdate($name, array $delete){
+	public function finalizeUpdate(string $name, array $delete): bool
+	{
 		$old_version = null;
 
 		$module = new ReflectionModule($name, $this->model);
 		$old_version = $module->version;
 
-		foreach($delete as $f){
-			unlink(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.$f);
+		foreach ($delete as $f) {
+			unlink(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $f);
 		}
-		if(!$this->deleteDirectory('model'.DIRECTORY_SEPARATOR.$name, true))
+		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name, true))
 			return false;
-		if(!$this->recursiveCopy('model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'temp', 'model'.DIRECTORY_SEPARATOR.$name))
+		if (!$this->recursiveCopy('model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp', 'model' . DIRECTORY_SEPARATOR . $name))
 			return false;
-		if(!$this->deleteDirectory('model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'temp'))
+		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp'))
 			return false;
 
 		$coreConfig = new Config($this->model);
 		$coreConfig->makeCache();
 
 		$module = new ReflectionModule($name, $this->model);
-		if($module->hasConfigClass()){
+		if ($module->hasConfigClass()) {
 			$new_version = $module->version;
 
 			$configClass = $module->getConfigClass();
-			if($configClass){
+			if ($configClass) {
 				$postUpdate = $configClass->postUpdate($old_version, $new_version);
-				if(!$postUpdate)
+				if (!$postUpdate)
 					return false;
 				$configClass->makeCache();
 			}
@@ -222,22 +233,23 @@ class Updater {
 	 * @param bool $onlyEmpties
 	 * @return bool
 	 */
-	private function deleteDirectory($folder, $onlyEmpties=false){
-		if(!file_exists(INCLUDE_PATH.$folder))
+	private function deleteDirectory(string $folder, bool $onlyEmpties = false): bool
+	{
+		if (!file_exists(INCLUDE_PATH . $folder))
 			return true;
 
-		$ff = glob(INCLUDE_PATH.$folder.DIRECTORY_SEPARATOR.'*');
-		foreach($ff as $f){
-			$f_name = substr($f, strlen(INCLUDE_PATH.$folder.DIRECTORY_SEPARATOR));
-			if(is_dir($f)){
-				if(!$this->deleteDirectory($folder.DIRECTORY_SEPARATOR.$f_name, $onlyEmpties))
+		$ff = glob(INCLUDE_PATH . $folder . DIRECTORY_SEPARATOR . '*');
+		foreach ($ff as $f) {
+			$f_name = substr($f, strlen(INCLUDE_PATH . $folder . DIRECTORY_SEPARATOR));
+			if (is_dir($f)) {
+				if (!$this->deleteDirectory($folder . DIRECTORY_SEPARATOR . $f_name, $onlyEmpties))
 					return false;
-			}elseif(!$onlyEmpties){
+			} elseif (!$onlyEmpties) {
 				unlink($f);
 			}
 		}
-		if(!$onlyEmpties or count($ff)==0)
-			return rmdir(INCLUDE_PATH.$folder);
+		if (!$onlyEmpties or count($ff) == 0)
+			return rmdir(INCLUDE_PATH . $folder);
 
 		return true;
 	}
@@ -249,17 +261,18 @@ class Updater {
 	 * @param string $dest
 	 * @return bool
 	 */
-	private function recursiveCopy($source, $dest){
-		$folder = INCLUDE_PATH.$source.DIRECTORY_SEPARATOR;
-		$ff = glob($folder.'*');
-		foreach($ff as $f){
+	private function recursiveCopy(string $source, string $dest): bool
+	{
+		$folder = INCLUDE_PATH . $source . DIRECTORY_SEPARATOR;
+		$ff = glob($folder . '*');
+		foreach ($ff as $f) {
 			$name = substr($f, strlen($folder));
-			if(is_dir($f)){
-				if(!file_exists(INCLUDE_PATH.$dest.DIRECTORY_SEPARATOR.$name))
-					mkdir(INCLUDE_PATH.$dest.DIRECTORY_SEPARATOR.$name);
-				$this->recursiveCopy($source.DIRECTORY_SEPARATOR.$name, $dest.DIRECTORY_SEPARATOR.$name);
-			}else{
-				copy($f, INCLUDE_PATH.$dest.DIRECTORY_SEPARATOR.$name);
+			if (is_dir($f)) {
+				if (!file_exists(INCLUDE_PATH . $dest . DIRECTORY_SEPARATOR . $name))
+					mkdir(INCLUDE_PATH . $dest . DIRECTORY_SEPARATOR . $name);
+				$this->recursiveCopy($source . DIRECTORY_SEPARATOR . $name, $dest . DIRECTORY_SEPARATOR . $name);
+			} else {
+				copy($f, INCLUDE_PATH . $dest . DIRECTORY_SEPARATOR . $name);
 			}
 		}
 
@@ -270,30 +283,32 @@ class Updater {
 	 * Module update via CLI
 	 *
 	 * @param string $module
+	 * @throws \Exception
 	 */
-	public function cliUpdate($module){
+	public function cliUpdate(string $module)
+	{
 		$this->checkUpdateQueue($module);
 
 		echo "--------------------\n";
-		echo "Updating ".$module."\n";
+		echo "Updating " . $module . "\n";
 		echo "--------------------\n";
 
 		$files = $this->getModuleFileList($module);
 
-		if(!$files){
+		if (!$files) {
 			echo "File list not found\n";
-		}elseif(!$files['update'] and !$files['delete']){
+		} elseif (!$files['update'] and !$files['delete']) {
 			echo "Nothing to update\n";
-		}else{
+		} else {
 			$cf = 0;
-			$tot_steps = count($files['update'])+2;
+			$tot_steps = count($files['update']) + 2;
 
-			foreach($files['update'] as $f){
+			foreach ($files['update'] as $f) {
 				$cf++;
 
-				$this->showCliPercentage('Downloading '.$f, $cf, $tot_steps);
+				$this->showCliPercentage('Downloading ' . $f, $cf, $tot_steps);
 
-				if(!$this->updateFile($module, $f)){
+				if (!$this->updateFile($module, $f)) {
 					die("Error in file download, aborting.\n");
 				}
 			}
@@ -301,14 +316,14 @@ class Updater {
 			$cf++;
 			$this->showCliPercentage('Finalizing update', $cf, $tot_steps);
 
-			if(!$this->finalizeUpdate($module, $files['delete']))
+			if (!$this->finalizeUpdate($module, $files['delete']))
 				die("Error in finalizing update, aborting.\n");
 
 			$cf++;
 			$this->showCliPercentage('Update successful', $cf, $tot_steps);
 		}
 
-		if(count($this->queue)>0){
+		if (count($this->queue) > 0) {
 			$this->cliUpdate($this->queue[0]);
 		}
 	}
@@ -320,12 +335,13 @@ class Updater {
 	 * @param int $c
 	 * @param int $tot_steps
 	 */
-	public function showCliPercentage($string, $c, $tot_steps){
-		$perc = round($c/$tot_steps*100);
+	public function showCliPercentage(string $string, int $c, int $tot_steps)
+	{
+		$perc = round($c / $tot_steps * 100);
 
 		echo str_pad($string, 60, ' ', STR_PAD_RIGHT);
-		echo str_pad(implode('', array_fill(0, $perc, '*')), 100, ' ', STR_PAD_RIGHT).'  ';
-		echo $perc."%\n";
+		echo str_pad(implode('', array_fill(0, $perc, '*')), 100, ' ', STR_PAD_RIGHT) . '  ';
+		echo $perc . "%\n";
 	}
 
 	/**
@@ -334,15 +350,16 @@ class Updater {
 	 * @param string $module
 	 * @return bool
 	 */
-	public function checkUpdateQueue($module){
-		if($this->queue===false)
+	public function checkUpdateQueue(string $module): bool
+	{
+		if ($this->queue === false)
 			$this->getUpdateQueue();
 
-		if(count($this->queue)>0 and $this->queue[0]==$module){
+		if (count($this->queue) > 0 and $this->queue[0] == $module) {
 			array_shift($this->queue);
-			file_put_contents($this->queue_file, "<?php\n\$queue = ".var_export($this->queue, true).";");
+			file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($this->queue, true) . ";");
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -352,12 +369,13 @@ class Updater {
 	 *
 	 * @return array
 	 */
-	public function getUpdateQueue(){
-		if($this->queue===false){
-			if(file_exists($this->queue_file)){
+	public function getUpdateQueue(): array
+	{
+		if ($this->queue === false) {
+			if (file_exists($this->queue_file)) {
 				include($this->queue_file);
 				$this->queue = $queue;
-			}else{
+			} else {
 				$this->queue = [];
 			}
 		}
@@ -370,10 +388,11 @@ class Updater {
 	 * @param array $queue
 	 * @return bool
 	 */
-	public function setUpdateQueue(array $queue){
+	public function setUpdateQueue(array $queue): bool
+	{
 		$this->queue = $queue;
-		$w = file_put_contents($this->queue_file, "<?php\n\$queue = ".var_export($queue, true).";\n");
-		return (bool) $w;
+		$w = file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($queue, true) . ";\n");
+		return (bool)$w;
 	}
 
 	/**
@@ -381,22 +400,23 @@ class Updater {
 	 *
 	 * @return array
 	 */
-	public function downloadableModules(){
+	public function downloadableModules(): array
+	{
 		$config = $this->model->retrieveConfig();
 
 		$modules = $this->getModules();
 
-		$remote_str = file_get_contents($config['repository'].'?act=get-modules&key='.urlencode($config['license']));
+		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&key=' . urlencode($config['license']));
 		$remote = json_decode($remote_str, true);
-		if($remote!==null){
+		if ($remote !== null) {
 			$return = array();
-			foreach($remote as $m=>$mod){
-				if(array_key_exists($m, $modules))
+			foreach ($remote as $m => $mod) {
+				if (array_key_exists($m, $modules))
 					continue;
 				$return[$m] = $mod;
 			}
 			return $return;
-		}else{
+		} else {
 			return [];
 		}
 	}
@@ -405,15 +425,16 @@ class Updater {
 	 * @param string $name
 	 * @return \Model\Core\Module_Config|bool
 	 */
-	public function getConfigClassFor($name){
-		if(file_exists(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'Config.php')) {
+	public function getConfigClassFor(string $name)
+	{
+		if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php')) {
 			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php');
 			$configClass = '\\Model\\' . $name . '\\Config';
-			if(!class_exists($configClass, false))
+			if (!class_exists($configClass, false))
 				return false;
 			$configClass = new $configClass($this->model);
 			return $configClass;
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -425,52 +446,53 @@ class Updater {
 	 * @param string $type
 	 * @return bool
 	 */
-	public function cliConfig($module, $type){
+	public function cliConfig(string $module, string $type): bool
+	{
 		$configClass = $this->getConfigClassFor($module);
-		if(!$configClass)
+		if (!$configClass)
 			return true;
 
 		$configData = $configClass->getConfigData();
 
 		$data = [];
-		if($configData){
-			echo "-------------------\nConfiguration of ".$this->model->getRequest(3)."...\n";
-			if(!$this->model->getInput('skip-input'))
+		if ($configData) {
+			echo "-------------------\nConfiguration of " . $this->model->getRequest(3) . "...\n";
+			if (!$this->model->getInput('skip-input'))
 				echo "Leave data empty to keep defaults\n";
 			echo "\n";
-			if(!$this->model->getInput('skip-input'))
-				$handle = fopen ("php://stdin","r");
-			foreach($configData as $k=>$d){
-				if($this->model->getInput('skip-input')){
+			if (!$this->model->getInput('skip-input'))
+				$handle = fopen("php://stdin", "r");
+			foreach ($configData as $k => $d) {
+				if ($this->model->getInput('skip-input')) {
 					$data[$k] = $d['default'];
-				}else{
-					echo $d['label'].($d['default']!==null ? ' (default '.$d['default'].')' : '').': ';
+				} else {
+					echo $d['label'] . ($d['default'] !== null ? ' (default ' . $d['default'] . ')' : '') . ': ';
 					$line = trim(fgets($handle));
-					if($line)
+					if ($line)
 						$data[$k] = $line;
 					else
 						$data[$k] = $d['default'];
 				}
 			}
-			if(!$this->model->getInput('skip-input'))
+			if (!$this->model->getInput('skip-input'))
 				fclose($handle);
 		}
 
 		switch ($type) {
 			case 'config':
-				if($configClass->saveConfig('config', $data)){
+				if ($configClass->saveConfig('config', $data)) {
 					echo "Configuration saved\n";
 					return true;
 				}
 				break;
 			case 'init':
-				if($configClass->install($data)){
+				if ($configClass->install($data)) {
 					$this->firstInit($module);
 					echo "----------------------\n";
-					echo "Module ".$module." initialized\n";
+					echo "Module " . $module . " initialized\n";
 					echo "----------------------\n";
 					return true;
-				}else{
+				} else {
 					echo "Some error occurred while installing.\n";
 				}
 				break;

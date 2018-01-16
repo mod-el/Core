@@ -196,26 +196,6 @@ function isAssoc($arr){
 	return array_keys($arr) !== range(0, count($arr) - 1);
 }
 
-// Functions for preventing CSRF attacks
-
-if(!isset($_SESSION['csrf']))
-	$_SESSION['csrf'] = md5(uniqid(rand(), true));
-
-/**
- * @return bool
- */
-function checkCsrf(){
-	if(isset($_POST['c_id']) and $_POST['c_id']==$_SESSION['csrf']) return true;
-	else return false;
-}
-
-/**
- *
- */
-function csrfInput(){
-	echo '<input type="hidden" name="c_id" value="'.$_SESSION['csrf'].'" />';
-}
-
 /**
 * @param array $array1
 * @param array $array2

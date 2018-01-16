@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
-class Core implements \JsonSerializable{
+class Core implements \JsonSerializable
+{
 	/** @var array[] */
 	public $modules = array();
 	/** @var string[] */
@@ -39,9 +40,10 @@ class Core implements \JsonSerializable{
 	/**
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
-	public function preInit(){
-		if(version_compare(phpversion(), '5.5.0', '<'))
-			die('PHP version ('.phpversion().') is not enough for ModEl framework to run.');
+	public function preInit()
+	{
+		if (version_compare(phpversion(), '7.0.0', '<'))
+			die('PHP version (' . phpversion() . ') is not enough for ModEl framework to run.');
 
 		$this->trigger('Core', 'start');
 
@@ -53,22 +55,22 @@ class Core implements \JsonSerializable{
 		header('Content-type: text/html; charset=utf-8');
 		mb_internal_encoding('utf-8');
 
-		if(DEBUG_MODE and version_compare(phpversion(), '5.5.0', '>=') and function_exists('opcache_reset'))
+		if (DEBUG_MODE and version_compare(phpversion(), '7.0.0', '>=') and function_exists('opcache_reset'))
 			opcache_reset();
 
-		if(!isset($_SESSION[SESSION_ID]))
+		if (!isset($_SESSION[SESSION_ID]))
 			$_SESSION[SESSION_ID] = [];
 
-		if(!isset($_COOKIE['ZKID'])){
+		if (!isset($_COOKIE['ZKID'])) {
 			$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0;
-			$zkid = sha1($ip.time());
-			setcookie('ZKID', $zkid, time()+60*60*24*30, PATH);
+			$zkid = sha1($ip . time());
+			setcookie('ZKID', $zkid, time() + 60 * 60 * 24 * 30, PATH);
 		}
 
-		setcookie('ZK', PATH, time()+(60*60*24*365), PATH);
+		setcookie('ZK', PATH, time() + (60 * 60 * 24 * 365), PATH);
 
 		$model = $this;
-		register_shutdown_function(function() use($model){
+		register_shutdown_function(function () use ($model) {
 			$model->terminate();
 		});
 
@@ -79,19 +81,20 @@ class Core implements \JsonSerializable{
 		$this->modules['Core'][0] = $this;
 
 		// Output module, if present, is always loaded, to have its methods bound here
-		if($this->moduleExists('Output'))
+		if ($this->moduleExists('Output'))
 			$this->load('Output');
 	}
 
-	private function defineConstants(){
+	private function defineConstants()
+	{
 		DEFINE('START_TIME', microtime(true));
 
-		include(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php');
+		include(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php');
 
-		define('INCLUDE_PATH', realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'..').DIRECTORY_SEPARATOR);
+		define('INCLUDE_PATH', realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..') . DIRECTORY_SEPARATOR);
 		define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
 
-		if(isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN']=='69')
+		if (isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN'] == '69')
 			define('DEBUG_MODE', 1);
 		else
 			define('DEBUG_MODE', MAIN_DEBUG_MODE);
@@ -104,7 +107,8 @@ class Core implements \JsonSerializable{
 	/**
 	 * Reloads the internal cache file
 	 */
-	public function reloadCacheFile(){
+	public function reloadCacheFile()
+	{
 		$cacheFile = $this->retrieveCacheFile();
 		Autoloader::$classes = $cacheFile['classes'];
 		Autoloader::$fileTypes = $cacheFile['file-types'];
@@ -120,19 +124,20 @@ class Core implements \JsonSerializable{
 	 * @throws Exception
 	 * @throws \Exception
 	 */
-	private function retrieveCacheFile(){
-		$cacheFile = INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'data'.DIRECTORY_SEPARATOR.'cache.php';
-		if(!file_exists($cacheFile)){
-			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Module_Config.php');
-			require_once(INCLUDE_PATH.'model'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'Config.php');
+	private function retrieveCacheFile(): array
+	{
+		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+		if (!file_exists($cacheFile)) {
+			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'Module_Config.php');
+			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'Config.php');
 			$configClass = new Config($this);
 			$configClass->makeCache();
 		}
 
-		if(file_exists($cacheFile)){
+		if (file_exists($cacheFile)) {
 			require($cacheFile);
 			return $cache;
-		}else{
+		} else {
 			$this->error('Cannot generate Core cache file.');
 		}
 	}
@@ -146,8 +151,9 @@ class Core implements \JsonSerializable{
 	 * @param string $name
 	 * @return array|bool
 	 */
-	public function moduleExists($name){
-		if(isset($this->availableModules[$name]))
+	public function moduleExists(string $name)
+	{
+		if (isset($this->availableModules[$name]))
 			return $this->availableModules[$name];
 		else
 			return false;
@@ -165,8 +171,9 @@ class Core implements \JsonSerializable{
 	 * @return mixed
 	 * @throws Exception
 	 */
-	public function load($name, array $options = [], $idx = 0){
-		if(isset($this->modules[$name][$idx])){
+	public function load(string $name, array $options = [], $idx = 0)
+	{
+		if (isset($this->modules[$name][$idx])) {
 			return $this->modules[$name][$idx];
 		}
 
@@ -176,49 +183,49 @@ class Core implements \JsonSerializable{
 		]);
 
 		$module = $this->moduleExists($name);
-		if(!$module){
-			$this->error('Module "'.entities($name).'" not found.');
+		if (!$module) {
+			$this->error('Module "' . entities($name) . '" not found.');
 		}
 
-		if($module['load']){
-			$className = '\\Model\\'.$name.'\\'.$name;
+		if ($module['load']) {
+			$className = '\\Model\\' . $name . '\\' . $name;
 
 			$this->modules[$name][$idx] = new $className($this, $idx);
 			$this->modules[$name][$idx]->init($options);
 
-			foreach($this->modules[$name][$idx]->methods as $m_name){
-				if(method_exists($this, $m_name))
-					$this->error('Protected method name "'.$m_name.'", error while loading module '.$name.'.');
+			foreach ($this->modules[$name][$idx]->methods as $m_name) {
+				if (method_exists($this, $m_name))
+					$this->error('Protected method name "' . $m_name . '", error while loading module ' . $name . '.');
 
-				if(isset($this->boundMethods[$m_name]) and $this->boundMethods[$m_name]!=$name)
-					$this->error('Method "'.$m_name.'" already bound by another module, error while loading module '.$name.'.');
+				if (isset($this->boundMethods[$m_name]) and $this->boundMethods[$m_name] != $name)
+					$this->error('Method "' . $m_name . '" already bound by another module, error while loading module ' . $name . '.');
 
 				$this->boundMethods[$m_name] = $name;
 			}
 
-			foreach($this->modules[$name][$idx]->properties as $p_name){
-				if(property_exists($this, $p_name))
-					$this->error('Protected property name "'.$p_name.'", error while loading module '.$name.'.');
+			foreach ($this->modules[$name][$idx]->properties as $p_name) {
+				if (property_exists($this, $p_name))
+					$this->error('Protected property name "' . $p_name . '", error while loading module ' . $name . '.');
 
-				if(isset($this->boundProperties[$p_name]) and $this->boundProperties[$p_name]!=$name)
-					$this->error('Property "'.$p_name.'" already bound by another module, error while loading module '.$name.'.');
+				if (isset($this->boundProperties[$p_name]) and $this->boundProperties[$p_name] != $name)
+					$this->error('Property "' . $p_name . '" already bound by another module, error while loading module ' . $name . '.');
 
 				$this->boundProperties[$p_name] = $name;
 			}
-		}else{
+		} else {
 			$this->modules[$name][$idx] = true;
 		}
 
-		$head = $module['assets-position']==='head' ? true : false;
+		$head = $module['assets-position'] === 'head' ? true : false;
 
-		foreach($module['js'] as $js){
-			$this->_Output->addJS(strtolower(substr($js, 0, 4))=='http' ? $js : 'model/'.$name.'/'.$js, [
+		foreach ($module['js'] as $js) {
+			$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : 'model/' . $name . '/' . $js, [
 				'custom' => false,
 				'head' => $head,
 			]);
 		}
-		foreach($module['css'] as $css){
-			$this->_Output->addCSS(strtolower(substr($css, 0, 4))=='http' ? $css : 'model/'.$name.'/'.$css, [
+		foreach ($module['css'] as $css) {
+			$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : 'model/' . $name . '/' . $css, [
 				'custom' => false,
 				'head' => $head,
 			]);
@@ -235,10 +242,11 @@ class Core implements \JsonSerializable{
 	 * @param mixed $idx
 	 * @return bool
 	 */
-	public function isLoaded($name, $idx=false){
-		if($idx===false){
+	public function isLoaded(string $name, $idx = null): bool
+	{
+		if ($idx === null) {
 			return isset($this->modules[$name]);
-		}else{
+		} else {
 			return isset($this->modules[$name][$idx]);
 		}
 	}
@@ -254,25 +262,26 @@ class Core implements \JsonSerializable{
 	 * @return Module|null
 	 * @throws Exception
 	 */
-	public function getModule($name, $idx=false, $autoload=true){
-		if($idx===false){
-			if(isset($this->modules[$name])){
+	public function getModule(string $name, $idx = null, bool $autoload = true)
+	{
+		if ($idx === null) {
+			if (isset($this->modules[$name])) {
 				reset($this->modules[$name]);
 				$idx = key($this->modules[$name]);
-			}else{
+			} else {
 				$idx = 0;
 			}
 		}
 
-		if(isset($this->modules[$name][$idx])){
+		if (isset($this->modules[$name][$idx])) {
 			return $this->modules[$name][$idx];
-		}else{
-			if($autoload){
-				if($this->load($name, array(), $idx))
+		} else {
+			if ($autoload) {
+				if ($this->load($name, [], $idx))
 					return $this->modules[$name][$idx];
 				else
 					return null;
-			}else{
+			} else {
 				return null;
 			}
 		}
@@ -284,19 +293,20 @@ class Core implements \JsonSerializable{
 	 * @param mixed $name
 	 * @return array
 	 */
-	public function allModules($name=false){
-		if($name===false){
+	public function allModules(string $name = null): array
+	{
+		if ($name === null) {
 			$return = array();
-			foreach($this->modules as $name=>$arr){
-				if(count($arr)==1 and key($arr)===0){
+			foreach ($this->modules as $name => $arr) {
+				if (count($arr) == 1 and key($arr) === 0) {
 					$return[$name] = $arr[0];
-				}else{
-					foreach($arr as $idx=>$m)
-						$return[$name.'_'.$idx] = $m;
+				} else {
+					foreach ($arr as $idx => $m)
+						$return[$name . '_' . $idx] = $m;
 				}
 			}
 			return $return;
-		}else{
+		} else {
 			return isset($this->modules[$name]) ? $this->modules[$name] : array();
 		}
 	}
@@ -313,21 +323,22 @@ class Core implements \JsonSerializable{
 	 * @return mixed
 	 * @throws Exception
 	 */
-	function __get($i){
-		if(preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)){
+	function __get(string $i)
+	{
+		if (preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)) {
 			$name = explode('_', substr($i, 1));
-			if(count($name)==1){
+			if (count($name) == 1) {
 				return $this->getModule($name[0]);
-			}elseif(count($name)==2){
+			} elseif (count($name) == 2) {
 				return $this->getModule($name[0], $name[1]);
-			}else{
-				$this->error('Unknown module '.entities($i).'.');
+			} else {
+				$this->error('Unknown module ' . entities($i) . '.');
 				return false;
 			}
-		}elseif(isset($this->boundProperties[$i])){
+		} elseif (isset($this->boundProperties[$i])) {
 			$module = $this->getModule($this->boundProperties[$i]);
 			return $module->{$i};
-		}else{
+		} else {
 			return null;
 		}
 	}
@@ -340,11 +351,12 @@ class Core implements \JsonSerializable{
 	 * @return mixed
 	 * @throws Exception
 	 */
-	function __call($name, array $arguments){
-		if(isset($this->boundMethods[$name])){
+	function __call(string $name, array $arguments)
+	{
+		if (isset($this->boundMethods[$name])) {
 			$module = $this->getModule($this->boundMethods[$name]);
 			return call_user_func_array(array($module, $name), $arguments);
-		}else{
+		} else {
 			return null;
 		}
 	}
@@ -355,12 +367,15 @@ class Core implements \JsonSerializable{
 	 * It may be expanded in the FrontController.
 	 * It is called before the actual execution of the page begins, and here will be loaded all the main generic modules (such as Db, ORM, etc)
 	 */
-	protected function init(){}
+	protected function init()
+	{
+	}
 
 	/**
 	 * Main execution of the ModEl framework
 	 */
-	private function exec(){
+	private function exec()
+	{
 		// Get the request
 		$request = $this->getRequest();
 
@@ -377,59 +392,59 @@ class Core implements \JsonSerializable{
 		$this->requestPrefix = PATH;
 
 		$preventInfiniteLoop = 0;
-		while(true){
+		while (true) {
 			$preventInfiniteLoop++;
 
 			$match = $this->matchRule($request);
 
-			if($match===false){
+			if ($match === false) {
 				$module = 'Core';
 				$controllerName = 'Err404';
 				$this->viewOptions['404-reason'] = 'No rule matched the request.';
 				break;
-			}else{
+			} else {
 				$module = $match['module'];
 				$ruleFound = $match['idx'];
 			}
 
-			$this->trigger('Core', 'leadingModuleFound', ['module'=>$module]);
+			$this->trigger('Core', 'leadingModuleFound', ['module' => $module]);
 
 			$controllerData = $this->getModule($module)->getController($request, $ruleFound);
 
-			if(!is_array($controllerData)){
-				$this->viewOptions['404-reason'] = 'Module '.$module.' can\'t return a controller name.';
+			if (!is_array($controllerData)) {
+				$this->viewOptions['404-reason'] = 'Module ' . $module . ' can\'t return a controller name.';
 				$module = 'Core';
 				$controllerName = 'Err404';
 				break;
 			}
 
-			if(isset($controllerData['prefix']) and $controllerData['prefix'])
-				$this->requestPrefix .= $controllerData['prefix'].'/';
+			if (isset($controllerData['prefix']) and $controllerData['prefix'])
+				$this->requestPrefix .= $controllerData['prefix'] . '/';
 
-			if(isset($controllerData['redirect'])){
-				if($controllerData['redirect']===$request)
-					$this->error('Recursion error: module '.$module.' is trying to redirect to the same request.');
+			if (isset($controllerData['redirect'])) {
+				if ($controllerData['redirect'] === $request)
+					$this->error('Recursion error: module ' . $module . ' is trying to redirect to the same request.');
 
 				$request = $controllerData['redirect'];
 				$this->request = $controllerData['redirect'];
 				continue;
 			}
 
-			if(isset($controllerData['controller']) and $controllerData['controller']) {
+			if (isset($controllerData['controller']) and $controllerData['controller']) {
 				$controllerName = $controllerData['controller'];
-			}else{
-				$this->viewOptions['404-reason'] = 'Module '.$module.' has not returned a controller name.';
+			} else {
+				$this->viewOptions['404-reason'] = 'Module ' . $module . ' has not returned a controller name.';
 				$module = 'Core';
 				$controllerName = 'Err404';
 				break;
 			}
 
-			if($controllerName){
-				$this->trigger('Core', 'controllerFound', ['controller'=>$controllerName]);
+			if ($controllerName) {
+				$this->trigger('Core', 'controllerFound', ['controller' => $controllerName]);
 				break;
 			}
 
-			if($preventInfiniteLoop){
+			if ($preventInfiniteLoop) {
 				$this->error('Infinite loop while trying to find the controller.');
 				break;
 			}
@@ -437,9 +452,9 @@ class Core implements \JsonSerializable{
 
 		$this->leadingModule = $module;
 
-		$controllerClassName = Autoloader::searchFile('Controller', $controllerName.'Controller');
+		$controllerClassName = Autoloader::searchFile('Controller', $controllerName . 'Controller');
 
-		if(!$controllerClassName or !class_exists($controllerClassName)){
+		if (!$controllerClassName or !class_exists($controllerClassName)) {
 			$controllerName = 'Err404';
 			$controllerClassName = 'Model\\Core\\Controllers\\Err404Controller';
 			$this->viewOptions['404-reason'] = 'Controller class not found.';
@@ -460,15 +475,15 @@ class Core implements \JsonSerializable{
 		$this->controller->init();
 		$this->controller->modelInit();
 
-		if(isset($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD']=='POST'){
-			if(array_keys($_POST)==['zkbindings']){
+		if (isset($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD'] == 'POST') {
+			if (array_keys($_POST) == ['zkbindings']) {
 				$this->trigger('Core', 'controllerIndex');
 				$this->controller->index();
-			}else{
+			} else {
 				$this->trigger('Core', 'controllerPost');
 				$this->controller->post();
 			}
-		}else{
+		} else {
 			$this->trigger('Core', 'controllerIndex');
 			$this->controller->index();
 		}
@@ -477,7 +492,7 @@ class Core implements \JsonSerializable{
 		 * Finally, I render the output content (default method in the controller use the Output module to handle this, but this behaviour can be customized.
 		 * */
 		$this->trigger('Core', 'outputStart');
-		if($this->isCLI())
+		if ($this->isCLI())
 			$this->controller->outputCLI();
 		else
 			$this->controller->output();
@@ -487,22 +502,25 @@ class Core implements \JsonSerializable{
 	 * It may be expanded in the FrontController.
 	 * It is called at the end of each correct execution.
 	 */
-	protected function end(){}
+	protected function end()
+	{
+	}
 
 	/**
 	 * Wrapper to execute the main methods in the correct order and catch potential uncaught exceptions.
 	 * This is the one to call from the outside.
 	 */
-	public function run(){
-		try{
+	public function run()
+	{
+		try {
 			$this->preInit();
 			$this->init();
 			$this->exec();
 			$this->end();
-		}catch(\Exception $e){
-			if($e->getMessage()!='cli-redirect'){ // Special case, throws an Exception to get out of the main cycle and end this froncontroller, to handle fake-redirects in CLI
+		} catch (\Exception $e) {
+			if ($e->getMessage() != 'cli-redirect') { // Special case, throws an Exception to get out of the main cycle and end this froncontroller, to handle fake-redirects in CLI
 				echo getErr($e);
-				if(DEBUG_MODE)
+				if (DEBUG_MODE)
 					zkdump($e->getTrace(), true);
 			}
 		}
@@ -511,14 +529,15 @@ class Core implements \JsonSerializable{
 	/**
 	 * It is executed at the end of each execution (both correct ones and with errors) and it calls the "terminate" method of each loaded module, to do possible clean ups.
 	 */
-	public function terminate(){
+	public function terminate()
+	{
 		$this->trigger('Core', 'end');
 
-		foreach($this->modules as $name=>$modules){
-			if($name=='Core')
+		foreach ($this->modules as $name => $modules) {
+			if ($name == 'Core')
 				continue;
-			foreach($modules as $m){
-				if(is_object($m))
+			foreach ($modules as $m) {
+				if (is_object($m))
 					$m->terminate();
 			}
 		}
@@ -533,37 +552,38 @@ class Core implements \JsonSerializable{
 	 * @param array $request
 	 * @return bool|array
 	 */
-	private function matchRule(array $request){
+	private function matchRule(array $request)
+	{
 		$matchedRules = [];
-		if(empty($request)){ // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
-			if(isset($this->rules['']))
+		if (empty($request)) { // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
+			if (isset($this->rules['']))
 				$matchedRules[''] = 0;
-		}else{
-			foreach($this->rules as $r=>$ruleData){
+		} else {
+			foreach ($this->rules as $r => $ruleData) {
 				$rArr = explode('/', $r);
-				if($r!==''){
+				if ($r !== '') {
 					$score = 0;
-					foreach($rArr as $i=>$sr){
-						if(!isset($request[$i]))
+					foreach ($rArr as $i => $sr) {
+						if (!isset($request[$i]))
 							continue 2;
-						if(!preg_match('/^'.$sr.'$/iu', $request[$i]))
+						if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
 							continue 2;
 
-						$score = $i*2;
-						if(strpos($sr, '[')===false)
+						$score = $i * 2;
+						if (strpos($sr, '[') === false)
 							$score += 1;
 					}
-				}else{
+				} else {
 					$score = 1;
 				}
 				$matchedRules[$r] = $score;
 			}
 		}
 
-		if(count($matchedRules)==0){
+		if (count($matchedRules) == 0) {
 			return false;
-		}else{
-			if(count($matchedRules)>1)
+		} else {
+			if (count($matchedRules) > 1)
 				krsort($matchedRules);
 
 			return $this->rules[key($matchedRules)];
@@ -573,20 +593,21 @@ class Core implements \JsonSerializable{
 	/**
 	 * Returns the controller needed for the rules for which the Core module is in charge (currently only "zk" for the management panel)
 	 *
-	 * @param string $request
+	 * @param array $request
 	 * @param string $rule
 	 * @return array
 	 */
-	public function getController($request, $rule){
-		switch($rule){
+	public function getController(array $request, string $rule): array
+	{
+		switch ($rule) {
 			case 'zk':
 				return [
-					'controller'=>'Zk',
+					'controller' => 'Zk',
 				];
 				break;
 			default:
 				return [
-					'controller'=>'Err404',
+					'controller' => 'Err404',
 				];
 				break;
 		}
@@ -598,58 +619,60 @@ class Core implements \JsonSerializable{
 	 * If $i is given, it returns that index of the request.
 	 * Otherwise, it returns the full array.
 	 *
-	 * @param bool|int $i
+	 * @param int $i
 	 * @return array|string|null
 	 */
-	public function getRequest($i=false){
-		if($this->request===false){
+	public function getRequest(int $i = null)
+	{
+		if ($this->request === false) {
 			if ($this->isCLI()) {
 				global $argv;
-				if(!is_array($argv))
-					return $i===false ? [] : null;
+				if (!is_array($argv))
+					return $i === null ? [] : null;
 
-				if(array_key_exists(1, $argv)){
+				if (array_key_exists(1, $argv)) {
 					$this->request = explode('/', $argv[1]);
-				}else{
+				} else {
 					$this->request = [];
 				}
-			}else{
+			} else {
 				$this->request = isset($_GET['url']) ? explode('/', trim($_GET['url'], '/')) : array();
 			}
 		}
 
-		if($i===false){
+		if ($i === null) {
 			return $this->request;
-		}else{
+		} else {
 			return array_key_exists($i, $this->request) ? $this->request[$i] : null;
 		}
 	}
 
 	/**
 	 * Returns one or all the input variables.
-	 * ModEl framwork can be called either via HTTP request (eg. via browser) or via CLI.
+	 * ModEl framework can be called either via HTTP request (eg. via browser) or via CLI.
 	 * If $i is given, it returns that variable.
 	 * Otherwise, it returns the full array.
 	 *
-	 * @param bool|int $i
+	 * @param string $i
 	 * @param string $type
 	 * @return array|string|null
 	 */
-	public function getInput($i=false, $type='request'){
+	public function getInput(string $i = null, string $type = 'request')
+	{
 		if ($this->isCLI()) {
-			if($this->inputVarsCache===false){
+			if ($this->inputVarsCache === false) {
 				$this->inputVarsCache = [];
 
 				global $argv;
 
-				if(is_array($argv) and count($argv)>2){
+				if (is_array($argv) and count($argv) > 2) {
 					$arr = $argv;
 					unset($arr[0]); // Script name
 					unset($arr[1]); // Main request (accesible via getRequest method)
 
-					foreach($arr as $input){
+					foreach ($arr as $input) {
 						$input = explode('=', $input);
-						if(count($input)==2){
+						if (count($input) == 2) {
 							$this->inputVarsCache[$input[0]] = $input[1];
 						}
 					}
@@ -657,8 +680,8 @@ class Core implements \JsonSerializable{
 			}
 
 			$arr = $this->inputVarsCache;
-		}else{
-			switch($type){
+		} else {
+			switch ($type) {
 				case 'get':
 					$arr = $_GET;
 					break;
@@ -670,13 +693,13 @@ class Core implements \JsonSerializable{
 					break;
 			}
 
-			if($type!=='post' and isset($arr['url']))
+			if ($type !== 'post' and isset($arr['url']))
 				unset($arr['url']);
 		}
 
-		if($i===false){
+		if ($i === null) {
 			return $arr;
-		}else{
+		} else {
 			return array_key_exists($i, $arr) ? $arr[$i] : null;
 		}
 	}
@@ -689,21 +712,22 @@ class Core implements \JsonSerializable{
 	 * @return string
 	 * @throws Exception
 	 */
-	public function prefix(array $tags = [], array $opt = []){
+	public function prefix(array $tags = [], array $opt = []): string
+	{
 		$opt = array_merge([
-			'path'=>true,
+			'path' => true,
 		], $opt);
 
-		if($tags){ // If no tag is given, returns the current prefix, otherwise it generates a new prefix dynamically
+		if ($tags) { // If no tag is given, returns the current prefix, otherwise it generates a new prefix dynamically
 			$prefix = $opt['path'] ? PATH : '';
-			foreach($this->prefixMakers as $m){
+			foreach ($this->prefixMakers as $m) {
 				$partial = $this->getModule($m)->getPrefix($tags, $opt);
-				if($partial)
-					$prefix .= $partial.'/';
+				if ($partial)
+					$prefix .= $partial . '/';
 			}
-		}else{
+		} else {
 			$prefix = $this->requestPrefix;
-			if(!$opt['path']){
+			if (!$opt['path']) {
 				$prefix = substr($prefix, strlen(PATH));
 			}
 		}
@@ -716,8 +740,9 @@ class Core implements \JsonSerializable{
 	 * @param string $module
 	 * @return bool
 	 */
-	public function addPrefixMaker($module){
-		if(!in_array($module, $this->prefixMakers))
+	public function addPrefixMaker(string $module): bool
+	{
+		if (!in_array($module, $this->prefixMakers))
 			$this->prefixMakers[] = $module;
 		return true;
 	}
@@ -732,40 +757,41 @@ class Core implements \JsonSerializable{
 	 * @return bool|string
 	 * @throws Exception
 	 */
-	public function getUrl($controller=false, $id=false, array $tags=[], array $opt=[]){
-		if($controller===false)
+	public function getUrl($controller = false, $id = false, array $tags = [], array $opt = [])
+	{
+		if ($controller === false)
 			$controller = $this->controllerName;
 
 		$opt = array_merge([
-			'prefix'=>true,
-			'path'=>true,
+			'prefix' => true,
+			'path' => true,
 		], $opt);
 
-		if(!is_array($tags))
-			$tags = ['lang'=>$tags];
+		if (!is_array($tags))
+			$tags = ['lang' => $tags];
 
-		if($opt['prefix']){
+		if ($opt['prefix']) {
 			$prefix = $this->prefix($tags, $opt);
-		}else{
-			if($opt['path'])
+		} else {
+			if ($opt['path'])
 				$prefix = PATH;
 			else
 				$prefix = '';
 		}
 
-		if($controller=='Zk')
-			return $prefix.'zk';
+		if ($controller == 'Zk')
+			return $prefix . 'zk';
 
 		$module = false;
-		foreach($this->controllers as $c=>$cModule){
-			if($c==$controller){
+		foreach ($this->controllers as $c => $cModule) {
+			if ($c == $controller) {
 				$module = $cModule;
 				break;
 			}
 		}
 
 		$url = $module ? $this->getModule($module)->getUrl($controller, $id, $tags, $opt) : false;
-		return $url!==false ? $prefix.$url : false;
+		return $url !== false ? $prefix . $url : false;
 	}
 
 	/* ERRORS MANAGEMENT */
@@ -777,18 +803,19 @@ class Core implements \JsonSerializable{
 	 * @param string|array $options
 	 * @throws Exception
 	 */
-	public function error($gen, $options=''){
-		if(!is_array($options))
-			$options = array('mex'=>$options);
+	public function error(string $gen, $options = '')
+	{
+		if (!is_array($options))
+			$options = array('mex' => $options);
 		$options = array_merge(array(
-			'code'=>'ModEl',
-			'mex'=>'',
-			'details'=>array(),
+			'code' => 'ModEl',
+			'mex' => '',
+			'details' => array(),
 		), $options);
 
 		$b = debug_backtrace();
 
-		$this->errorHandler('ModEl', $gen.' - '.$options['mex'], $b[0]['file'], $b[0]['line']); // Log
+		$this->errorHandler('ModEl', $gen . ' - ' . $options['mex'], $b[0]['file'], $b[0]['line']); // Log
 
 		$e = new Exception($gen);
 		$e->_code = $options['code'];
@@ -808,14 +835,15 @@ class Core implements \JsonSerializable{
 	 * @param $errcontext
 	 * @return bool
 	 */
-	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext=false){
-		if(error_reporting()===0)
+	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext = false)
+	{
+		if (error_reporting() === 0)
 			return true;
 
 		$backtrace = zkBacktrace(true);
 		array_shift($backtrace);
 
-		$errors = array(E_ERROR=>'E_ERROR', E_WARNING=>'E_WARNING', E_PARSE=>'E_PARSE', E_NOTICE=>'E_NOTICE', E_CORE_ERROR=>'E_CORE_ERROR', E_CORE_WARNING=>'E_CORE_WARNING', E_COMPILE_ERROR=>'E_COMPILE_ERROR', E_COMPILE_WARNING=>'E_COMPILE_WARNING', E_USER_ERROR=>'E_USER_ERROR', E_USER_WARNING=>'E_USER_WARNING', E_USER_NOTICE=>'E_USER_NOTICE', E_STRICT=>'E_STRICT', E_RECOVERABLE_ERROR=>'E_RECOVERABLE_ERROR', E_DEPRECATED=>'E_DEPRECATED', E_USER_DEPRECATED=>'E_USER_DEPRECATED', E_ALL=>'E_ALL');
+		$errors = array(E_ERROR => 'E_ERROR', E_WARNING => 'E_WARNING', E_PARSE => 'E_PARSE', E_NOTICE => 'E_NOTICE', E_CORE_ERROR => 'E_CORE_ERROR', E_CORE_WARNING => 'E_CORE_WARNING', E_COMPILE_ERROR => 'E_COMPILE_ERROR', E_COMPILE_WARNING => 'E_COMPILE_WARNING', E_USER_ERROR => 'E_USER_ERROR', E_USER_WARNING => 'E_USER_WARNING', E_USER_NOTICE => 'E_USER_NOTICE', E_STRICT => 'E_STRICT', E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR', E_DEPRECATED => 'E_DEPRECATED', E_USER_DEPRECATED => 'E_USER_DEPRECATED', E_ALL => 'E_ALL');
 		$this->trigger('Core', 'error', [
 			'no' => $errno,
 			'code' => isset($errors[$errno]) ? $errors[$errno] : $errno,
@@ -839,14 +867,15 @@ class Core implements \JsonSerializable{
 	 * @param \Closure $callback
 	 * @param bool $retroactive
 	 */
-	public function on($event, \Closure $callback, $retroactive = false){
-		if(!isset($this->registeredListeners[$event]))
+	public function on(string $event, \Closure $callback, bool $retroactive = false)
+	{
+		if (!isset($this->registeredListeners[$event]))
 			$this->registeredListeners[$event] = [];
 		$this->registeredListeners[$event][] = $callback;
 
-		if($retroactive){
-			foreach($this->eventsHistory as $e){
-				if($e['module'].'_'.$e['event']===$event or $e['event']===$event){
+		if ($retroactive) {
+			foreach ($this->eventsHistory as $e) {
+				if ($e['module'] . '_' . $e['event'] === $event or $e['event'] === $event) {
 					call_user_func($callback, $e['data']);
 				}
 			}
@@ -861,8 +890,9 @@ class Core implements \JsonSerializable{
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger($module, $event, array $data = []){
-		if(!$this->eventsOn)
+	public function trigger(string $module, string $event, array $data = []): bool
+	{
+		if (!$this->eventsOn)
 			return true;
 
 		$this->eventsHistory[] = [
@@ -872,14 +902,14 @@ class Core implements \JsonSerializable{
 			'time' => microtime(true),
 		];
 
-		if(isset($this->registeredListeners[$event])){
-			foreach($this->registeredListeners[$event] as $callback){
+		if (isset($this->registeredListeners[$event])) {
+			foreach ($this->registeredListeners[$event] as $callback) {
 				call_user_func($callback, $data);
 			}
 		}
 
-		if(isset($this->registeredListeners[$module.'_'.$event])){
-			foreach($this->registeredListeners[$module.'_'.$event] as $callback){
+		if (isset($this->registeredListeners[$module . '_' . $event])) {
+			foreach ($this->registeredListeners[$module . '_' . $event] as $callback) {
 				call_user_func($callback, $data);
 			}
 		}
@@ -892,7 +922,8 @@ class Core implements \JsonSerializable{
 	 *
 	 * @return array
 	 */
-	public function getEventsHistory(){
+	public function getEventsHistory(): array
+	{
 		return $this->eventsHistory;
 	}
 
@@ -901,7 +932,8 @@ class Core implements \JsonSerializable{
 	 *
 	 * @param bool $set
 	 */
-	public function switchEvents($set){
+	public function switchEvents(bool $set)
+	{
 		$this->eventsOn = $set;
 	}
 
@@ -911,7 +943,8 @@ class Core implements \JsonSerializable{
 	 *
 	 * @return string
 	 */
-	public function jsonSerialize(){
+	public function jsonSerialize()
+	{
 		return 'MODEL/FRONT CONTROLLER';
 	}
 
@@ -920,7 +953,8 @@ class Core implements \JsonSerializable{
 	 *
 	 * @return bool
 	 */
-	public function isCLI(){
+	public function isCLI(): bool
+	{
 		return (php_sapi_name() == "cli");
 	}
 
@@ -930,9 +964,10 @@ class Core implements \JsonSerializable{
 	 * @param string $path
 	 * @throws \Exception
 	 */
-	function redirect($path){
-		if($this->isCLI()){
-			if(stripos($path, PATH)!==0)
+	function redirect(string $path)
+	{
+		if ($this->isCLI()) {
+			if (stripos($path, PATH) !== 0)
 				die('Can\t redirect to a non-local url in CLI.');
 
 			$this->end();
@@ -940,20 +975,20 @@ class Core implements \JsonSerializable{
 
 			$real_path = substr($path, strlen(PATH));
 			global $argv;
-			if(strpos($real_path, '?')){
+			if (strpos($real_path, '?')) {
 				$real_path = explode('?', $real_path);
 				$argv = [
-					0=>$argv[0],
-					1=>$real_path[0],
+					0 => $argv[0],
+					1 => $real_path[0],
 				];
 
 				$arguments = explode('&', $real_path[1]);
-				foreach($arguments as $a)
+				foreach ($arguments as $a)
 					$argv[] = $a;
-			}else{
+			} else {
 				$argv = [
-					0=>$argv[0],
-					1=>$real_path,
+					0 => $argv[0],
+					1 => $real_path,
 				];
 			}
 
@@ -961,8 +996,8 @@ class Core implements \JsonSerializable{
 			$frontController->run();
 
 			throw new \Exception('cli-redirect');
-		}else{
-			header('Location: '.$path);
+		} else {
+			header('Location: ' . $path);
 			die();
 		}
 	}
@@ -973,30 +1008,31 @@ class Core implements \JsonSerializable{
 	 * @return array
 	 * @throws Exception
 	 */
-	public function getDebugData(){
+	public function getDebugData(): array
+	{
 		$debug = array(
-			'prefix'=>$this->prefix([], ['path'=>false]),
-			'request'=>implode('/', $this->getRequest()),
-			'execution_time'=>microtime(true)-START_TIME,
-			'module'=>$this->leadingModule,
-			'controller'=>$this->controllerName,
-			'modules'=>array_keys($this->allModules()),
-			'zk_loading_id'=>ZK_LOADING_ID,
+			'prefix' => $this->prefix([], ['path' => false]),
+			'request' => implode('/', $this->getRequest()),
+			'execution_time' => microtime(true) - START_TIME,
+			'module' => $this->leadingModule,
+			'controller' => $this->controllerName,
+			'modules' => array_keys($this->allModules()),
+			'zk_loading_id' => ZK_LOADING_ID,
 		);
 
-		if($this->isLoaded('Db')){
+		if ($this->isLoaded('Db')) {
 			$debug['n_query'] = $this->_Db->n_query;
 			$debug['n_prepared'] = $this->_Db->n_prepared;
 			$debug['query_per_table'] = $this->_Db->n_tables;
 		}
 
-		if($this->isLoaded('Router')){
+		if ($this->isLoaded('Router')) {
 			$pageId = $this->_Router->pageId;
-			if($pageId)
+			if ($pageId)
 				$debug['pageId'] = $pageId;
 		}
 
-		if(is_object($this->element)){
+		if (is_object($this->element)) {
 			$debug['elementType'] = get_class($this->element);
 			$debug['elementId'] = $this->element[$this->element->settings['primary']];
 		}
@@ -1007,11 +1043,12 @@ class Core implements \JsonSerializable{
 	/**
 	 * Retrieves the Core config (as for any other module)
 	 */
-	public function retrieveConfig(){
-		if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php')){
-			require(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'Core'.DIRECTORY_SEPARATOR.'config.php');
+	public function retrieveConfig(): array
+	{
+		if (file_exists(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'config.php')) {
+			require(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'config.php');
 			return $config;
-		}else{
+		} else {
 			return [];
 		}
 	}
