@@ -74,8 +74,11 @@ class Module
 
 	/**
 	 * Clears stored config data
+	 *
+	 * @param array $options
+	 * @return bool
 	 */
-	public function reloadConfig(): bool
+	public function reloadConfig(array $options = []): bool
 	{
 		$this->configCache = null;
 		return true;
