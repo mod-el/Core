@@ -335,31 +335,35 @@ class ZkController extends Controller
 		if ($qry_string)
 			$qry_string = '?' . $qry_string;
 
-		switch ($this->model->getRequest(1)) {
-			case 'modules':
-				switch ($this->model->getRequest(2)) {
-					case 'config':
-					case 'init':
-						$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
-						if ($configClass) {
-							switch ($this->model->getRequest(2)) {
-								case 'config':
-									if ($configClass->saveConfig($this->model->getRequest(2), $_POST))
-										$this->viewOptions['messages'][] = 'Configuration saved.';
-									break;
-								case 'init':
-									if ($configClass->install($_POST)) {
-										$this->updater->firstInit($this->model->getRequest(3));
-										$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-									} else {
-										$this->viewOptions['errors'][] = 'Some error occurred while installing.';
-									}
-									break;
+		try {
+			switch ($this->model->getRequest(1)) {
+				case 'modules':
+					switch ($this->model->getRequest(2)) {
+						case 'config':
+						case 'init':
+							$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
+							if ($configClass) {
+								switch ($this->model->getRequest(2)) {
+									case 'config':
+										if ($configClass->saveConfig($this->model->getRequest(2), $_POST))
+											$this->viewOptions['messages'][] = 'Configuration saved.';
+										break;
+									case 'init':
+										if ($configClass->install($_POST)) {
+											$this->updater->firstInit($this->model->getRequest(3));
+											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
+										} else {
+											$this->viewOptions['errors'][] = 'Some error occurred while installing.';
+										}
+										break;
+								}
 							}
-						}
-						break;
-				}
-				break;
+							break;
+					}
+					break;
+			}
+		} catch (\Exception $e) {
+			$this->viewOptions['errors'][] = $e->getMessage();
 		}
 
 		$this->index();

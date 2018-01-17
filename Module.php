@@ -73,6 +73,18 @@ class Module
 	}
 
 	/**
+	 * Clears stored config data
+	 *
+	 * @param array $options
+	 * @return bool
+	 */
+	public function reloadConfig(array $options = []): bool
+	{
+		$this->configCache = null;
+		return true;
+	}
+
+	/**
 	 * This will trigger a new event in the Core, coming from this module.
 	 * Each event has its own name (param $event) and eventually carries a bunch of data in the form of an array (param $data)
 	 *
