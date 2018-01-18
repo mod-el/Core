@@ -1052,4 +1052,32 @@ class Core implements \JsonSerializable
 			return [];
 		}
 	}
-}
+
+	/**
+	 * @param string $k
+	 * @return mixed
+	 */
+	public function getSetting(string $k)
+	{
+		if (!$this->isLoaded('Db'))
+			return null;
+		return $this->_Db->select('main_settings', ['k' => $k], 'v');
+	}
+
+	/**
+	 * @param string $k
+	 * @param mixed $v
+	 * @return bool
+	 */
+	public function setSetting(string $k, $v): bool
+	{
+		if (!$this->isLoaded('Db'))
+			return false;
+
+		$current = $this->getSetting($k);
+		if ($current === false) {
+			return (bool)$this->_Db->insert('main_settings', ['k' => $k, 'v' => $v]);
+		} else {
+			return (bool)$this->_Db->update('main_settings', ['k' => $k], ['v' => $v]);
+		}
+	}
