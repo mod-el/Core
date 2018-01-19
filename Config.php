@@ -20,6 +20,7 @@ class Config extends Module_Config
 		$rules = [];
 		$controllers = [];
 		$modules = [];
+		$cleanups = [];
 
 		if (!is_dir(INCLUDE_PATH . 'app-data'))
 			mkdir(INCLUDE_PATH . 'app-data');
@@ -104,6 +105,9 @@ class Config extends Module_Config
 				$configClassName = '\\Model\\' . $d_info['filename'] . '\\Config';
 				$configClass = new $configClassName($this->model);
 
+				if ($configClass->hasCleanUp)
+					$cleanups[] = $d_info['filename'];
+
 				$moduleRules = $configClass->getRules();
 				if (!is_array($moduleRules) or !isset($moduleRules['rules'], $moduleRules['controllers']))
 					throw new \Exception('The module ' . $d_info['filename'] . ' returned an invalid format for rules.');
@@ -150,12 +154,15 @@ class Config extends Module_Config
 			return 0;
 		});
 
+		sort($cleanups);
+
 		$cache = [
 			'classes' => $classes,
 			'rules' => $rules,
 			'controllers' => $controllers,
 			'modules' => $modules,
 			'file-types' => $fileTypes,
+			'cleanups' => $cleanups,
 		];
 
 		$cacheDir = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data';

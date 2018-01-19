@@ -6,7 +6,13 @@ class Module_Config
 	protected $model;
 	/** @var bool */
 	public $configurable = false;
+	/** @var bool */
+	public $hasCleanUp = false;
 
+	/**
+	 * Module_Config constructor.
+	 * @param Core $model
+	 */
 	public function __construct(Core $model)
 	{
 		$this->model = $model;
@@ -189,5 +195,12 @@ $config = ' . var_export($data, true) . ';
 	{
 		$reflector = new \ReflectionClass(get_class($this));
 		return pathinfo(dirname($reflector->getFileName()), PATHINFO_FILENAME);
+	}
+
+	/**
+	 * Meant to be extended by the moduels, it can be used to perform periodic cleanups (deletes old logs, etc)
+	 */
+	public function cleanUp()
+	{
 	}
 }
