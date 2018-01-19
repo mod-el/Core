@@ -36,6 +36,8 @@ class Core implements \JsonSerializable
 	private $eventsHistory = [];
 	/** @var bool */
 	private $eventsOn = true;
+	/** @var array */
+	private $modulesWithCleanUp = [];
 
 	/**
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
@@ -80,6 +82,8 @@ class Core implements \JsonSerializable
 
 		$this->modules['Core'][0] = $this;
 
+		$this->checkCleanUp();
+
 		// Output module, if present, is always loaded, to have its methods bound here
 		if ($this->moduleExists('Output'))
 			$this->load('Output');
@@ -115,13 +119,13 @@ class Core implements \JsonSerializable
 		$this->rules = $cacheFile['rules'];
 		$this->controllers = $cacheFile['controllers'];
 		$this->availableModules = $cacheFile['modules'];
+		$this->modulesWithCleanUp = $cacheFile['cleanups'];
 	}
 
 	/**
 	 * Looks for the internal cache file, and attempts to generate it if not found (e.g. first runs, or accidental cache wipes)
 	 *
 	 * @return array
-	 * @throws Exception
 	 * @throws \Exception
 	 */
 	private function retrieveCacheFile(): array
@@ -139,6 +143,52 @@ class Core implements \JsonSerializable
 			return $cache;
 		} else {
 			$this->error('Cannot generate Core cache file.');
+		}
+	}
+
+	/**
+	 * Cleanups take a probabilistic approach:
+	 * Every user that open the app for the first time, rolls a dice: it has one probability over a certain number to starts a cleanup
+	 * If the probability is matched, it runs a cleanup on one of the supported modules
+	 * Every time the dice is rolled, it won't be rolled again for an hour
+	 * This ensures a nice load distribution over the users and over time
+	 */
+	private function checkCleanUp()
+	{
+		if (count($this->modulesWithCleanUp) === 0)
+			return;
+
+		$tryCleanUp = false;
+		$threshold = date_create();
+		$threshold->modify('-1 hour');
+		if (isset($_SESSION[SESSION_ID]['model-cleanup-checked'])) {
+			$session_date = date_create($_SESSION[SESSION_ID]['model-cleanup-checked']);
+			if (!$session_date or $session_date < $threshold)
+				$tryCleanUp = true;
+		} else {
+			$tryCleanUp = true;
+		}
+
+		if ($tryCleanUp) {
+			$_SESSION[SESSION_ID]['model-cleanup-checked'] = date('Y-m-d H:i:s');
+			$dice = mt_rand(1, 10);
+			if ($dice === 1) {
+				try {
+					$lastModule = $this->getSetting('cleanup-last-module');
+					$lastModuleK = array_search($lastModule, $this->modulesWithCleanUp);
+					if ($lastModuleK === false or $lastModuleK === (count($this->modulesWithCleanUp) - 1))
+						$nextModule = $this->modulesWithCleanUp[0];
+					else
+						$nextModule = $this->modulesWithCleanUp[$lastModuleK + 1];
+
+					$this->setSetting('cleanup-last-module', $nextModule);
+
+					$configClassName = '\\Model\\' . $nextModule . '\\Config';
+					$configClass = new $configClassName($this);
+					$configClass->cleanUp();
+				} catch (\Exception $e) {
+				}
+			}
 		}
 	}
 
@@ -1050,6 +1100,35 @@ class Core implements \JsonSerializable
 			return $config;
 		} else {
 			return [];
+		}
+	}
+
+	/**
+	 * @param string $k
+	 * @return mixed
+	 */
+	public function getSetting(string $k)
+	{
+		if (!$this->moduleExists('Db'))
+			return null;
+		return $this->_Db->select('main_settings', ['k' => $k], 'v');
+	}
+
+	/**
+	 * @param string $k
+	 * @param mixed $v
+	 * @return bool
+	 */
+	public function setSetting(string $k, $v): bool
+	{
+		if (!$this->moduleExists('Db'))
+			return false;
+
+		$current = $this->getSetting($k);
+		if ($current === false) {
+			return (bool)$this->_Db->insert('main_settings', ['k' => $k, 'v' => $v]);
+		} else {
+			return (bool)$this->_Db->update('main_settings', ['k' => $k], ['v' => $v]);
 		}
 	}
 }
