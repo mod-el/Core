@@ -58,7 +58,7 @@ class Module_Config
 
 	/**
 	 * If this module needs to register rules, this is the method that should return them.
-	 * The sintax is: [
+	 * The syntax is: [
 	 *        'rules'=>[
 	 *            'idx'=>'rule',
 	 *        ],
@@ -219,7 +219,7 @@ $config = ' . var_export($data, true) . ';
 	}
 
 	/**
-	 * Meant to be extended by the moduels, it can be used to perform periodic cleanups (deletes old logs, etc)
+	 * Meant to be extended by the modules, it can be used to perform periodic cleanups (deletes old logs, etc)
 	 */
 	public function cleanUp()
 	{

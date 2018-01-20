@@ -180,7 +180,7 @@ class ZkController extends Controller
 							if ($m->version != '0.0.0' and !$m->installed) {
 								$toBeInstalled[] = $m;
 							} else {
-								if($m->getConfigClass())
+								if ($m->getConfigClass())
 									$m->getConfigClass()->checkAssets();
 							}
 
