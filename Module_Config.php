@@ -234,6 +234,7 @@ $config = ' . var_export($data, true) . ';
 
 	/**
 	 * Add an asset, namely a file or a folder that this module needs
+	 * If the file is null, only the main folder will be created (useful for the main config dir)
 	 *
 	 * @param string $type
 	 * @param string $file
@@ -241,7 +242,7 @@ $config = ' . var_export($data, true) . ';
 	 * @return bool
 	 * @throws Exception
 	 */
-	protected function addAsset(string $type, string $file, callable $defaultContent = null): bool
+	protected function addAsset(string $type, string $file = null, callable $defaultContent = null): bool
 	{
 		if (!in_array($type, ['data', 'config']))
 			$this->model->error('Unknown asset type in module definition');
@@ -275,7 +276,7 @@ $config = ' . var_export($data, true) . ';
 					break;
 			}
 
-			$file = $base_dir . DIRECTORY_SEPARATOR . $asset['file'];
+			$file = $base_dir . ($asset['file'] ? (DIRECTORY_SEPARATOR . $asset['file']) : '');
 			if (!file_exists($file)) {
 				if ($asset['default'] !== null) { // If there is default content, then it's a file
 					$dir = pathinfo($file, PATHINFO_DIRNAME);
