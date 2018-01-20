@@ -4,6 +4,24 @@ class Config extends Module_Config
 {
 	public $configurable = true;
 
+	protected function assetsList()
+	{
+		$this->addAsset('data', 'cache.php', function () {
+			$arr = [
+				'classes' => [],
+				'rules' => [],
+				'controllers' => [],
+				'modules' => [],
+				'file-types' => [],
+				'cleanups' => [],
+			];
+			return "<?php\n\$cache = " . var_export($arr, true) . ";\n";
+		});
+		$this->addAsset('data', 'update-queue.php', function () {
+			return "<?php\n\$queue = [];\n";
+		});
+	}
+
 	/**
 	 * Caches the following:
 	 * - All the available modules
@@ -241,6 +259,7 @@ $cache = ' . var_export($cache, true) . ';
 	 * @param string $type
 	 * @param array $data
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function saveConfig(string $type, array $data): bool
 	{
@@ -262,6 +281,7 @@ $config = ' . var_export($config, true) . ';
 
 	/**
 	 * @return array
+	 * @throws \Exception
 	 */
 	public function getConfigData(): array
 	{

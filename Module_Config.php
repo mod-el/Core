@@ -8,6 +8,8 @@ class Module_Config
 	public $configurable = false;
 	/** @var bool */
 	public $hasCleanUp = false;
+	/** @var array */
+	private $assets = [];
 
 	/**
 	 * Module_Config constructor.
@@ -16,14 +18,28 @@ class Module_Config
 	public function __construct(Core $model)
 	{
 		$this->model = $model;
+		$this->assetsList();
+	}
+
+	/**
+	 * Utility method, returns the name of this module.
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getName(): string
+	{
+		$rc = new \ReflectionClass(get_class($this));
+		return pathinfo(dirname($rc->getFileName()), PATHINFO_FILENAME);
 	}
 
 	/**
 	 * Utility method, returns the path of this module.
 	 *
 	 * @return string
+	 * @throws \Exception
 	 */
-	public function getPath()
+	public function getPath(): string
 	{
 		$rc = new \ReflectionClass(get_class($this));
 		return substr(dirname($rc->getFileName()), strlen(INCLUDE_PATH)) . DIRECTORY_SEPARATOR;
@@ -42,7 +58,7 @@ class Module_Config
 
 	/**
 	 * If this module needs to register rules, this is the method that should return them.
-	 * The sintax is: [
+	 * The syntax is: [
 	 *        'rules'=>[
 	 *            'idx'=>'rule',
 	 *        ],
@@ -87,6 +103,7 @@ class Module_Config
 	 * @param string $type
 	 * @param array $data
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function saveConfig(string $type, array $data): bool
 	{
@@ -105,6 +122,7 @@ $config = ' . var_export($data, true) . ';
 	 * Retrieves the configuration file of this module - if exists - and returns it.
 	 *
 	 * @return array
+	 * @throws \Exception
 	 */
 	public function retrieveConfig(): array
 	{
@@ -134,6 +152,7 @@ $config = ' . var_export($data, true) . ';
 	 * @param string $from
 	 * @param string $to
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function postUpdate(string $from, string $to): bool
 	{
@@ -164,6 +183,7 @@ $config = ' . var_export($data, true) . ';
 	 * Returns a list of all postUpdate methods
 	 *
 	 * @return array
+	 * @throws \Exception
 	 */
 	private function getPostUpdateMethods(): array
 	{
@@ -190,6 +210,7 @@ $config = ' . var_export($data, true) . ';
 	 * Returns the module name
 	 *
 	 * @return string
+	 * @throws \Exception
 	 */
 	private function getModuleName(): string
 	{
@@ -198,9 +219,76 @@ $config = ' . var_export($data, true) . ';
 	}
 
 	/**
-	 * Meant to be extended by the moduels, it can be used to perform periodic cleanups (deletes old logs, etc)
+	 * Meant to be extended by the modules, it can be used to perform periodic cleanups (deletes old logs, etc)
 	 */
 	public function cleanUp()
 	{
+	}
+
+	/**
+	 * Meant to be extended by the modules, it will consist in a series of "addAsset" calls, telling the framework what files this module needs
+	 */
+	protected function assetsList()
+	{
+	}
+
+	/**
+	 * Add an asset, namely a file or a folder that this module needs
+	 * If the file is null, only the main folder will be created (useful for the main config dir)
+	 *
+	 * @param string $type
+	 * @param string $file
+	 * @param callable|null $defaultContent
+	 * @return bool
+	 * @throws Exception
+	 */
+	protected function addAsset(string $type, string $file = null, callable $defaultContent = null): bool
+	{
+		if (!in_array($type, ['data', 'config']))
+			$this->model->error('Unknown asset type in module definition');
+
+		$this->assets[] = [
+			'type' => $type,
+			'file' => $file,
+			'default' => $defaultContent,
+		];
+
+		return true;
+	}
+
+	/**
+	 * Checks if all assets are created - it's called whenever the user visits the control panel
+	 *
+	 * @throws \Exception
+	 */
+	public function checkAssets()
+	{
+		foreach ($this->assets as $asset) {
+			switch ($asset['type']) {
+				case 'data':
+					$base_dir = INCLUDE_PATH . $this->getPath() . 'data';
+					break;
+				case 'config':
+					$base_dir = INCLUDE_PATH . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $this->getName();
+					break;
+				default:
+					$this->model->error('Unknown asset type encountered while checking assets');
+					break;
+			}
+
+			$file = $base_dir . ($asset['file'] ? (DIRECTORY_SEPARATOR . $asset['file']) : '');
+			if (!file_exists($file)) {
+				if ($asset['default'] !== null) { // If there is default content, then it's a file
+					$dir = pathinfo($file, PATHINFO_DIRNAME);
+					if (!is_dir($dir))
+						mkdir($dir, 0777, true);
+
+					$content = call_user_func($asset['default']);
+					file_put_contents($file, $content);
+				} else { // Otherwise, it's a directory
+					mkdir($file, 0777, true);
+				}
+			}
+		}
 	}
 }
