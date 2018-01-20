@@ -22,6 +22,7 @@ class Module_Config
 	 * Utility method, returns the path of this module.
 	 *
 	 * @return string
+	 * @throws \Exception
 	 */
 	public function getPath()
 	{
@@ -87,6 +88,7 @@ class Module_Config
 	 * @param string $type
 	 * @param array $data
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function saveConfig(string $type, array $data): bool
 	{
@@ -105,6 +107,7 @@ $config = ' . var_export($data, true) . ';
 	 * Retrieves the configuration file of this module - if exists - and returns it.
 	 *
 	 * @return array
+	 * @throws \Exception
 	 */
 	public function retrieveConfig(): array
 	{
@@ -134,6 +137,7 @@ $config = ' . var_export($data, true) . ';
 	 * @param string $from
 	 * @param string $to
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function postUpdate(string $from, string $to): bool
 	{
@@ -164,6 +168,7 @@ $config = ' . var_export($data, true) . ';
 	 * Returns a list of all postUpdate methods
 	 *
 	 * @return array
+	 * @throws \Exception
 	 */
 	private function getPostUpdateMethods(): array
 	{
@@ -190,6 +195,7 @@ $config = ' . var_export($data, true) . ';
 	 * Returns the module name
 	 *
 	 * @return string
+	 * @throws \Exception
 	 */
 	private function getModuleName(): string
 	{

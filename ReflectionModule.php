@@ -199,10 +199,10 @@ class ReflectionModule
 	/**
 	 * @return Module_Config
 	 */
-	public function getConfigClass(): Module_Config
+	public function getConfigClass()
 	{
 		$this->loadConfigClass();
-		return $this->configClass;
+		return $this->configClass ?: null;
 	}
 
 	/**
