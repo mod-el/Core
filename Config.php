@@ -241,6 +241,7 @@ $cache = ' . var_export($cache, true) . ';
 	 * @param string $type
 	 * @param array $data
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function saveConfig(string $type, array $data): bool
 	{
@@ -262,6 +263,7 @@ $config = ' . var_export($config, true) . ';
 
 	/**
 	 * @return array
+	 * @throws \Exception
 	 */
 	public function getConfigData(): array
 	{
