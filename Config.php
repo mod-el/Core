@@ -4,6 +4,24 @@ class Config extends Module_Config
 {
 	public $configurable = true;
 
+	protected function assetsList()
+	{
+		$this->addAsset('data', 'cache.php', function () {
+			$arr = [
+				'classes' => [],
+				'rules' => [],
+				'controllers' => [],
+				'modules' => [],
+				'file-types' => [],
+				'cleanups' => [],
+			];
+			return "<?php\n\$cache = " . var_export($arr, true) . ";\n";
+		});
+		$this->addAsset('data', 'update-queue.php', function () {
+			return "<?php\n\$queue = [];\n";
+		});
+	}
+
 	/**
 	 * Caches the following:
 	 * - All the available modules

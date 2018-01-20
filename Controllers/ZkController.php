@@ -13,7 +13,7 @@ class ZkController extends Controller
 		$this->viewOptions['template-module'] = 'Core';
 		$this->viewOptions['template-module-layout'] = 'Core';
 
-		if($this->model->moduleExists('CSRF'))
+		if ($this->model->moduleExists('CSRF'))
 			$this->model->load('CSRF');
 
 		$this->updater = new Updater($this->model);
@@ -177,8 +177,12 @@ class ZkController extends Controller
 						// Check that all dependencies are satisfied, and check if some module still has to be installed
 						$toBeInstalled = [];
 						foreach ($modules as $m) {
-							if ($m->version != '0.0.0' and !$m->installed)
+							if ($m->version != '0.0.0' and !$m->installed) {
 								$toBeInstalled[] = $m;
+							} else {
+								if($m->getConfigClass())
+									$m->getConfigClass()->checkAssets();
+							}
 
 							foreach ($m->dependencies as $depModule => $depVersion) {
 								if (!isset($modules[$depModule])) {
