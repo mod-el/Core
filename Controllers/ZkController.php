@@ -109,7 +109,7 @@ class ZkController extends Controller
 								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
 								if ($this->viewOptions['template'] === null) {
 									if ($this->model->getRequest(2) == 'init') {
-										$installation = $configClass->install();
+										$installation = $this->updater->install($configClass);
 										if ($installation) {
 											$this->updater->firstInit($this->model->getRequest(3));
 											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
@@ -353,7 +353,7 @@ class ZkController extends Controller
 											$this->viewOptions['messages'][] = 'Configuration saved.';
 										break;
 									case 'init':
-										if ($configClass->install($_POST)) {
+										if ($this->updater->install($configClass, $_POST)) {
 											$this->updater->firstInit($this->model->getRequest(3));
 											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 										} else {
