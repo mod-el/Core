@@ -284,7 +284,8 @@ $config = ' . var_export($data, true) . ';
 						mkdir($dir, 0777, true);
 
 					$content = call_user_func($asset['default']);
-					file_put_contents($file, $content);
+					if ($content !== null and $content !== false)
+						file_put_contents($file, $content);
 				} else { // Otherwise, it's a directory
 					mkdir($file, 0777, true);
 				}
