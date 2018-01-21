@@ -486,7 +486,7 @@ class Updater
 				}
 				break;
 			case 'init':
-				if ($configClass->install($data)) {
+				if ($this->install($configClass, $data)) {
 					$this->firstInit($module);
 					echo "----------------------\n";
 					echo "Module " . $module . " initialized\n";
@@ -499,5 +499,19 @@ class Updater
 		}
 
 		return false;
+	}
+
+	/**
+	 * Installs a module
+	 *
+	 * @param Module_Config $configClass
+	 * @param array $data
+	 * @return bool
+	 * @throws \Exception
+	 */
+	public function install(Module_Config $configClass, array $data = []): bool
+	{
+		$configClass->checkAssets();
+		return $configClass->install($data);
 	}
 }
