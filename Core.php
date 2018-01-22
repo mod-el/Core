@@ -833,9 +833,9 @@ class Core implements \JsonSerializable
 			return $prefix . 'zk';
 
 		$modules = [];
-		foreach ($this->controllers as $c => $cModule) {
-			if ($c == $controller)
-				$modules[] = $cModule;
+		foreach ($this->controllers as $controllerModulePair) {
+			if ($controllerModulePair['controller'] == $controller)
+				$modules[] = $controllerModulePair['module'];
 		}
 
 		if (count($modules) > 0) {

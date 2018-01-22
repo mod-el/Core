@@ -140,9 +140,10 @@ class Config extends Module_Config
 				}
 
 				foreach ($moduleRules['controllers'] as $c) {
-					if (isset($controllers[$c]))
-						continue;
-					$controllers[$c] = $d_info['filename'];
+					$controllers[] = [
+						'controller' => $c,
+						'module' => $d_info['filename'],
+					];
 				}
 			}
 
