@@ -832,15 +832,22 @@ class Core implements \JsonSerializable
 		if ($controller == 'Zk')
 			return $prefix . 'zk';
 
-		$module = false;
+		$modules = [];
 		foreach ($this->controllers as $c => $cModule) {
-			if ($c == $controller) {
-				$module = $cModule;
-				break;
-			}
+			if ($c == $controller)
+				$modules[] = $cModule;
 		}
 
-		$url = $module ? $this->getModule($module)->getUrl($controller, $id, $tags, $opt) : false;
+		if (count($modules) > 0) {
+			if (in_array($this->leadingModule, $modules))
+				$module = $this->leadingModule;
+			else
+				$module = reset($modules);
+		} else {
+			return false;
+		}
+
+		$url = $this->getModule($module)->getUrl($controller, $id, $tags, $opt);
 		return $url !== false ? $prefix . $url : false;
 	}
 
