@@ -30,10 +30,11 @@ class ZkController extends Controller
 		if ($qry_string)
 			$qry_string = '?' . $qry_string;
 
+		$this->viewOptions['cache'] = false;
+
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
 				$this->viewOptions['template'] = 'modules';
-				$this->viewOptions['cache'] = false;
 
 				$this->model->addCSS('model/Core/files/style.css');
 				$this->model->addJS('model/Core/files/js.js');
@@ -247,13 +248,17 @@ class ZkController extends Controller
 				}
 				break;
 			case 'local-modules':
-				$this->viewOptions['template'] = 'local-modules';
-				$this->viewOptions['cache'] = false;
-
 				$this->model->addCSS('model/Core/files/style.css');
 				$this->model->addJS('model/Core/files/js.js');
 
-				$this->viewOptions['modules'] = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
+				$modules = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
+				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
+					$this->viewOptions['template'] = 'local-module';
+					$this->viewOptions['module'] = $modules[$this->model->getRequest(2)];
+				} else {
+					$this->viewOptions['template'] = 'local-modules';
+					$this->viewOptions['modules'] = $modules;
+				}
 				break;
 			case 'make-cache':
 				try {
