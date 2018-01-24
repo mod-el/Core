@@ -246,6 +246,15 @@ class ZkController extends Controller
 						break;
 				}
 				break;
+			case 'local-modules':
+				$this->viewOptions['template'] = 'local-modules';
+				$this->viewOptions['cache'] = false;
+
+				$this->model->addCSS('model/Core/files/style.css');
+				$this->model->addJS('model/Core/files/js.js');
+
+				$this->viewOptions['modules'] = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
+				break;
 			case 'make-cache':
 				try {
 					$modules = $this->updater->getModules();

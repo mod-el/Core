@@ -43,25 +43,30 @@ class ReflectionModule
 	 * @param Core $model
 	 * @param string $base_dir
 	 */
-	function __construct(string $name, Core $model, $base_dir = '')
+	function __construct(string $name, Core $model, string $base_dir = 'model')
 	{
 		$this->folder_name = $name;
 		$this->model = $model;
 		$this->base_dir = $base_dir;
-		$this->path = INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR;
+		$this->path = INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR;
 
 		$manifestExists = $this->loadManifest();
 
 		if ($manifestExists) {
 			$this->exists = true;
 		} else {
-			$this->exists = false;
-			return false;
+			if ($base_dir === 'model') {
+				$this->exists = false;
+				return;
+			} else {
+				$this->exists = true;
+				$this->name = $name;
+			}
 		}
 
 		$this->files = $this->getFiles($this->path);
 
-		$vars_file = INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+		$vars_file = INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
 		if (file_exists($vars_file)) {
 			require($vars_file);
 			if (isset($installed))
@@ -221,6 +226,6 @@ class ReflectionModule
 	 */
 	private function getConfigClassPath(): string
 	{
-		return INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
+		return INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
 	}
 }

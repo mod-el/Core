@@ -109,3 +109,61 @@ input:not([type=checkbox]):not([type=radio]), select{
     overflow: auto;
     box-sizing: border-box;
 }
+
+.modulo{
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 5px;
+    width: calc(100% / 3);
+    font-size: 12px;
+    vertical-align: top;
+}
+
+.modulo > div{
+    border: solid #CCC 1px;
+    min-height: 50px;
+    position: relative;
+}
+
+.modulo > div > div:first-of-type{
+    box-sizing: border-box;
+    padding: 15px;
+}
+
+.modulo.not-official > div{
+    border: dashed #F00 1px;
+}
+
+.versione{
+    font-style: italic;
+    float: right;
+}
+
+.clickable, .list-module{
+    cursor: pointer;
+}
+
+.list-module{
+    padding: 5px 10px;
+}
+
+.clickable:hover, .list-module:hover, .list-module.selected{
+    background: #D9ECFF;
+}
+
+.module-loading-bar{
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.module-loading-bar > div{
+    width: 0%;
+    height: 5px;
+    background: #2693FF;
+    -webkit-transition: width 0.4s ease-out;
+    -moz-transition: width 0.4s ease-out;
+    -o-transition: width 0.4s ease-out;
+    -ms-transition: width 0.4s ease-out;
+    transition: width 0.4s ease-out;
+}
