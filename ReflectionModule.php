@@ -43,25 +43,30 @@ class ReflectionModule
 	 * @param Core $model
 	 * @param string $base_dir
 	 */
-	function __construct(string $name, Core $model, $base_dir = '')
+	function __construct(string $name, Core $model, string $base_dir = 'model')
 	{
 		$this->folder_name = $name;
 		$this->model = $model;
 		$this->base_dir = $base_dir;
-		$this->path = INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR;
+		$this->path = INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR;
 
 		$manifestExists = $this->loadManifest();
 
 		if ($manifestExists) {
 			$this->exists = true;
 		} else {
-			$this->exists = false;
-			return false;
+			if ($base_dir === 'model') {
+				$this->exists = false;
+				return;
+			} else {
+				$this->exists = true;
+				$this->name = $name;
+			}
 		}
 
 		$this->files = $this->getFiles($this->path);
 
-		$vars_file = INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+		$vars_file = INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
 		if (file_exists($vars_file)) {
 			require($vars_file);
 			if (isset($installed))
@@ -82,47 +87,20 @@ class ReflectionModule
 	 */
 	private function loadManifest(): bool
 	{
-		if (file_exists($this->path . 'manifest.json'))
-			return $this->loadNewManifest();
-		elseif (file_exists($this->path . 'model.php')) // TODO: deprecated, to be removed
-			return $this->loadOldManifest();
-		else
+		if (file_exists($this->path . 'manifest.json')) {
+			$moduleData = json_decode(file_get_contents($this->path . 'manifest.json'), true);
+			if ($moduleData === null)
+				return false;
+
+			$this->name = $moduleData['name'];
+			$this->description = $moduleData['description'];
+			$this->version = $moduleData['version'];
+			$this->dependencies = $moduleData['dependencies'];
+
+			return true;
+		} else {
 			return false;
-	}
-
-	/**
-	 * Loads the new module manifest.json file
-	 *
-	 * @return bool
-	 */
-	private function loadNewManifest(): bool
-	{
-		$moduleData = json_decode(file_get_contents($this->path . 'manifest.json'), true);
-		if ($moduleData === null)
-			return false;
-
-		$this->name = $moduleData['name'];
-		$this->description = $moduleData['description'];
-		$this->version = $moduleData['version'];
-		$this->dependencies = $moduleData['dependencies'];
-
-		return true;
-	}
-
-	/**
-	 * Loads the old module model.php file
-	 *
-	 * @return bool
-	 */
-	private function loadOldManifest(): bool
-	{ // TODO: deprecated, to be removed
-		require($this->path . 'model.php');
-		$this->name = $moduleData['name'];
-		$this->description = $moduleData['description'];
-		$this->version = $moduleData['version'];
-		$this->dependencies = $moduleData['dependencies'];
-
-		return true;
+		}
 	}
 
 	/**
@@ -221,6 +199,6 @@ class ReflectionModule
 	 */
 	private function getConfigClassPath(): string
 	{
-		return INCLUDE_PATH . $this->base_dir . 'model' . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
+		return INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
 	}
 }

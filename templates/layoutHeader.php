@@ -17,8 +17,7 @@
 
 <div id="header">
     <a href="<?=PATH?>zk/modules">Modules</a>
-    <!--<a href="<?/*=PATH*/?>zk/elements">Elements</a>
-    <a href="<?/*=PATH*/?>zk/error-log">Error Log</a>-->
+    <a href="<?=PATH?>zk/local-modules">App</a>
 </div>
 
 <div id="main">

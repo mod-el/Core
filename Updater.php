@@ -23,11 +23,11 @@ class Updater
 	 * @param string $base_dir
 	 * @return ReflectionModule[]
 	 */
-	public function getModules(bool $get_updates = false, string $base_dir = ''): array
+	public function getModules(bool $get_updates = false, string $base_dir = 'model'): array
 	{
 		$modules = [];
 
-		$dirs = glob(INCLUDE_PATH . $base_dir . 'model' . DIRECTORY_SEPARATOR . '*');
+		$dirs = glob(INCLUDE_PATH . $base_dir . DIRECTORY_SEPARATOR . '*');
 		foreach ($dirs as $f) {
 			$name = explode(DIRECTORY_SEPARATOR, $f);
 			$name = end($name);

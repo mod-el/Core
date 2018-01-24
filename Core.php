@@ -665,7 +665,7 @@ class Core implements \JsonSerializable
 
 	/**
 	 * Returns the current request.
-	 * ModEl framwork can be called either via HTTP request (eg. via browser) or via CLI.
+	 * ModEl framework can be called either via HTTP request (eg. via browser) or via CLI.
 	 * If $i is given, it returns that index of the request.
 	 * Otherwise, it returns the full array.
 	 *
