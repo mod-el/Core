@@ -87,47 +87,20 @@ class ReflectionModule
 	 */
 	private function loadManifest(): bool
 	{
-		if (file_exists($this->path . 'manifest.json'))
-			return $this->loadNewManifest();
-		elseif (file_exists($this->path . 'model.php')) // TODO: deprecated, to be removed
-			return $this->loadOldManifest();
-		else
+		if (file_exists($this->path . 'manifest.json')) {
+			$moduleData = json_decode(file_get_contents($this->path . 'manifest.json'), true);
+			if ($moduleData === null)
+				return false;
+
+			$this->name = $moduleData['name'];
+			$this->description = $moduleData['description'];
+			$this->version = $moduleData['version'];
+			$this->dependencies = $moduleData['dependencies'];
+
+			return true;
+		} else {
 			return false;
-	}
-
-	/**
-	 * Loads the new module manifest.json file
-	 *
-	 * @return bool
-	 */
-	private function loadNewManifest(): bool
-	{
-		$moduleData = json_decode(file_get_contents($this->path . 'manifest.json'), true);
-		if ($moduleData === null)
-			return false;
-
-		$this->name = $moduleData['name'];
-		$this->description = $moduleData['description'];
-		$this->version = $moduleData['version'];
-		$this->dependencies = $moduleData['dependencies'];
-
-		return true;
-	}
-
-	/**
-	 * Loads the old module model.php file
-	 *
-	 * @return bool
-	 */
-	private function loadOldManifest(): bool
-	{ // TODO: deprecated, to be removed
-		require($this->path . 'model.php');
-		$this->name = $moduleData['name'];
-		$this->description = $moduleData['description'];
-		$this->version = $moduleData['version'];
-		$this->dependencies = $moduleData['dependencies'];
-
-		return true;
+		}
 	}
 
 	/**
