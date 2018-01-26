@@ -201,4 +201,23 @@ class ReflectionModule
 	{
 		return INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $this->folder_name . DIRECTORY_SEPARATOR . 'Config.php';
 	}
+
+	/**
+	 *
+	 */
+	public function getFilesByType()
+	{
+		$arr_files = [];
+		foreach (Autoloader::$fileTypes as $type => $data) {
+			foreach ($data['files'] as $module => $files) {
+				if ($module !== $this->folder_name)
+					continue;
+				if (!isset($arr_files[$type]))
+					$arr_files[$type] = [];
+				foreach ($files as $f => $path)
+					$arr_files[$type][] = $f;
+			}
+		}
+		return $arr_files;
+	}
 }
