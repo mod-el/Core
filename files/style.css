@@ -167,3 +167,21 @@ input:not([type=checkbox]):not([type=radio]), select{
     -ms-transition: width 0.4s ease-out;
     transition: width 0.4s ease-out;
 }
+
+.module-files{
+    display: inline-block;
+    box-sizing: border-box;
+    padding: 5px;
+    width: calc(100% / 3);
+    font-size: 12px;
+    vertical-align: top;
+}
+
+.module-files > div{
+    border: solid #CCC 1px;
+    padding: 10px;
+}
+
+.module-files > div > div:last-child{
+    padding: 10px;
+}
