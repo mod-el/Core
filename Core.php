@@ -158,36 +158,23 @@ class Core implements \JsonSerializable
 		if (count($this->modulesWithCleanUp) === 0)
 			return;
 
-		$tryCleanUp = false;
-		$threshold = date_create();
-		$threshold->modify('-1 hour');
-		if (isset($_SESSION[SESSION_ID]['model-cleanup-checked'])) {
-			$session_date = date_create($_SESSION[SESSION_ID]['model-cleanup-checked']);
-			if (!$session_date or $session_date < $threshold)
-				$tryCleanUp = true;
-		} else {
-			$tryCleanUp = true;
-		}
+		$dice = mt_rand(1, 100);
+		if ($dice === 1) {
+			try {
+				$lastModule = $this->getSetting('cleanup-last-module');
+				$lastModuleK = array_search($lastModule, $this->modulesWithCleanUp);
+				if ($lastModuleK === false or $lastModuleK === (count($this->modulesWithCleanUp) - 1))
+					$nextModule = $this->modulesWithCleanUp[0];
+				else
+					$nextModule = $this->modulesWithCleanUp[$lastModuleK + 1];
 
-		if ($tryCleanUp) {
-			$_SESSION[SESSION_ID]['model-cleanup-checked'] = date('Y-m-d H:i:s');
-			$dice = mt_rand(1, 10);
-			if ($dice === 1) {
-				try {
-					$lastModule = $this->getSetting('cleanup-last-module');
-					$lastModuleK = array_search($lastModule, $this->modulesWithCleanUp);
-					if ($lastModuleK === false or $lastModuleK === (count($this->modulesWithCleanUp) - 1))
-						$nextModule = $this->modulesWithCleanUp[0];
-					else
-						$nextModule = $this->modulesWithCleanUp[$lastModuleK + 1];
+				$this->setSetting('cleanup-last-module', $nextModule);
+				$this->setSetting('last-cleanup', date('Y-m-d H:i:s'));
 
-					$this->setSetting('cleanup-last-module', $nextModule);
-
-					$configClassName = '\\Model\\' . $nextModule . '\\Config';
-					$configClass = new $configClassName($this);
-					$configClass->cleanUp();
-				} catch (\Exception $e) {
-				}
+				$configClassName = '\\Model\\' . $nextModule . '\\Config';
+				$configClass = new $configClassName($this);
+				$configClass->cleanUp();
+			} catch (Exception $e) {
 			}
 		}
 	}

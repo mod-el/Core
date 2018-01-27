@@ -14,11 +14,4 @@
             </div>
         </div>
 	<?php } ?>
-    <?/*<div class="modulo" style="width: 100%">
-        <div id="module-new" class="clickable" onclick="lightboxNewModule()">
-            <div>
-                <b>Install new module</b>
-            </div>
-        </div>
-    </div>*/?>
 </div>
