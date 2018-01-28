@@ -168,6 +168,23 @@ class Core implements \JsonSerializable
 				else
 					$nextModule = $this->modulesWithCleanUp[$lastModuleK + 1];
 
+				$lastCleanup = $this->getSetting('last-cleanup');
+				$lastCleanup = $lastCleanup ? date_create($lastCleanup) : false;
+				$today = date_create();
+				if ($lastCleanup) {
+					$interval = $today->getTimestamp() - $lastCleanup->getTimestamp();
+
+					$totalInterval = (int)$this->getSetting('cleanup-total-interval');
+					$numberOfIntervals = (int)$this->getSetting('cleanup-intervals');
+
+					$totalInterval += $interval;
+					$numberOfIntervals++;
+
+					$this->setSetting('cleanup-total-interval', $totalInterval);
+					$this->setSetting('cleanup-intervals', $numberOfIntervals);
+					$this->setSetting('cleanups-average', round($totalInterval / $numberOfIntervals));
+				}
+
 				$this->setSetting('cleanup-last-module', $nextModule);
 				$this->setSetting('last-cleanup', date('Y-m-d H:i:s'));
 
