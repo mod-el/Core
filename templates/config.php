@@ -12,7 +12,7 @@
 </style>
 
 <form action="?" method="post">
-	<?php csrfInput(); ?>
+	<?php $this->model->_CSRF->csrfInput(); ?>
 	<table style="width: 50%">
         <tr>
             <td style="width: 50%">

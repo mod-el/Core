@@ -166,18 +166,18 @@ function zkBacktrace($return = false){
 }
 
 /**
- * Is a ZkException?
+ * Is a ModEl Exception?
  *
  * @param $el
  * @return bool
  */
 function isErr($el){
-	if(is_object($el) and get_class($el)=='Model\\Core\\ZkException') return true;
+	if(is_object($el) and get_class($el)=='Model\\Core\\Exception') return true;
 	else return false;
 }
 
 /**
- * Gets the string from an Exception, depending if it's a simple Exception or a ZkException
+ * Gets the string from an Exception, depending if it's a simple Exception or a ModEl Exception
  *
  * @param Exception $e
  * @return string
@@ -196,22 +196,23 @@ function isAssoc($arr){
 	return array_keys($arr) !== range(0, count($arr) - 1);
 }
 
-// Functions for preventing CSRF attacks
-
-if(!isset($_SESSION['csrf']))
-	$_SESSION['csrf'] = md5(uniqid(rand(), true));
-
 /**
- * @return bool
- */
-function checkCsrf(){
-	if(isset($_POST['c_id']) and $_POST['c_id']==$_SESSION['csrf']) return true;
-	else return false;
-}
+* @param array $array1
+* @param array $array2
+* @return array
+* @author Daniel <daniel (at) danielsmedegaardbuus (dot) dk>
+* @author Gabriel Sobrinho <gabriel (dot) sobrinho (at) gmail (dot) com>
+*/
+function array_merge_recursive_distinct(array &$array1, array &$array2) {
+	$merged = $array1;
 
-/**
- *
- */
-function csrfInput(){
-	echo '<input type="hidden" name="c_id" value="'.$_SESSION['csrf'].'" />';
+	foreach( $array2 as $key => &$value ) {
+		if( is_array ( $value ) && isset ( $merged [$key] ) && is_array ( $merged [$key] ) ) {
+			$merged [$key] = array_merge_recursive_distinct ( $merged [$key], $value );
+		}else{
+			$merged [$key] = $value;
+		}
+	}
+
+	return $merged;
 }

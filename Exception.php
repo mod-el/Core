@@ -1,13 +1,15 @@
 <?php namespace Model\Core;
 
-class ZkException extends \Exception{
+class Exception extends \Exception
+{
 	public $_mex = '';
 	public $_code = 'ModEl';
 	public $_details = array();
 
-	function show(){
+	function show()
+	{
 		$message = parent::getMessage();
-		if(DEBUG_MODE) return $this->_code.' - '.$message.($this->_mex ? '<br />'.$this->_mex : '');
+		if (DEBUG_MODE) return $this->_code . ' - ' . $message . ($this->_mex ? '<br />' . $this->_mex : '');
 		else return $message;
 	}
 }

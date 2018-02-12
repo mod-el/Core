@@ -1,6 +1,12 @@
 {
 	"name": "Core",
 	"description": "",
-	"version": "2.2.0",
-	"dependencies": {}
+	"version": "2.4.1",
+	"dependencies": {},
+	"file-types": {
+		"Controller": {
+			"folder": "Controllers",
+			"class": true
+		}
+	}
 }

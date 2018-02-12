@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
-class Controller{
+class Controller
+{
 	/** @var \FrontController */
 	protected $model;
 	/** @var array */
@@ -11,13 +12,16 @@ class Controller{
 		'footer' => [
 			'layoutFooter',
 		],
+		'template-module' => null,
+		'template-module-layout' => null,
 		'template-folder' => [],
 		'template' => false,
 		'errors' => [],
 		'messages' => [],
 	);
 
-	function __construct(\FrontController $model){
+	function __construct(\FrontController $model)
+	{
 		$this->model = $model;
 	}
 
@@ -25,25 +29,34 @@ class Controller{
 	 * Meant to be extended
 	 * This will be executed first
 	 */
-	public function init(){}
+	public function init()
+	{
+	}
 
 	/**
 	 * This is executed after init()
 	 */
-	public function modelInit(){
+	public function modelInit()
+	{
 
 	}
 
 	/**
 	 * Meant to be extended
 	 * This should contain the actual business logic of the application
+	 *
+	 * @return mixed
 	 */
-	public function index(){}
+	public function index()
+	{
+		return null;
+	}
 
 	/**
 	 * Optionally, you can specify different behaviours for POST or GET requests
 	 */
-	public function post(){
+	public function post()
+	{
 		return $this->index();
 	}
 
@@ -52,20 +65,22 @@ class Controller{
 	 * It uses Output model, by default, but this behaviour can be customized by extending the method
 	 * If Output module is not installed, it tries to execute outputCLI (only works if "outputCLI" was customized)
 	 */
-	public function output(){
+	public function output()
+	{
 		/* Backward compatibility */
-		if(isset($this->viewOptions['errori']))
+		if (isset($this->viewOptions['errori']))
 			$this->viewOptions['errors'] = $this->viewOptions['errori'];
-		if(isset($this->viewOptions['messaggi']))
+		if (isset($this->viewOptions['messaggi']))
 			$this->viewOptions['messages'] = $this->viewOptions['messaggi'];
 
-		if($this->viewOptions['template']===false){ // By default, load the template with the same name as the current controller
-			$this->viewOptions['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr(get_class($this), 0, -10)));
+		if ($this->viewOptions['template'] === false) { // By default, load the template with the same name as the current controller
+			$classShortName = (new \ReflectionClass($this))->getShortName();
+			$this->viewOptions['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr($classShortName, 0, -10)));
 		}
 
-		if($this->model->moduleExists('Output')){
+		if ($this->model->moduleExists('Output')) {
 			$this->model->_Output->render($this->viewOptions);
-		}else{
+		} else {
 			echo '<pre>';
 			$this->outputCLI(true);
 			echo '</pre>';
@@ -78,8 +93,9 @@ class Controller{
 	 *
 	 * @param bool $asFallback
 	 */
-	public function outputCLI($asFallback=false){
-		if(!$asFallback)
+	public function outputCLI(bool $asFallback = false)
+	{
+		if (!$asFallback)
 			$this->output();
 	}
 
@@ -90,8 +106,10 @@ class Controller{
 	 * @param array $options
 	 * @param mixed $idx
 	 * @return mixed
+	 * @throws Exception
 	 */
-	private function load($name, array $options=array(), $idx=0){
+	private function load(string $name, array $options = array(), $idx = 0)
+	{
 		return $this->model->load($name, $options, $idx);
 	}
 }

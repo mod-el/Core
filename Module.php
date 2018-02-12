@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
-class Module{
+class Module
+{
 	/** @var Core */
 	public $model;
 	/** @var mixed */
@@ -17,7 +18,8 @@ class Module{
 	 * @param Core $front
 	 * @param mixed $idx
 	 */
-	function __construct(Core $front, $idx = 0){
+	function __construct(Core $front, $idx = 0)
+	{
 		$this->model = $front;
 		$this->module_id = $idx;
 	}
@@ -25,23 +27,28 @@ class Module{
 	/**
 	 * Meant to be expanded in the specific module.
 	 *
-	 * @param mixed $options
+	 * @param array $options
 	 */
-	public function init($options){}
+	public function init(array $options)
+	{
+	}
 
 	/**
 	 * This method is called by the "terminate" method of the Core, at the end of each execution.
 	 */
-	public function terminate(){}
+	public function terminate()
+	{
+	}
 
 	/**
 	 * Utility method, returns the path of this module.
 	 *
 	 * @return string
 	 */
-	public function getPath(){
+	public function getPath(): string
+	{
 		$rc = new \ReflectionClass(get_class($this));
-		return substr(dirname($rc->getFileName()), strlen(INCLUDE_PATH)).'/';
+		return substr(dirname($rc->getFileName()), strlen(INCLUDE_PATH)) . '/';
 	}
 
 	/**
@@ -49,14 +56,15 @@ class Module{
 	 *
 	 * @return array
 	 */
-	public function retrieveConfig(){
-		if($this->configCache===null){
+	public function retrieveConfig(): array
+	{
+		if ($this->configCache === null) {
 			$classname = $this->getClass();
 
-			if(file_exists(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php')){
-				require(INCLUDE_PATH.'app'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.''.$classname.DIRECTORY_SEPARATOR.'config.php');
+			if (file_exists(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . '' . $classname . DIRECTORY_SEPARATOR . 'config.php')) {
+				require(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . '' . $classname . DIRECTORY_SEPARATOR . 'config.php');
 				$this->configCache = $config;
-			}else{
+			} else {
 				$this->configCache = [];
 			}
 		}
@@ -65,14 +73,27 @@ class Module{
 	}
 
 	/**
+	 * Clears stored config data
+	 *
+	 * @param array $options
+	 * @return bool
+	 */
+	public function reloadConfig(array $options = []): bool
+	{
+		$this->configCache = null;
+		return true;
+	}
+
+	/**
 	 * This will trigger a new event in the Core, coming from this module.
 	 * Each event has its own name (param $event) and eventually carries a bunch of data in the form of an array (param $data)
 	 *
-	 * @param $event
+	 * @param string $event
 	 * @param array $data
 	 * @return bool
 	 */
-	protected function trigger($event, array $data = []){
+	protected function trigger(string $event, array $data = [])
+	{
 		return $this->model->trigger($this->getClass(), $event, $data);
 	}
 
@@ -81,7 +102,8 @@ class Module{
 	 *
 	 * @return string
 	 */
-	protected function getClass(){
+	protected function getClass(): string
+	{
 		$classname = get_class($this);
 		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
 			$classname = substr($classname, $pos + 1);
@@ -91,29 +113,33 @@ class Module{
 	/**
 	 * A loaded module can, optionally, put content in the "head" section of the page
 	 */
-	public function headings(){}
+	public function headings()
+	{
+	}
 
 	/**
 	 * Meant to be extended if needed
 	 *
 	 * @param array $request
 	 * @param string $rule
-	 * @return string|bool
+	 * @return array|bool
 	 */
-	public function getController(array $request, $rule){
+	public function getController(array $request, string $rule)
+	{
 		return false;
 	}
 
 	/**
 	 * Meant to be extended if needed
 	 *
-	 * @param string|bool $controller
+	 * @param string $controller
 	 * @param int|bool $id
 	 * @param array $tags
 	 * @param array $opt
 	 * @return bool|string
 	 */
-	public function getUrl($controller=false, $id=false, array $tags=[], array $opt=[]){
+	public function getUrl(string $controller = null, $id = false, array $tags = [], array $opt = [])
+	{
 		return false;
 	}
 }
