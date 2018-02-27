@@ -131,9 +131,8 @@ class Config extends Module_Config
 					throw new \Exception('The module ' . $d_info['filename'] . ' returned an invalid format for rules.');
 
 				foreach ($moduleRules['rules'] as $rIdx => $r) {
-					if (isset($rules[$r]))
-						continue;
-					$rules[$r] = [
+					$rules[] = [
+						'rule' => $r,
 						'module' => $d_info['filename'],
 						'idx' => $rIdx,
 					];
