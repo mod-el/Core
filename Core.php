@@ -617,20 +617,24 @@ class Core implements \JsonSerializable
 				if ($r === '')
 					continue;
 
-				$rArr = explode('/', $r);
-				$score = 0;
-				foreach ($rArr as $i => $sr) {
-					if (!isset($request[$i]))
-						continue 2;
-					if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
-						continue 2;
+				if ($r === null) {
+					$matchedRules[$r] = 1;
+				} else {
+					$rArr = explode('/', $r);
+					$score = 0;
+					foreach ($rArr as $i => $sr) {
+						if (!isset($request[$i]))
+							continue 2;
+						if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
+							continue 2;
 
-					$score = $i * 2;
-					if (strpos($sr, '[') === false)
-						$score += 1;
+						$score = $i * 2;
+						if (strpos($sr, '[') === false)
+							$score += 1;
+					}
+
+					$matchedRules[$r] = $score;
 				}
-
-				$matchedRules[$r] = $score;
 			}
 		}
 
