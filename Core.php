@@ -614,22 +614,22 @@ class Core implements \JsonSerializable
 				$matchedRules[''] = 0;
 		} else {
 			foreach ($this->rules as $r => $ruleData) {
-				$rArr = explode('/', $r);
-				if ($r !== '') {
-					$score = 0;
-					foreach ($rArr as $i => $sr) {
-						if (!isset($request[$i]))
-							continue 2;
-						if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
-							continue 2;
+				if ($r === '')
+					continue;
 
-						$score = $i * 2;
-						if (strpos($sr, '[') === false)
-							$score += 1;
-					}
-				} else {
-					$score = 1;
+				$rArr = explode('/', $r);
+				$score = 0;
+				foreach ($rArr as $i => $sr) {
+					if (!isset($request[$i]))
+						continue 2;
+					if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
+						continue 2;
+
+					$score = $i * 2;
+					if (strpos($sr, '[') === false)
+						$score += 1;
 				}
+
 				$matchedRules[$r] = $score;
 			}
 		}
