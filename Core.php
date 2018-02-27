@@ -10,7 +10,7 @@ class Core implements \JsonSerializable
 	protected $boundProperties = array();
 	/** @var array[] */
 	protected $availableModules = [];
-	/** @var string[] */
+	/** @var array[] */
 	protected $rules = [];
 	/** @var string[] */
 	protected $controllers = [];
@@ -609,32 +609,32 @@ class Core implements \JsonSerializable
 	private function matchRule(array $request)
 	{
 		$matchedRules = [];
-		if (empty($request)) { // If the request is empty, it matches only if a rule with an empty string is given (usually the home page of the website/app)
-			if (isset($this->rules['']))
-				$matchedRules[''] = 0;
-		} else {
-			foreach ($this->rules as $r => $ruleData) {
-				if ($r === '')
+
+		foreach ($this->rules as $rIdx => $r) {
+			if ($r['rule'] === '') {
+				if ($request === '')
+					$matchedRules[$rIdx] = 0;
+				else
 					continue;
+			}
 
-				if ($r === null) {
-					$matchedRules[$r] = 1;
-				} else {
-					$rArr = explode('/', $r);
-					$score = 0;
-					foreach ($rArr as $i => $sr) {
-						if (!isset($request[$i]))
-							continue 2;
-						if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
-							continue 2;
+			if ($r['rule'] === null) {
+				$matchedRules[$rIdx] = 1;
+			} else {
+				$rArr = explode('/', $r['rule']);
+				$score = 0;
+				foreach ($rArr as $i => $sr) {
+					if (!isset($request[$i]))
+						continue 2;
+					if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
+						continue 2;
 
-						$score = $i * 2;
-						if (strpos($sr, '[') === false)
-							$score += 1;
-					}
-
-					$matchedRules[$r] = $score;
+					$score = $i * 2;
+					if (strpos($sr, '[') === false)
+						$score += 1;
 				}
+
+				$matchedRules[$rIdx] = $score;
 			}
 		}
 
