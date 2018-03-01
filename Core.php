@@ -642,7 +642,7 @@ class Core implements \JsonSerializable
 			return false;
 		} else {
 			if (count($matchedRules) > 1)
-				krsort($matchedRules);
+				arsort($matchedRules);
 
 			return $this->rules[key($matchedRules)];
 		}
