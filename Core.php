@@ -612,7 +612,7 @@ class Core implements \JsonSerializable
 
 		foreach ($this->rules as $rIdx => $r) {
 			if ($r['rule'] === '') {
-				if ($request === '')
+				if ($request === [])
 					$matchedRules[$rIdx] = 0;
 				else
 					continue;
