@@ -203,7 +203,7 @@ function isAssoc($arr){
 * @author Daniel <daniel (at) danielsmedegaardbuus (dot) dk>
 * @author Gabriel Sobrinho <gabriel (dot) sobrinho (at) gmail (dot) com>
 */
-function array_merge_recursive_distinct(array &$array1, array &$array2) {
+function array_merge_recursive_distinct(array $array1, array $array2) {
 	$merged = $array1;
 
 	foreach( $array2 as $key => &$value ) {
