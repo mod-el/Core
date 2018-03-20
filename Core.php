@@ -619,7 +619,7 @@ class Core implements \JsonSerializable
 			}
 
 			if ($r['rule'] === null) {
-				$matchedRules[$rIdx] = 1;
+				$matchedRules[$rIdx] = 0.5;
 			} else {
 				$rArr = explode('/', $r['rule']);
 				$score = 0;
