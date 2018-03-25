@@ -1,7 +1,7 @@
 {
 	"name": "Core",
 	"description": "",
-	"version": "2.4.1",
+	"version": "2.4.2",
 	"dependencies": {},
 	"file-types": {
 		"Controller": {

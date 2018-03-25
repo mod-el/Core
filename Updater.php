@@ -8,7 +8,12 @@ class Updater
 	private $queue_file;
 	/** @var Core */
 	private $model;
+	/** @var array */
+	private $updating = [];
 
+	/**
+	 * @param Core $model
+	 */
 	function __construct(Core $model)
 	{
 		$this->model = $model;
@@ -423,7 +428,7 @@ class Updater
 
 	/**
 	 * @param string $name
-	 * @return \Model\Core\Module_Config|bool
+	 * @return \Model\Core\Module_Config|null
 	 */
 	public function getConfigClassFor(string $name)
 	{
@@ -431,11 +436,11 @@ class Updater
 			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php');
 			$configClass = '\\Model\\' . $name . '\\Config';
 			if (!class_exists($configClass, false))
-				return false;
+				return null;
 			$configClass = new $configClass($this->model);
 			return $configClass;
 		} else {
-			return false;
+			return null;
 		}
 	}
 
@@ -445,6 +450,7 @@ class Updater
 	 * @param string $module
 	 * @param string $type
 	 * @return bool
+	 * @throws \Exception
 	 */
 	public function cliConfig(string $module, string $type): bool
 	{
@@ -513,5 +519,56 @@ class Updater
 	{
 		$configClass->checkAssets();
 		return $configClass->install($data);
+	}
+
+	/**
+	 * Updates a module (and its dependencies) cache
+	 * Returns a list of updated modules
+	 *
+	 * @param string $module
+	 * @return array|null
+	 * @throws Exception
+	 */
+	public function updateModuleCache(string $module): array
+	{
+		$this->updating = [];
+		return $this->internalUpdateCache($module);
+	}
+
+	/**
+	 * Recursive, called by the previous method
+	 *
+	 * @param string $module
+	 * @return array
+	 * @throws Exception
+	 */
+	private function internalUpdateCache(string $module): array
+	{
+		if (in_array($module, $this->updating)) {
+			$this->model->error('Cache update loop');
+		} else {
+			$this->updating[] = $module;
+		}
+		$updated = [];
+		$configClass = $this->getConfigClassFor($module);
+		if ($configClass) {
+			$dependencies = $configClass->cacheDependencies();
+			foreach ($dependencies as $dep) {
+				// Updates all the dependencies
+				// Eventual recursive loops between dependency modules (e.g. between Core, Router and ORM) will be ignored thanks to the try-catch block
+				// This is because the modules will be updated by the next function call in the controller anyway, so there's no need to stop the whole process
+				try {
+					$sub_updated = $this->internalUpdateCache($dep);
+					if (!is_array($sub_updated))
+						return null;
+					$updated = array_merge($updated, $sub_updated);
+				} catch (Exception $e) {
+				}
+			}
+			if (!$configClass->makeCache())
+				$this->model->error('Error in making cache for module ' . $module);
+			$updated[] = $module;
+		}
+		return $updated;
 	}
 }

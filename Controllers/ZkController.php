@@ -1,6 +1,7 @@
 <?php namespace Model\Core\Controllers;
 
 use Model\Core\Controller;
+use Model\Core\Exception;
 use Model\Core\Updater;
 
 class ZkController extends Controller
@@ -264,34 +265,16 @@ class ZkController extends Controller
 				try {
 					$modules = $this->updater->getModules();
 
-					$modulesConfigs = [
-						'\\Model\\Core\\Config' => false,
-					];
-					foreach ($modules as $mIdx => $m) {
-						if ($mIdx == 'Core')
+					$this->updater->updateModuleCache('Core');
+
+					foreach ($modules as $mName => $m) {
+						if ($mName == 'Core')
 							continue;
 						if ($m->hasConfigClass()) {
-							$modulesConfigs['\\Model\\' . $mIdx . '\\Config'] = false;
+							$this->updater->updateModuleCache($mName);
 						}
 					}
 
-					$cacheErrors = [];
-					for ($c = 1; $c <= 2; $c++) { // Since some modules require others to have cache updated, I run through each one twice, instead of manually forcing the order
-						foreach ($modulesConfigs as $className => $mStatus) {
-							try {
-								$moduleConfig = new $className($this->model);
-								$modulesConfigs[$className] = $moduleConfig->makeCache();
-							} catch (Exception $e) {
-								$modulesConfigs[$className] = false;
-								$cacheErrors[$className] = getErr($e);
-							}
-						}
-					}
-
-					foreach ($modulesConfigs as $className => $mStatus) {
-						if (!$mStatus)
-							$this->model->error('Error in making cache for module ' . $className . (isset($cacheErrors[$className]) ? "\n" . $cacheErrors[$className] : ''));
-					}
 				} catch (Exception $e) {
 					die(getErr($e));
 				}
