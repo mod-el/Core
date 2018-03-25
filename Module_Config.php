@@ -57,6 +57,16 @@ class Module_Config
 	}
 
 	/**
+	 * Must return a list of modules on which this module depends on, in order to build a correct internal cache
+	 *
+	 * @return array
+	 */
+	public function cacheDependencies(): array
+	{
+		return [];
+	}
+
+	/**
 	 * If this module needs to register rules, this is the method that should return them.
 	 * The syntax is: [
 	 *        'rules'=>[

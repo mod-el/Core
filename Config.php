@@ -200,6 +200,16 @@ $cache = ' . var_export($cache, true) . ';
 	}
 
 	/**
+	 * Router must be updated in order for it to pass the correct rules
+	 *
+	 * @return array
+	 */
+	public function cacheDependencies(): array
+	{
+		return ['Router'];
+	}
+
+	/**
 	 * @param string $path
 	 * @param bool $isClass
 	 * @return array
