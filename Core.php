@@ -91,6 +91,9 @@ class Core implements \JsonSerializable
 
 	private function defineConstants()
 	{
+		if(defined('START_TIME'))
+			return;
+
 		DEFINE('START_TIME', microtime(true));
 
 		include(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php');
