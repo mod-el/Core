@@ -456,9 +456,26 @@ class Core implements \JsonSerializable
 				$ruleFound = $match['idx'];
 			}
 
+			$moduleData = $this->moduleExists($module);
+			if (!$moduleData)
+				$this->model->error('Module ' . $module . ' does not exist');
+
 			$this->trigger('Core', 'leadingModuleFound', ['module' => $module]);
 
-			$controllerData = $this->getModule($module)->getController($request, $ruleFound);
+			if ($moduleData['load']) {
+				$controllerData = $this->getModule($module)->getController($request, $ruleFound);
+			} else {
+				// If this is not an auto-loading module, I just return the first controller I find
+				$controllerData = null;
+				foreach ($this->controllers as $c) {
+					if ($c['module'] === $module) {
+						$controllerData = [
+							'controller' => $c['controller'],
+						];
+						break;
+					}
+				}
+			}
 
 			if (!is_array($controllerData)) {
 				$this->viewOptions['404-reason'] = 'Module ' . $module . ' can\'t return a controller name.';
