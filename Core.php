@@ -126,7 +126,6 @@ class Core implements \JsonSerializable
 	 * Looks for the internal cache file, and attempts to generate it if not found (e.g. first runs, or accidental cache wipes)
 	 *
 	 * @return array
-	 * @throws \Exception
 	 */
 	private function retrieveCacheFile(): array
 	{
@@ -223,7 +222,6 @@ class Core implements \JsonSerializable
 	 * @param array $options
 	 * @param mixed $idx
 	 * @return mixed
-	 * @throws Exception
 	 */
 	public function load(string $name, array $options = [], $idx = 0)
 	{
@@ -314,7 +312,6 @@ class Core implements \JsonSerializable
 	 * @param mixed $idx
 	 * @param bool $autoload
 	 * @return Module|null
-	 * @throws Exception
 	 */
 	public function getModule(string $name, $idx = null, bool $autoload = true)
 	{
@@ -375,7 +372,6 @@ class Core implements \JsonSerializable
 	 *
 	 * @param $i
 	 * @return mixed
-	 * @throws Exception
 	 */
 	function __get(string $i)
 	{
@@ -403,7 +399,6 @@ class Core implements \JsonSerializable
 	 * @param string $name
 	 * @param array $arguments
 	 * @return mixed
-	 * @throws Exception
 	 */
 	function __call(string $name, array $arguments)
 	{
@@ -461,9 +456,26 @@ class Core implements \JsonSerializable
 				$ruleFound = $match['idx'];
 			}
 
+			$moduleData = $this->moduleExists($module);
+			if (!$moduleData)
+				$this->model->error('Module ' . $module . ' does not exist');
+
 			$this->trigger('Core', 'leadingModuleFound', ['module' => $module]);
 
-			$controllerData = $this->getModule($module)->getController($request, $ruleFound);
+			if ($moduleData['load']) {
+				$controllerData = $this->getModule($module)->getController($request, $ruleFound);
+			} else {
+				// If this is not an auto-loading module, I just return the first controller I find
+				$controllerData = null;
+				foreach ($this->controllers as $c) {
+					if ($c['module'] === $module) {
+						$controllerData = [
+							'controller' => $c['controller'],
+						];
+						break;
+					}
+				}
+			}
 
 			if (!is_array($controllerData)) {
 				$this->viewOptions['404-reason'] = 'Module ' . $module . ' can\'t return a controller name.';
@@ -768,7 +780,6 @@ class Core implements \JsonSerializable
 	 * @param array $tags
 	 * @param array $opt
 	 * @return string
-	 * @throws Exception
 	 */
 	public function prefix(array $tags = [], array $opt = []): string
 	{
@@ -813,7 +824,6 @@ class Core implements \JsonSerializable
 	 * @param array $tags
 	 * @param array $opt
 	 * @return bool|string
-	 * @throws Exception
 	 */
 	public function getUrl($controller = false, $id = false, array $tags = [], array $opt = [])
 	{
@@ -866,7 +876,6 @@ class Core implements \JsonSerializable
 	 *
 	 * @param string $gen
 	 * @param string|array $options
-	 * @throws Exception
 	 */
 	public function error(string $gen, $options = '')
 	{
@@ -1027,7 +1036,6 @@ class Core implements \JsonSerializable
 	 * Shortcut for redirecting
 	 *
 	 * @param string $path
-	 * @throws \Exception
 	 */
 	function redirect(string $path)
 	{
@@ -1071,7 +1079,6 @@ class Core implements \JsonSerializable
 	 * Returns debug data
 	 *
 	 * @return array
-	 * @throws Exception
 	 */
 	public function getDebugData(): array
 	{
