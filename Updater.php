@@ -57,8 +57,13 @@ class Updater
 
 						if ($remote[$name]['old_md5']) {
 							$m->expected_md5 = $remote[$name]['old_md5'];
-							if ($m->md5 != $m->expected_md5)
-								$m->corrupted = true;
+							if ($m->md5 != $m->expected_md5) {
+								if ($m->expected_md5 != $m->version_md5) {
+									$m->new_version = true;
+								} else {
+									$m->corrupted = true;
+								}
+							}
 						}
 						if ($remote[$name]['current_version'] and version_compare($remote[$name]['current_version'], $m->version, '>'))
 							$m->new_version = $remote[$name]['current_version'];
@@ -83,6 +88,7 @@ class Updater
 	{
 		if (!file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data'))
 			mkdir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data');
+
 		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
 
 		if (!file_exists($file_path)) {
@@ -90,13 +96,7 @@ class Updater
 			@chmod($file_path, 0755);
 		}
 
-		$text = file_get_contents($file_path);
-
-		if (stripos($text, '$installed') !== false) {
-			$return = (bool)file_put_contents($file_path, preg_replace('/\$installed ?=.+;/i', '$installed = true;', $text));
-		} else {
-			$return = (bool)file_put_contents($file_path, $text . "\n" . '$installed = true;' . "\n");
-		}
+		$this->changeModuleInternalVar($name, 'installed', true);
 
 		$configClass = $this->getConfigClassFor($name);
 		if ($configClass) {
@@ -108,6 +108,24 @@ class Updater
 		}
 
 		return true;
+	}
+
+	protected function changeModuleInternalVar(string $name, string $k, $v): bool
+	{
+		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+
+		require($file_path);
+
+		if (!isset($vars)) {
+			$vars = [
+				'installed' => false,
+				'md5' => null,
+			];
+		}
+
+		$vars[$k] = $v;
+
+		return (bool)file_put_contents($file_path, "<?php\n\$vars = " . var_export($vars, true) . ";\n");
 	}
 
 	/**
@@ -211,6 +229,13 @@ class Updater
 			return false;
 		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp'))
 			return false;
+
+		$config = $this->model->retrieveConfig();
+		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&modules=' . urlencode($name) . '&key=' . urlencode($config['license']));
+		$remote = json_decode($remote_str, true);
+		if (!isset($remote[$name]))
+			return false;
+		$this->changeModuleInternalVar($name, 'md5', $remote[$name]['md5']);
 
 		$coreConfig = new Config($this->model);
 		$coreConfig->makeCache();

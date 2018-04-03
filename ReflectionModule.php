@@ -26,6 +26,8 @@ class ReflectionModule
 	public $files = array();
 	/** @var string|bool */
 	public $md5 = false;
+	/** @var string|null */
+	public $version_md5 = null;
 	/** @var bool */
 	public $official = null;
 	/** @var Module_Config */
@@ -67,13 +69,27 @@ class ReflectionModule
 		$this->files = $this->getFiles($this->path);
 
 		$vars_file = INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+
+		$status_vars = [
+			'installed' => false,
+			'md5' => null,
+		];
+
 		if (file_exists($vars_file)) {
 			require($vars_file);
+
+			if (isset($vars)) {
+				$status_vars = array_merge($status_vars, $vars);
+			}
+
 			if (isset($installed))
-				$this->installed = $installed;
+				$status_vars['installed'] = $installed;
 		}
 
-		$md5 = array();
+		$this->installed = $status_vars['installed'];
+		$this->version_md5 = $status_vars['md5'];
+
+		$md5 = [];
 		foreach ($this->files as $f)
 			$md5[] = $f['md5'];
 		sort($md5);

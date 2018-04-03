@@ -309,32 +309,29 @@ $config = ' . var_export($config, true) . ';
 		];
 	}
 
-	public function postUpdate_2_1_0()
+	public function postUpdate_2_5_0()
 	{
-		if (file_exists(INCLUDE_PATH . 'data'))
-			return rename(INCLUDE_PATH . 'data', INCLUDE_PATH . 'app');
+		$updater = new \Model\Core\Updater($this->model);
+		$queue = $updater->getUpdateQueue();
+
+		foreach (glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*') as $dir) {
+			$file_path = $dir . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+			file_put_contents($file_path, "<?php\n\$vars = [\'installed\'=>true, \'md5\'=>null];\n");
+
+			$queue[] = pathinfo($dir, PATHINFO_BASENAME);
+		}
+
+		$updater->setUpdateQueue($queue);
+
 		return true;
 	}
 
-	public function postUpdate_2_1_0_Backup()
+	public function postUpdate_2_5_0_Backup()
 	{
-		if (file_exists(INCLUDE_PATH . 'app'))
-			return rename(INCLUDE_PATH . 'app', INCLUDE_PATH . 'data');
-		return true;
-	}
-
-	public function postUpdate_2_2_0()
-	{
-		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
-		if (file_exists($cacheFile))
-			unlink($cacheFile);
-		file_put_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php', str_replace('FrontController extends \\Model\\Core', 'FrontController extends \\Model\\Core\\Core', file_get_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php')));
-		return true;
-	}
-
-	public function postUpdate_2_2_0_Backup()
-	{
-		file_put_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php', str_replace('FrontController extends \\Model\\Core\\Core', 'FrontController extends \\Model\\Core', file_get_contents(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'FrontController.php')));
+		foreach (glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*') as $dir) {
+			$file_path = $dir . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+			file_put_contents($file_path, "<?php\n\$installed = true;\n");
+		}
 		return true;
 	}
 }
