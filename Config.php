@@ -316,7 +316,7 @@ $config = ' . var_export($config, true) . ';
 
 		foreach (glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*') as $dir) {
 			$file_path = $dir . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
-			file_put_contents($file_path, "<?php\n\$vars = [\'installed\'=>true, \'md5\'=>null];\n");
+			file_put_contents($file_path, "<?php\n\$vars = ['installed'=>true, 'md5'=>null];\n");
 
 			$queue[] = pathinfo($dir, PATHINFO_BASENAME);
 		}
