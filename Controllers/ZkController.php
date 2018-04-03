@@ -137,11 +137,8 @@ class ZkController extends Controller
 							$this->updater->checkUpdateQueue($this->model->getInput('module'));
 
 							$files = $this->updater->getModuleFileList($this->model->getInput('module'));
-							if (!$files) {
+							if (!$files)
 								die("File list not found\n");
-							} elseif (!$files['update'] and !$files['delete']) {
-								die("Nothing to update\n");
-							}
 
 							$_SESSION[SESSION_ID]['delete-from-module-' . $this->model->getInput('module')] = $files['delete'];
 							$this->model->sendJSON($files['update'], false);

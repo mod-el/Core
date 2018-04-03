@@ -1,4 +1,4 @@
-if(typeof c_id==='undefined')
+if (typeof c_id === 'undefined')
 	var c_id = '';
 
 var updateQueue = [];
@@ -119,7 +119,7 @@ function updateNextFile(name) {
 	if (updatingFileList[name].length > 0) {
 		var file = updatingFileList[name].shift();
 		ajax(function (r, name) {
-			if (r == 'ok') {
+			if (r === 'ok') {
 				updatingStep[name]++;
 				updateModuleBar(name);
 				updateNextFile(name);
@@ -133,13 +133,15 @@ function updateNextFile(name) {
 		}, absolute_path + 'zk/modules/update-file', 'module=' + encodeURIComponent(name) + '&file=' + encodeURIComponent(file), 'c_id=' + c_id, name);
 	} else {
 		ajax(function (r, name) {
-			if (r == 'ok') {
+			if (r === 'ok') {
 				updatingStep[name]++;
 				updateModuleBar(name);
 				refreshModule(name);
 				resetModuleLoadingBar(name);
 
-				if (updateQueue.length > 0)
+				if (name === 'Core')
+					document.location.reload();
+				else if (updateQueue.length > 0)
 					updateModule(updateQueue.shift());
 			} else {
 				alert(r);
@@ -227,7 +229,7 @@ function installModule(name) {
 	document.getElementById('lightbox').loading();
 
 	ajax(function (r) {
-		if (r == 'ok') {
+		if (r === 'ok') {
 			document.location.reload();
 		} else {
 			document.getElementById('lightbox').innerHTML = r;

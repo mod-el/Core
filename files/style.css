@@ -139,6 +139,14 @@ input:not([type=checkbox]):not([type=radio]), select{
     float: right;
 }
 
+.modulo .md5{
+    position: absolute;
+    right: 5px;
+    bottom: 2px;
+    color: #BBB;
+    font-size: 10px;
+}
+
 .clickable, .list-module{
     cursor: pointer;
 }
