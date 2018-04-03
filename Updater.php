@@ -89,13 +89,6 @@ class Updater
 		if (!file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data'))
 			mkdir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data');
 
-		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
-
-		if (!file_exists($file_path)) {
-			file_put_contents($file_path, "<?php\n");
-			@chmod($file_path, 0755);
-		}
-
 		$this->changeModuleInternalVar($name, 'installed', true);
 
 		$configClass = $this->getConfigClassFor($name);
@@ -113,6 +106,11 @@ class Updater
 	protected function changeModuleInternalVar(string $name, string $k, $v): bool
 	{
 		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+
+		if (!file_exists($file_path)) {
+			file_put_contents($file_path, "<?php\n");
+			@chmod($file_path, 0755);
+		}
 
 		require($file_path);
 
