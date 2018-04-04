@@ -139,10 +139,10 @@ function updateNextFile(name) {
 				refreshModule(name);
 				resetModuleLoadingBar(name);
 
-				if (name === 'Core')
-					document.location.reload();
-				else if (updateQueue.length > 0)
+				if (updateQueue.length > 0)
 					updateModule(updateQueue.shift());
+				else
+					document.location.reload();
 			} else {
 				alert(r);
 				refreshModule(name);
