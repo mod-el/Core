@@ -91,6 +91,9 @@ class Updater
 
 		$this->changeModuleInternalVar($name, 'installed', true);
 
+		$module = new ReflectionModule($name, $this->model);
+		$this->changeModuleInternalVar($name, 'md5', $module->md5);
+
 		$configClass = $this->getConfigClassFor($name);
 		if ($configClass) {
 			try {
