@@ -180,15 +180,6 @@ class Updater
 		if ($content == 'File not found')
 			$this->model->error('File ' . $file . ' not found');
 
-		$arr_path = explode(DIRECTORY_SEPARATOR, $file);
-		$buildingPath = '';
-		foreach ($arr_path as $f) {
-			if (stripos($f, '.') !== false) break; // File
-			if (!is_dir(INCLUDE_PATH . $buildingPath . $f))
-				mkdir(INCLUDE_PATH . $buildingPath . $f);
-			$buildingPath .= $f . DIRECTORY_SEPARATOR;
-		}
-
 		$temppath = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . $file;
 		$path = pathinfo($temppath, PATHINFO_DIRNAME);
 
@@ -295,6 +286,12 @@ class Updater
 		$ff = glob($folder . '*');
 		foreach ($ff as $f) {
 			$name = substr($f, strlen($folder));
+
+			$destFile = $dest . DIRECTORY_SEPARATOR . $name;
+			$destDir = dirname(INCLUDE_PATH . $destFile);
+			if (is_dir($destDir))
+				mkdir($destDir, 0755, true);
+
 			if (is_dir($f)) {
 				if (!file_exists(INCLUDE_PATH . $dest . DIRECTORY_SEPARATOR . $name))
 					mkdir(INCLUDE_PATH . $dest . DIRECTORY_SEPARATOR . $name);
