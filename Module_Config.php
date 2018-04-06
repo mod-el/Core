@@ -120,6 +120,9 @@ class Module_Config
 		$classname = $this->getModuleName();
 
 		$configFile = INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $classname . DIRECTORY_SEPARATOR . 'config.php';
+		$dirName = dirname($configFile);
+		if (!is_dir($dirName))
+			mkdir($dirName, 0755, true);
 
 		$w = file_put_contents($configFile, '<?php
 $config = ' . var_export($data, true) . ';
