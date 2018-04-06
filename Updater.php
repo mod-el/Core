@@ -289,7 +289,7 @@ class Updater
 
 			$destFile = $dest . DIRECTORY_SEPARATOR . $name;
 			$destDir = dirname(INCLUDE_PATH . $destFile);
-			if (is_dir($destDir))
+			if (!is_dir($destDir))
 				mkdir($destDir, 0755, true);
 
 			if (is_dir($f)) {
