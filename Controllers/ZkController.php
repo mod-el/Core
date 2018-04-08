@@ -130,7 +130,8 @@ class ZkController extends Controller
 								die("File list not found\n");
 
 							$_SESSION[SESSION_ID]['delete-from-module-' . $this->model->getInput('module')] = $files['delete'];
-							$this->model->sendJSON($files['update'], false);
+							echo json_encode($files['update']);
+							die();
 						}
 
 						die();
@@ -270,7 +271,8 @@ class ZkController extends Controller
 				break;
 			case 'inspect-session':
 				if ($this->model->isCLI()) {
-					$this->model->sendJSON($_SESSION[SESSION_ID]);
+					echo json_encode($_SESSION[SESSION_ID]);
+					die();
 				} else {
 					zkdump($_SESSION[SESSION_ID]);
 				}
