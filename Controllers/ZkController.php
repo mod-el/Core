@@ -8,21 +8,13 @@ class ZkController extends Controller
 {
 	/** @var Updater */
 	private $updater;
+	/** @var array */
+	protected $options = [];
 
 	public function init()
 	{
 		$this->viewOptions['template-module'] = 'Core';
-		$this->viewOptions['template-module-layout'] = 'Core';
-
-		if ($this->model->moduleExists('CSRF'))
-			$this->model->load('CSRF');
-
 		$this->updater = new Updater($this->model);
-
-		if ($this->model->isLoaded('Output')) {
-			$this->model->_Output->wipeCSS();
-			$this->model->_Output->wipeJS();
-		}
 	}
 
 	public function index()
@@ -36,9 +28,6 @@ class ZkController extends Controller
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
 				$this->viewOptions['template'] = 'modules';
-
-				$this->model->addCSS('model/Core/files/style.css');
-				$this->model->addJS('model/Core/files/js.js');
 
 				switch ($this->model->getRequest(2)) {
 					case 'install':
@@ -246,9 +235,6 @@ class ZkController extends Controller
 				}
 				break;
 			case 'local-modules':
-				$this->model->addCSS('model/Core/files/style.css');
-				$this->model->addJS('model/Core/files/js.js');
-
 				$modules = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
 				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
 					$this->viewOptions['template'] = 'local-module';
@@ -325,6 +311,18 @@ class ZkController extends Controller
 				die('CLI not supported for the request.');
 				break;
 		}
+	}
+
+	public function output()
+	{
+		$this->options = $this->viewOptions;
+
+		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
+			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutHeader.php');
+		if ($this->viewOptions['template'])
+			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $this->viewOptions['template-module'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $this->viewOptions['template'] . '.php');
+		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
+			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutFooter.php');
 	}
 
 	public function post()
