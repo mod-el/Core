@@ -321,6 +321,12 @@ class ZkController extends Controller
 
 		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutHeader.php');
+
+		if (!empty($this->viewOptions['errors']))
+			echo '<div class="red-message">' . implode('<br />', $this->viewOptions['errors']) . '</div>';
+		if (!empty($this->viewOptions['messages']))
+			echo '<div class="green-message">' . implode('<br />', $this->viewOptions['messages']) . '</div>';
+
 		if ($this->viewOptions['template'])
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $this->viewOptions['template-module'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $this->viewOptions['template'] . '.php');
 		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
