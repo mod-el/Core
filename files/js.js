@@ -7,7 +7,9 @@ var updatingFileList = {};
 var updatingTotalSteps = {};
 var updatingStep = {};
 
-var myRequest = new Array();
+var updatingModule = null;
+
+var myRequest = [];
 
 function CreateXmlHttpReq(n, handler, campi_addizionali) { // Funzione che verrï¿½ usata da richiestaAjax
 	var xmlhttp = false;
@@ -29,10 +31,10 @@ function CreateXmlHttpReq(n, handler, campi_addizionali) { // Funzione che verrï
 					var r = myRequest[n].responseText;
 				}
 
-				if (typeof handler == 'object' && handler.nodeType && handler.nodeType == 1) {
+				if (typeof handler === 'object' && handler.nodeType && handler.nodeType == 1) {
 					handler.innerHTML = r;
 				} else {
-					if (typeof handler != 'function')
+					if (typeof handler !== 'function')
 						eval('handler = ' + handler + ';');
 
 					if (myRequest[n].status == 200) handler.call(myRequest[n], r, campi_addizionali);
@@ -46,15 +48,15 @@ function CreateXmlHttpReq(n, handler, campi_addizionali) { // Funzione che verrï
 }
 
 function ajax(handler, indirizzo, parametri_get, parametri_post, campi_addizionali) {
-	if (typeof campi_addizionali == 'undefined' || campi_addizionali === '') campi_addizionali = [];
-	var r = Math.random();
+	if (typeof campi_addizionali === 'undefined' || campi_addizionali === '') campi_addizionali = [];
+	let r = Math.random();
 	n = 0;
 	while (myRequest[n]) n++;
 	myRequest[n] = CreateXmlHttpReq(n, handler, campi_addizionali);
 	myRequest[n].open('POST', indirizzo + '?zkrand=' + r + '&' + parametri_get);
 	myRequest[n].setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 
-	if (typeof parametri_post == 'undefined')
+	if (typeof parametri_post === 'undefined')
 		parametri_post = '';
 
 	myRequest[n].send(parametri_post);
@@ -68,11 +70,11 @@ Element.prototype.loading = function () {
 }
 
 function cmd(cmd, post) {
-	if (typeof post == 'undefined') post = '';
-	var div = document.getElementById('cmd-' + cmd);
+	if (typeof post === 'undefined') post = '';
+	let div = document.getElementById('cmd-' + cmd);
 	if (!div)
 		return false;
-	var ex = div.innerHTML;
+	let ex = div.innerHTML;
 	div.loading();
 	ajax(function (r, dati) {
 		alert(r);
@@ -80,20 +82,36 @@ function cmd(cmd, post) {
 	}, absolute_path + 'zk/' + cmd, '', post, {'div': div, 'html': ex});
 }
 
+function queueModuleUpdate(name) {
+	if (updatingModule) {
+		updateQueue.push(name);
+
+		let cont = document.getElementById('module-' + name);
+		cont.loading();
+	} else {
+		updateModule(name);
+	}
+}
+
 function updateModule(name) {
-	var cont = document.getElementById('module-' + name);
+	if (updatingModule)
+		return false;
+
+	let cont = document.getElementById('module-' + name);
 	cont.loading();
 
-	var bar = document.getElementById('loading-bar-' + name);
+	let bar = document.getElementById('loading-bar-' + name);
 	bar.style.visibility = 'visible';
 
 	updatingStep[name] = 0;
+	updatingModule = name;
 
 	ajax(function (r, name) {
-		if (typeof r != 'object') {
+		if (typeof r !== 'object') {
 			alert('Errore nell\'aggiornamento del modulo ' + name + ":\n" + r);
 			refreshModule(name);
 
+			updatingModule = null;
 			if (updateQueue.length > 0)
 				updateModule(updateQueue.shift());
 		} else {
@@ -107,17 +125,17 @@ function updateModule(name) {
 }
 
 function updateModuleBar(name) {
-	if (typeof updatingTotalSteps[name] == 'undefined' || !updatingTotalSteps[name] || typeof updatingStep[name] == 'undefined')
+	if (typeof updatingTotalSteps[name] === 'undefined' || !updatingTotalSteps[name] || typeof updatingStep[name] === 'undefined')
 		return;
-	var bar = document.getElementById('loading-bar-' + name);
+	let bar = document.getElementById('loading-bar-' + name);
 	bar.firstElementChild.style.width = parseInt(updatingStep[name] / updatingTotalSteps[name] * 100) + '%';
 }
 
 function updateNextFile(name) {
-	if (typeof !updatingFileList[name] == 'undefined' || !updatingFileList[name])
+	if (typeof !updatingFileList[name] === 'undefined' || !updatingFileList[name])
 		return;
 	if (updatingFileList[name].length > 0) {
-		var file = updatingFileList[name].shift();
+		let file = updatingFileList[name].shift();
 		ajax(function (r, name) {
 			if (r === 'ok') {
 				updatingStep[name]++;
@@ -127,6 +145,7 @@ function updateNextFile(name) {
 				alert(r);
 				refreshModule(name);
 
+				updatingModule = null;
 				if (updateQueue.length > 0)
 					updateModule(updateQueue.shift());
 			}
@@ -139,6 +158,7 @@ function updateNextFile(name) {
 				refreshModule(name);
 				resetModuleLoadingBar(name);
 
+				updatingModule = null;
 				if (updateQueue.length > 0)
 					updateModule(updateQueue.shift());
 				else
@@ -152,16 +172,16 @@ function updateNextFile(name) {
 }
 
 function resetModuleLoadingBar(name) {
-	var bar = document.getElementById('loading-bar-' + name);
+	let bar = document.getElementById('loading-bar-' + name);
 	bar.style.visibility = 'hidden';
 	bar.style.width = '0%';
 }
 
 function refreshModule(name) {
-	var cont = document.getElementById('module-' + name);
+	let cont = document.getElementById('module-' + name);
 	cont.loading();
 	ajax(function (r, cont) {
-		if (typeof r == 'object') {
+		if (typeof r === 'object') {
 			switch (r.action) {
 				case 'init':
 					document.location.href = absolute_path + 'zk/modules/init/' + r.module;
@@ -182,10 +202,10 @@ window.addEventListener('load', function () {
 });
 
 function lightbox(html) {
-	var lightbox = document.getElementById('lightbox');
+	let lightbox = document.getElementById('lightbox');
 
 	if (!lightbox) {
-		var contLightbox = document.createElement('div');
+		let contLightbox = document.createElement('div');
 		contLightbox.id = 'lightbox-bg';
 		contLightbox.addEventListener('click', closeLightbox);
 		document.body.appendChild(contLightbox);
@@ -200,28 +220,28 @@ function lightbox(html) {
 }
 
 function closeLightbox() {
-	var lightbox = document.getElementById('lightbox');
+	let lightbox = document.getElementById('lightbox');
 	if (lightbox)
 		lightbox.parentNode.removeChild(lightbox);
-	var contLightbox = document.getElementById('lightbox-bg');
+	let contLightbox = document.getElementById('lightbox-bg');
 	if (contLightbox)
 		contLightbox.parentNode.removeChild(contLightbox);
 }
 
 function lightboxNewModule() {
-	var lb = lightbox('');
+	let lb = lightbox('');
 	lb.loading();
 	ajax(lb, absolute_path + 'zk/modules/install', '', '');
 }
 
 function selectDownloadableModule(el) {
-	var selected = document.getElementById('.list-module.selected');
+	let selected = document.getElementById('.list-module.selected');
 	if (selected)
 		selected.className = 'list-module';
 	el.className = 'list-module selected';
 
-	var div = document.getElementById('downloadable-module-details');
-	var name = el.dataset.name;
+	let div = document.getElementById('downloadable-module-details');
+	let name = el.dataset.name;
 	div.innerHTML = '<div><div class="versione">' + el.dataset.version + '</div><b>' + name + '</b></div><p><i>' + el.dataset.description + '</i></p><div style="text-align: right"><input type="button" value="Scarica e installa" onclick="installModule(\'' + name + '\')" /></div>';
 }
 
