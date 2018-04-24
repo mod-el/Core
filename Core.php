@@ -91,7 +91,7 @@ class Core implements \JsonSerializable
 
 	private function defineConstants()
 	{
-		if(defined('START_TIME'))
+		if (defined('START_TIME'))
 			return;
 
 		DEFINE('START_TIME', microtime(true));
@@ -969,16 +969,6 @@ class Core implements \JsonSerializable
 	 */
 	public function trigger(string $module, string $event, array $data = []): bool
 	{
-		if (!$this->eventsOn)
-			return true;
-
-		$this->eventsHistory[] = [
-			'module' => $module,
-			'event' => $event,
-			'data' => $data,
-			'time' => microtime(true),
-		];
-
 		if (isset($this->registeredListeners[$event])) {
 			foreach ($this->registeredListeners[$event] as $callback) {
 				call_user_func($callback, $data);
@@ -990,6 +980,16 @@ class Core implements \JsonSerializable
 				call_user_func($callback, $data);
 			}
 		}
+
+		if (!$this->eventsOn)
+			return true;
+
+		$this->eventsHistory[] = [
+			'module' => $module,
+			'event' => $event,
+			'data' => $data,
+			'time' => microtime(true),
+		];
 
 		return true;
 	}
