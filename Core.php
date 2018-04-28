@@ -130,7 +130,7 @@ class Core implements \JsonSerializable
 	 *
 	 * @return array
 	 */
-	private function retrieveCacheFile(): array
+	public function retrieveCacheFile(): array
 	{
 		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
 		if (!file_exists($cacheFile)) {

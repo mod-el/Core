@@ -39,6 +39,7 @@ class Config extends Module_Config
 		$controllers = [];
 		$modules = [];
 		$cleanups = [];
+		$zkpages = [];
 
 		if (!is_dir(INCLUDE_PATH . 'app-data'))
 			mkdir(INCLUDE_PATH . 'app-data');
@@ -144,6 +145,11 @@ class Config extends Module_Config
 				}
 			}
 
+			if (isset($moduleData['zk-pages'])) {
+				foreach ($moduleData['zk-pages'] as $p)
+					$zkpages[] = $p;
+			}
+
 			foreach ($fileTypes as $type => $typeData) {
 				if (is_dir($d . DIRECTORY_SEPARATOR . $typeData['folder'])) {
 					$files = $this->getModuleFiles($d . DIRECTORY_SEPARATOR . $typeData['folder'], $typeData['class']);
@@ -179,6 +185,7 @@ class Config extends Module_Config
 			'modules' => $modules,
 			'file-types' => $fileTypes,
 			'cleanups' => $cleanups,
+			'zk-pages' => $zkpages,
 		];
 
 		$cacheDir = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data';
