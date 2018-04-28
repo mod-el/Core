@@ -15,6 +15,8 @@ class ZkController extends Controller
 	{
 		$this->viewOptions['template-module'] = 'Core';
 		$this->updater = new Updater($this->model);
+		if ($this->model->isLoaded('Log'))
+			$this->model->_Log->disableAutoLog();
 	}
 
 	public function index()
