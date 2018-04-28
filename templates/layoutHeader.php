@@ -22,7 +22,16 @@
 </div>
 
 <div id="header">
-    <a href="<?= PATH ?>zk/modules">Modules</a> <a href="<?= PATH ?>zk/local-modules">App</a>
+    <a href="<?= PATH ?>zk/modules">Modules</a>
+    <a href="<?= PATH ?>zk/local-modules">App</a>
+	<?php
+	$cache = $this->model->retrieveCacheFile();
+	foreach (($cache['zk-pages'] ?? []) as $p) {
+		?>
+        <a href="<?= PATH ?>zk/<?= entities($p['url']) ?>"><?= entities($p['text']) ?></a>
+		<?php
+	}
+	?>
 </div>
 
 <div id="main">
