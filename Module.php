@@ -92,7 +92,7 @@ class Module
 	 * @param array $data
 	 * @return bool
 	 */
-	protected function trigger(string $event, array $data = [])
+	public function trigger(string $event, array $data = [])
 	{
 		return $this->model->trigger($this->getClass(), $event, $data);
 	}
