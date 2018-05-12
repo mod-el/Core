@@ -2,12 +2,16 @@
 /**
  * Shortcut for extended htmlentities handling
  *
- * @param string $text
+ * @param string|null $text
  * @param bool $br
  * @return string
  */
-function entities(string $text, bool $br = false): string
+function entities($text, bool $br = false): string
 {
+	if (is_object($text))
+		throw new Exception('entities function cannot accept objects!');
+	if ($text === null)
+		return '';
 	$text = htmlentities($text, ENT_QUOTES | ENT_IGNORE, 'UTF-8');
 	if ($br) $text = nl2br($text);
 	return $text;
