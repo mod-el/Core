@@ -2,17 +2,18 @@
 /**
  * Shortcut for extended htmlentities handling
  *
- * @param string $text
+ * @param string|null $text
  * @param bool $br
  * @return string
  */
-function entities($text, $br = false){
-	if(is_object($text) and DEBUG_MODE){
-		echo 'Oggetto passato dentro entities!';
-		zkBacktrace();
-	}
+function entities($text, bool $br = false): string
+{
+	if (is_object($text))
+		throw new Exception('entities function cannot accept objects!');
+	if ($text === null)
+		return '';
 	$text = htmlentities($text, ENT_QUOTES | ENT_IGNORE, 'UTF-8');
-	if($br) $text = nl2br($text);
+	if ($br) $text = nl2br($text);
 	return $text;
 }
 
@@ -22,49 +23,50 @@ function entities($text, $br = false){
  * @param string $text
  * @param int $limit
  * @param array $options
- * @param bool $safe
  * @return string
  */
-function textCutOff($text, $limit, $options=array(), $safe = true){
-	$options = array_merge(array(
-		'other'=>false,
-		'safe'=>true,
-		'puntini'=>true
-	), $options);
+function textCutOff(string $text, int $limit, array $options = []): string
+{
+	$options = array_merge([
+		'other' => false,
+		'safe' => true,
+		'dots' => true
+	], $options);
 
 	$text = trim($text);
 	$len = strlen($text);
-	if($limit>=$len){
-		if($options['other']) return '';
+	if ($limit >= $len) {
+		if ($options['other']) return '';
 		else return $text;
 	}
 	$breaks = array('.', ':', "\n", '!', '?', ' ');
 	$lastBreak = false;
-	if($options['safe']) for($p=0;$p<$limit;$p++){
+	if ($options['safe']) for ($p = 0; $p < $limit; $p++) {
 		$c = $text{$p};
-		if(in_array($c, $breaks)) $lastBreak = $p;
+		if (in_array($c, $breaks)) $lastBreak = $p;
 	}
-	if($options['safe'] and !$lastBreak){
-		$p = $limit; $c = true;
-		while(!$lastBreak and $c){
-			if(strlen($text)>$p) $c = $text{$p};
+	if ($options['safe'] and !$lastBreak) {
+		$p = $limit;
+		$c = true;
+		while (!$lastBreak and $c) {
+			if (strlen($text) > $p) $c = $text{$p};
 			else $c = false;
-			if(in_array($c, $breaks)) $lastBreak = $p;
+			if (in_array($c, $breaks)) $lastBreak = $p;
 			$p++;
 		}
 	}
-	if($lastBreak){
+	if ($lastBreak) {
 		$lastBreak++;
-		if($options['other']) $tor = trim(mb_substr($text, $lastBreak));
+		if ($options['other']) $tor = trim(mb_substr($text, $lastBreak));
 		else $tor = trim(mb_substr($text, 0, $lastBreak));
-	}else{
-		if($options['other']) $tor = trim(mb_substr($text, $limit));
+	} else {
+		if ($options['other']) $tor = trim(mb_substr($text, $limit));
 		else $tor = trim(mb_substr($text, 0, $limit));
 	}
-	if($options['puntini'] and strlen($tor)<strlen($text)){
-		if($lastBreak) return $tor.' [...]';
-		else return $tor.'[...]';
-	}else return $tor;
+	if ($options['dots'] and strlen($tor) < strlen($text)) {
+		if ($lastBreak) return $tor . ' [...]';
+		else return $tor . '[...]';
+	} else return $tor;
 }
 
 /**
@@ -74,15 +76,16 @@ function textCutOff($text, $limit, $options=array(), $safe = true){
  * @param array $options
  * @return string
  */
-function makePrice($p, $options=array()){
-	$options = array_merge(array(
-		'show_currency'=>true,
-		'decimal_separator'=>',',
-		'thousands_separator'=>'.'
-	), $options);
+function makePrice(float $p, array $options = []): string
+{
+	$options = array_merge([
+		'show_currency' => true,
+		'decimal_separator' => ',',
+		'thousands_separator' => '.'
+	], $options);
 
 	$return = number_format($p, 2, $options['decimal_separator'], $options['thousands_separator']);
-	if($options['show_currency']) $return .= '&euro;';
+	if ($options['show_currency']) $return .= '&euro;';
 	return $return;
 }
 
@@ -92,7 +95,8 @@ function makePrice($p, $options=array()){
  * @param $n
  * @return bool|int|string
  */
-function textToNumber($n){
+function textToNumber($n)
+{
 	$n = str_replace(',', '.', $n);
 	$n = preg_replace('/\.(?=.*\.)/', '', $n);
 	return is_numeric($n) ? $n : false;
@@ -105,14 +109,15 @@ function textToNumber($n){
  * @param bool $lower
  * @return string
  */
-function rewriteUrlWords($names, $lower=true){
-	if(empty($names))
+function rewriteUrlWords(array $names, bool $lower = true)
+{
+	if (empty($names))
 		return '';
-	if(!is_array($names))
+	if (!is_array($names))
 		$names = array($names);
 
-	foreach($names as $n => $name){
-		if($lower)
+	foreach ($names as $n => $name) {
+		if ($lower)
 			$name = mb_strtolower($name);
 		$name = str_replace('à', 'a', $name);
 		$name = str_replace(array('è', 'é'), 'e', $name);
@@ -123,7 +128,7 @@ function rewriteUrlWords($names, $lower=true){
 		$name = trim($name);
 		$name = preg_replace('/  */u', '-', $name);
 		$name = preg_replace('/[^a-zа-я0-9\p{Han}-]+/iu', '-', $name);
-		while(strpos($name, '--')!==false) $name = str_replace('--', '-', $name);
+		while (strpos($name, '--') !== false) $name = str_replace('--', '-', $name);
 		$name = preg_replace('/^-(.+)$/', '\\1', $name);
 		$name = preg_replace('/^(.+)-$/', '\\1', $name);
 		$names[$n] = $name;
@@ -140,16 +145,17 @@ function rewriteUrlWords($names, $lower=true){
  * @param bool $return
  * @return bool|string
  */
-function zkdump($v, $use_json=false, $return=false){
-	if(!DEBUG_MODE and !$return)
+function zkdump($v, bool $use_json = false, bool $return = false)
+{
+	if (!DEBUG_MODE and !$return)
 		return false;
-	if($return) ob_start();
+	if ($return) ob_start();
 	echo '<pre>';
-	if($use_json)
+	if ($use_json)
 		$v = json_decode(json_encode($v), true);
 	var_dump($v);
 	echo '</pre>';
-	if($return)
+	if ($return)
 		return ob_get_clean();
 }
 
@@ -157,9 +163,10 @@ function zkdump($v, $use_json=false, $return=false){
  * @param bool $return
  * @return array
  */
-function zkBacktrace($return = false){
+function zkBacktrace(bool $return = false)
+{
 	$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-	if($return)
+	if ($return)
 		return $backtrace;
 	else
 		zkdump($backtrace);
@@ -171,8 +178,9 @@ function zkBacktrace($return = false){
  * @param $el
  * @return bool
  */
-function isErr($el){
-	if(is_object($el) and get_class($el)=='Model\\Core\\Exception') return true;
+function isErr($el): bool
+{
+	if (is_object($el) and get_class($el) == 'Model\\Core\\Exception') return true;
 	else return false;
 }
 
@@ -182,7 +190,8 @@ function isErr($el){
  * @param Exception $e
  * @return string
  */
-function getErr(\Exception $e){
+function getErr(\Exception $e): string
+{
 	return isErr($e) ? $e->show() : $e->getMessage();
 }
 
@@ -192,24 +201,26 @@ function getErr(\Exception $e){
  * @param array $arr
  * @return bool
  */
-function isAssoc($arr){
+function isAssoc($arr): bool
+{
 	return array_keys($arr) !== range(0, count($arr) - 1);
 }
 
 /**
-* @param array $array1
-* @param array $array2
-* @return array
-* @author Daniel <daniel (at) danielsmedegaardbuus (dot) dk>
-* @author Gabriel Sobrinho <gabriel (dot) sobrinho (at) gmail (dot) com>
-*/
-function array_merge_recursive_distinct(array $array1, array $array2) {
+ * @param array $array1
+ * @param array $array2
+ * @return array
+ * @author Daniel <daniel (at) danielsmedegaardbuus (dot) dk>
+ * @author Gabriel Sobrinho <gabriel (dot) sobrinho (at) gmail (dot) com>
+ */
+function array_merge_recursive_distinct(array $array1, array $array2): array
+{
 	$merged = $array1;
 
-	foreach( $array2 as $key => &$value ) {
-		if( is_array ( $value ) && isset ( $merged [$key] ) && is_array ( $merged [$key] ) ) {
-			$merged [$key] = array_merge_recursive_distinct ( $merged [$key], $value );
-		}else{
+	foreach ($array2 as $key => &$value) {
+		if (is_array($value) && isset ($merged [$key]) && is_array($merged [$key])) {
+			$merged [$key] = array_merge_recursive_distinct($merged [$key], $value);
+		} else {
 			$merged [$key] = $value;
 		}
 	}
