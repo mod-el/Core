@@ -109,12 +109,10 @@ function textToNumber($n)
  * @param bool $lower
  * @return string
  */
-function rewriteUrlWords(array $names, bool $lower = true)
+function rewriteUrlWords(array $names, bool $lower = true): string
 {
 	if (empty($names))
 		return '';
-	if (!is_array($names))
-		$names = array($names);
 
 	foreach ($names as $n => $name) {
 		if ($lower)
