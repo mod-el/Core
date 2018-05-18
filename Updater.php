@@ -594,4 +594,39 @@ class Updater
 		}
 		return $updated;
 	}
+
+	public function getModulesPriority(array $modules): array
+	{
+		$priorities = [
+			'Core' => 0,
+		];
+		$c = 0;
+		while (count($priorities) < count($modules)) {
+			foreach ($modules as $m) {
+				if (isset($priorities[$m->folder_name]))
+					continue;
+
+				$allSet = true;
+				$score = 0;
+
+				foreach ($m->dependencies as $dep => $version) {
+					if (isset($priorities[$dep])) {
+						$score = max($score, $priorities[$dep]);
+					} else {
+						$allSet = false;
+						break;
+					}
+				}
+
+				if ($allSet)
+					$priorities[$m->folder_name] = $score + 1;
+			}
+
+			$c++;
+			if ($c === 1000)
+				$this->model->error('Infinite loop, maybe one of the modules has broken dependencies.');
+		}
+
+		return $priorities;
+	}
 }
