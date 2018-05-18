@@ -202,12 +202,10 @@ class ZkController extends Controller
 						$nextToInstall = false;
 						if (count($toBeInstalled) > 0) {
 							// I sort the modules so that I can install the modules without dependencies first
-							usort($toBeInstalled, function ($a, $b) {
-								if (count($a->dependencies) == count($b->dependencies)) {
-									return 0;
-								} else {
-									return count($a->dependencies) > count($b->dependencies) ? 1 : -1;
-								}
+							$priorities = $this->updater->getModulesPriority($modules);
+
+							usort($toBeInstalled, function ($a, $b) use ($priorities) {
+								return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
 							});
 
 							$nextToInstall = reset($toBeInstalled);
@@ -227,9 +225,18 @@ class ZkController extends Controller
 
 							$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
 
-							if ($this->model->isCLI() and count($this->viewOptions['update-queue']) > 0) {
-								$this->updater->cliUpdate($this->viewOptions['update-queue'][0]);
-								$modules = $this->updater->getModules(true);
+							if (count($this->viewOptions['update-queue']) > 0) {
+								// I sort the modules so that I can update the modules without dependencies first
+								$priorities = $this->updater->getModulesPriority($modules);
+
+								usort($this->viewOptions['update-queue'], function ($a, $b) use ($priorities) {
+									return $priorities[$a] <=> $priorities[$b];
+								});
+
+								if ($this->model->isCLI()) {
+									$this->updater->cliUpdate($this->viewOptions['update-queue'][0]);
+									$modules = $this->updater->getModules(true);
+								}
 							}
 
 							$this->viewOptions['modules'] = $modules;
