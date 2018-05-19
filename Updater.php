@@ -373,7 +373,7 @@ class Updater
 	}
 
 	/**
-	 * Checks if the next module is the one in the update queue, and eventually removes it
+	 * Checks if the next module is in the update queue, and eventually removes it
 	 *
 	 * @param string $module
 	 * @return bool
@@ -383,8 +383,8 @@ class Updater
 		if ($this->queue === false)
 			$this->getUpdateQueue();
 
-		if (count($this->queue) > 0 and $this->queue[0] == $module) {
-			array_shift($this->queue);
+		if (count($this->queue) > 0 and ($key = array_search($module, $this->queue))) {
+			unset($this->queue[$key]);
 			file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($this->queue, true) . ";");
 			return true;
 		} else {
