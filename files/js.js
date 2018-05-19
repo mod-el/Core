@@ -70,16 +70,24 @@ Element.prototype.loading = function () {
 }
 
 function cmd(cmd, post) {
-	if (typeof post === 'undefined') post = '';
+	if (typeof post === 'undefined')
+		post = '';
+	if (typeof refresh === 'undefined')
+		refresh = false;
+
 	let div = document.getElementById('cmd-' + cmd);
 	if (!div)
 		return false;
 	let ex = div.innerHTML;
 	div.loading();
-	ajax(function (r, dati) {
-		alert(r);
-		dati.div.innerHTML = dati.html;
-	}, absolute_path + 'zk/' + cmd, '', post, {'div': div, 'html': ex});
+	return new Promise(((cmd, post, refresh, div, ex) => {
+		return function (resolve) {
+			ajax(r => {
+				div.innerHTML = ex;
+				resolve(r);
+			}, absolute_path + 'zk/' + cmd, '', post)
+		};
+	})(cmd, post, refresh, div, ex));
 }
 
 function queueModuleUpdate(name) {
@@ -159,10 +167,11 @@ function updateNextFile(name) {
 				resetModuleLoadingBar(name);
 
 				updatingModule = null;
-				if (updateQueue.length > 0)
+				if (updateQueue.length > 0) {
 					updateModule(updateQueue.shift());
-				else
-					document.location.reload();
+				} else {
+					cmd('make-cache').then(() => document.location.reload());
+				}
 			} else {
 				alert(r);
 				refreshModule(name);
