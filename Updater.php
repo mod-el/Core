@@ -383,7 +383,7 @@ class Updater
 		if ($this->queue === false)
 			$this->getUpdateQueue();
 
-		if (count($this->queue) > 0 and ($key = array_search($module, $this->queue))) {
+		if (count($this->queue) > 0 and ($key = array_search($module, $this->queue)) !== false) {
 			unset($this->queue[$key]);
 			file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($this->queue, true) . ";");
 			return true;
