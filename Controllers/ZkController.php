@@ -224,6 +224,18 @@ class ZkController extends Controller
 								$this->model->redirect(PATH . 'zk/modules/init/' . $nextToInstall->folder_name . $qry_string);
 
 							$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
+							$toBeUpdated = [];
+							foreach ($modules as $m) {
+								if ($m->new_version or $m->corrupted)
+									$toBeUpdated[] = $m->folder_name;
+							}
+							$this->viewOptions['something-to-update'] = count($toBeUpdated) > 0 ? true : false;
+
+							if (isset($_GET['update-all'])) {
+								$queue = array_unique(array_merge($this->viewOptions['update-queue'], $toBeUpdated));
+								$this->updater->setUpdateQueue($queue);
+								$this->model->redirect(PATH . 'zk/modules');
+							}
 
 							if (count($this->viewOptions['update-queue']) > 0) {
 								// I sort the modules so that I can update the modules without dependencies first
