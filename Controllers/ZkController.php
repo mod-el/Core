@@ -225,11 +225,15 @@ class ZkController extends Controller
 
 							$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
 							$toBeUpdated = [];
+							$somethingEdited = false;
 							foreach ($modules as $m) {
 								if ($m->new_version or $m->corrupted)
 									$toBeUpdated[] = $m->folder_name;
+								if ($m->corrupted)
+									$somethingEdited = true;
 							}
 							$this->viewOptions['something-to-update'] = count($toBeUpdated) > 0 ? true : false;
+							$this->viewOptions['something-edited'] = $somethingEdited;
 
 							if (isset($_GET['update-all'])) {
 								$queue = array_unique(array_merge($this->viewOptions['update-queue'], $toBeUpdated));

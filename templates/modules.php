@@ -2,7 +2,11 @@
 if ($this->options['something-to-update']) {
 	?>
     <div style="float: right">
-        [<a href="?update-all"> update all </a>]
+        [<a href="?update-all"<?php
+		if ($this->options['something-edited']) {
+			echo ' onclick="if(!confirm(\'Some modules are marked as edited. Are you sure you want to overwrite them as well?\')) return false"';
+		}
+		?>> update all </a>]
     </div>
 	<?php
 }
