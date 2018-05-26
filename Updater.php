@@ -34,6 +34,8 @@ class Updater
 
 		$dirs = glob(INCLUDE_PATH . $base_dir . DIRECTORY_SEPARATOR . '*');
 		foreach ($dirs as $f) {
+			if (!is_dir($f))
+				continue;
 			$name = explode(DIRECTORY_SEPARATOR, $f);
 			$name = end($name);
 			$module = new ReflectionModule($name, $this->model, $base_dir);
