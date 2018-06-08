@@ -85,6 +85,7 @@ class Config extends Module_Config
 				'custom' => in_array($d, $customDirs),
 				'js' => [],
 				'css' => [],
+				'dependencies' => [],
 				'assets-position' => 'head',
 			];
 
@@ -103,6 +104,8 @@ class Config extends Module_Config
 					$modules[$d_info['filename']]['css'] = $moduleData['css'];
 				if (isset($moduleData['assets-position']))
 					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
+				if (isset($moduleData['dependencies']))
+					$modules[$d_info['filename']]['dependencies'] = array_keys($moduleData['dependencies']);
 			}
 
 			$files = glob($d . DIRECTORY_SEPARATOR . '*');

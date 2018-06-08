@@ -238,8 +238,19 @@ class Core implements \JsonSerializable
 		]);
 
 		$module = $this->moduleExists($name);
-		if (!$module) {
+		if (!$module)
 			$this->error('Module "' . entities($name) . '" not found.');
+
+		if (isset($module['dependencies'])) {
+			foreach ($module['dependencies'] as $dep) {
+				if (!$this->isLoaded($dep)) {
+					$depModule = $this->moduleExists($dep);
+					if (!$depModule)
+						$this->error('Module "' . entities($dep) . '", dependency of "' . entities($name) . '", not found.');
+					if ($depModule['css'] or $depModule['js'])
+						$this->load($dep);
+				}
+			}
 		}
 
 		if ($module['load']) {
