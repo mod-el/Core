@@ -614,7 +614,7 @@ class Updater
 				foreach ($m->dependencies as $dep => $version) {
 					if (isset($priorities[$dep])) {
 						$score = max($score, $priorities[$dep]);
-					} else {
+					} elseif (isset($modules[$dep])) {
 						$allSet = false;
 						break;
 					}
