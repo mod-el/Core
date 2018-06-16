@@ -59,8 +59,11 @@ class Updater
 
 						if ($remote[$name]['old_md5']) {
 							$m->expected_md5 = $remote[$name]['old_md5'];
-							if ($m->md5 != $m->expected_md5) {
-								if ($m->expected_md5 != $m->version_md5) {
+							if ($m->md5 === $m->expected_md5) {
+								if ($m->md5 !== $m->version_md5)
+									$this->changeModuleInternalVar($name, 'md5', $m->md5);
+							} else {
+								if ($m->expected_md5 !== $m->version_md5) {
 									$m->new_version = true;
 								} else {
 									$m->corrupted = true;
