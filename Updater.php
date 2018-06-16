@@ -113,8 +113,11 @@ class Updater
 
 	protected function changeModuleInternalVar(string $name, string $k, $v): bool
 	{
-		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+		$folder_path = $file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data';
+		if (!is_dir($folder_path))
+			mkdir($folder_path, 0755, true);
 
+		$file_path = $folder_path . DIRECTORY_SEPARATOR . 'vars.php';
 		if (!file_exists($file_path)) {
 			file_put_contents($file_path, "<?php\n");
 			@chmod($file_path, 0755);
