@@ -265,3 +265,8 @@ function installModule(name) {
 		}
 	}, absolute_path + 'zk/modules/install/' + encodeURIComponent(name), '', 'c_id=' + c_id);
 }
+
+function makeNewFile(module, type) {
+	let lb = lightbox('').loading();
+	ajax(lb, absolute_path + 'zk/local-modules/' + module + '/make/'+type, '', '');
+}
