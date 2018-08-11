@@ -67,7 +67,11 @@ class Maker
 		if (!is_dir($folder))
 			mkdir($folder, 0777, true);
 
-		return file_put_contents($folder . DIRECTORY_SEPARATOR . $data['name'] . '.php', $raw) !== false;
+		$fullPath = $folder . DIRECTORY_SEPARATOR . $data['name'] . '.php';
+		if (file_exists($fullPath))
+			$this->model->error('File ' . $fullPath . ' already exists');
+
+		return file_put_contents($fullPath, $raw) !== false;
 	}
 
 	/**
