@@ -8,20 +8,23 @@ $module = $this->options['module'];
 	$filesTot = $module->getFilesByType();
 	foreach ($filesTot as $type => $files) {
 		?>
-        <div class="module-files">
-            <div>
-                <div><b><?= entities($type) ?></b></div>
-                <div>
+		<div class="module-files">
+			<div>
+				<div><b><?= entities($type) ?></b></div>
+				<div>
 					<?php
 					foreach ($files as $f) {
 						?>
-                        <div><?= entities($f) ?></div>
+						<div><?= entities($f) ?></div>
 						<?php
 					}
 					?>
-                </div>
-            </div>
-        </div>
+					<div>
+						[<a href="#" onclick="makeNewFile('<?= entities($this->model->getRequest(2)) ?>', '<?= entities($type) ?>'); return false"> Make new </a>]
+					</div>
+				</div>
+			</div>
+		</div>
 		<?php
 	}
 	?>

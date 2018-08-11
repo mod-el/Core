@@ -225,11 +225,11 @@ class ReflectionModule
 	{
 		$arr_files = [];
 		foreach (Autoloader::$fileTypes as $type => $data) {
+			if (!isset($arr_files[$type]))
+				$arr_files[$type] = [];
 			foreach ($data['files'] as $module => $files) {
 				if ($module !== $this->folder_name)
 					continue;
-				if (!isset($arr_files[$type]))
-					$arr_files[$type] = [];
 				foreach ($files as $f => $path)
 					$arr_files[$type][] = $f;
 			}

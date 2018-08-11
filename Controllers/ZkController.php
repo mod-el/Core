@@ -265,6 +265,21 @@ class ZkController extends Controller
 				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
 					$this->viewOptions['template'] = 'local-module';
 					$this->viewOptions['module'] = $modules[$this->model->getRequest(2)];
+
+					if (isset($_POST['makeNewFile'])) {
+						try {
+							$maker = new \Model\Core\Maker($this->model);
+							$data = $_POST;
+							unset($data['makeNewFile']);
+							$maker->make($this->model->getRequest(2), $_POST['makeNewFile'], $data);
+							$this->updater->updateModuleCache('Core');
+						} catch (\Exception $e) {
+							$this->viewOptions['errors'][] = getErr($e);
+						}
+					} elseif ($this->model->getRequest(3) === 'make' and $this->model->getRequest(4)) {
+						$this->viewOptions['template'] = 'make-file';
+						$this->viewOptions['showLayout'] = false;
+					}
 				} else {
 					$this->viewOptions['template'] = 'local-modules';
 					$this->viewOptions['modules'] = $modules;

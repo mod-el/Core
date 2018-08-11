@@ -1,12 +1,13 @@
 {
 	"name": "Core",
 	"description": "",
-	"version": "2.5.5",
+	"version": "2.6.0",
 	"dependencies": {},
 	"file-types": {
 		"Controller": {
 			"folder": "Controllers",
-			"class": true
+			"class": true,
+			"suffix": "Controller"
 		}
 	}
 }
