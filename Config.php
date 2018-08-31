@@ -98,6 +98,8 @@ class Config extends Module_Config
 			if ($moduleData !== null) {
 				if (isset($moduleData['load']) and !$moduleData['load'])
 					$modules[$d_info['filename']]['load'] = false;
+				if (isset($moduleData['version']))
+					$modules[$d_info['filename']]['version'] = $moduleData['version'];
 				if (isset($moduleData['js']))
 					$modules[$d_info['filename']]['js'] = $moduleData['js'];
 				if (isset($moduleData['css']))
