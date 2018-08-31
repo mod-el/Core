@@ -285,13 +285,13 @@ class Core implements \JsonSerializable
 		$head = $module['assets-position'] === 'head' ? true : false;
 
 		foreach ($module['js'] as $js) {
-			$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : 'model/' . $name . '/' . $js, [
+			$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : 'model/' . $name . '/' . $js . '?v=' . $module['version'], [
 				'custom' => false,
 				'head' => $head,
 			]);
 		}
 		foreach ($module['css'] as $css) {
-			$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : 'model/' . $name . '/' . $css, [
+			$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : 'model/' . $name . '/' . $css . '?v=' . $module['version'], [
 				'custom' => false,
 				'head' => $head,
 			]);
