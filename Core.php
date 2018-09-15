@@ -27,7 +27,10 @@ class Core implements \JsonSerializable
 	/** @var Controller */
 	public $controller;
 	/** @var array */
-	protected $viewOptions = [];
+	public $viewOptions = [
+		'errors' => [],
+		'messages' => [],
+	];
 	/** @var bool|array */
 	private $inputVarsCache = false;
 	/** @var array */
@@ -542,7 +545,7 @@ class Core implements \JsonSerializable
 
 		$this->controllerName = $controllerName;
 		$this->controller = new $controllerClassName($this);
-		$this->controller->viewOptions = array_merge($this->controller->viewOptions, $this->viewOptions);
+		$this->controller->viewOptions = array_merge_recursive_distinct($this->viewOptions, $this->controller->viewOptions);
 
 		/*
 		 * The init method is expanded in the specific controller and is executed beforehand

@@ -36,7 +36,7 @@ class ZkController extends Controller
 						$this->viewOptions['showLayout'] = false;
 						$this->viewOptions['template'] = 'new-module';
 						$modules = $this->updater->downloadableModules();
-						$this->viewOptions['modules'] = $modules;
+						$this->model->inject('modules', $modules);
 
 						if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
 							if (!$this->model->moduleExists($this->model->getRequest(3))) {
@@ -111,8 +111,8 @@ class ZkController extends Controller
 										}
 									}
 								}
-								$this->viewOptions['config-class'] = $configClass;
-								$this->viewOptions['config'] = $config;
+								$this->model->inject('config-class', $configClass);
+								$this->model->inject('config', $config);
 							}
 						} else {
 							if ($this->model->getRequest(2) == 'init') {
@@ -218,12 +218,13 @@ class ZkController extends Controller
 
 							$this->viewOptions['showLayout'] = false;
 							$this->viewOptions['template'] = 'module';
-							$this->viewOptions['module'] = $modules[$_GET['module']];
+							$this->model->inject('module', $modules[$_GET['module']]);
 						} else {
 							if ($nextToInstall)
 								$this->model->redirect(PATH . 'zk/modules/init/' . $nextToInstall->folder_name . $qry_string);
 
-							$this->viewOptions['update-queue'] = $this->updater->getUpdateQueue();
+							$queue = $this->updater->getUpdateQueue();
+
 							$toBeUpdated = [];
 							$somethingEdited = false;
 							foreach ($modules as $m) {
@@ -232,30 +233,31 @@ class ZkController extends Controller
 								if ($m->corrupted)
 									$somethingEdited = true;
 							}
-							$this->viewOptions['something-to-update'] = count($toBeUpdated) > 0 ? true : false;
-							$this->viewOptions['something-edited'] = $somethingEdited;
+							$this->model->inject('something_to_update', count($toBeUpdated) > 0 ? true : false);
+							$this->model->inject('something_edited', $somethingEdited);
 
 							if (isset($_GET['update-all'])) {
-								$queue = array_unique(array_merge($this->viewOptions['update-queue'], $toBeUpdated));
+								$queue = array_unique(array_merge($queue, $toBeUpdated));
 								$this->updater->setUpdateQueue($queue);
 								$this->model->redirect(PATH . 'zk/modules');
 							}
 
-							if (count($this->viewOptions['update-queue']) > 0) {
+							if (count($queue) > 0) {
 								// I sort the modules so that I can update the modules without dependencies first
 								$priorities = $this->updater->getModulesPriority($modules);
 
-								usort($this->viewOptions['update-queue'], function ($a, $b) use ($priorities) {
+								usort($queue, function ($a, $b) use ($priorities) {
 									return $priorities[$a] <=> $priorities[$b];
 								});
 
 								if ($this->model->isCLI()) {
-									$this->updater->cliUpdate($this->viewOptions['update-queue'][0]);
+									$this->updater->cliUpdate($queue[0]);
 									$modules = $this->updater->getModules(true);
 								}
 							}
 
-							$this->viewOptions['modules'] = $modules;
+							$this->model->inject('update_queue', $queue);
+							$this->model->inject('modules', $modules);
 						}
 						break;
 				}
@@ -264,7 +266,7 @@ class ZkController extends Controller
 				$modules = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
 				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
 					$this->viewOptions['template'] = 'local-module';
-					$this->viewOptions['module'] = $modules[$this->model->getRequest(2)];
+					$this->model->inject('module', $modules[$this->model->getRequest(2)]);
 
 					if (isset($_POST['makeNewFile'])) {
 						try {
@@ -282,12 +284,18 @@ class ZkController extends Controller
 					}
 				} else {
 					$this->viewOptions['template'] = 'local-modules';
-					$this->viewOptions['modules'] = $modules;
+					$this->model->inject('modules', $modules);
 				}
 				break;
 			case 'make-cache':
 				try {
 					$modules = $this->updater->getModules();
+
+					$priorities = $this->updater->getModulesPriority($modules);
+
+					uasort($modules, function ($a, $b) use ($priorities) {
+						return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
+					});
 
 					$this->updater->updateModuleCache('Core');
 
@@ -337,8 +345,8 @@ class ZkController extends Controller
 						break;
 				}
 
-				if (count($this->viewOptions['modules']) > 0) {
-					foreach ($this->viewOptions['modules'] as $m) {
+				if (count($this->injected('modules')) > 0) {
+					foreach ($this->injected('modules') as $m) {
 						if (is_array($m)) {
 							echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
 						} else {
@@ -357,6 +365,9 @@ class ZkController extends Controller
 
 	public function output()
 	{
+		foreach ($this->model->injected() as $injName => $injObj)
+			${$injName} = $injObj;
+
 		$this->options = $this->viewOptions;
 
 		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])

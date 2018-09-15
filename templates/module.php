@@ -1,26 +1,22 @@
-<?php
-if (!isset($m))
-	$m = $this->options['module'];
-?>
 <div>
-    <div class="versione"><?= entities($m->version) ?></div>
-    <b><?= entities($m->name) ?></b>
+	<div class="versione"><?= entities($module->version) ?></div>
+	<b><?= entities($module->name) ?></b>
 </div>
-<?php if ($m->description) { ?><p><i><?= entities($m->description, true) ?></i></p><?php } ?>
+<?php if ($module->description) { ?><p><i><?= entities($module->description, true) ?></i></p><?php } ?>
 <p>
 	<?php
-	if ($m->new_version) {
+	if ($module->new_version) {
 		?>
-        <b style="color: #0C0">New version <?= $m->new_version !== true ? ': ' . $m->new_version : '' ?></b> [
-        <a href="#" onclick="event.stopPropagation(); queueModuleUpdate('<?= $m->folder_name ?>'); return false"> update </a>]
+		<b style="color: #0C0">New version <?= $module->new_version !== true ? ': ' . $module->new_version : '' ?></b> [
+		<a href="#" onclick="event.stopPropagation(); queueModuleUpdate('<?= $module->folder_name ?>'); return false"> update </a>]
 		<?php
-	} elseif ($m->corrupted) {
+	} elseif ($module->corrupted) {
 		?>
-        <b style="color: #F00">Edited!</b> [
-        <a href="#" onclick="event.stopPropagation(); queueModuleUpdate('<?= $m->folder_name ?>'); return false"> restore </a>]
-        <br/><?php
+		<b style="color: #F00">Edited!</b> [
+		<a href="#" onclick="event.stopPropagation(); queueModuleUpdate('<?= $module->folder_name ?>'); return false"> restore </a>]
+		<br/><?php
 	}
 	?>
 </p>
 
-<div class="md5"><?= entities($m->version_md5) ?></div>
+<div class="md5"><?= entities($module->version_md5) ?></div>
