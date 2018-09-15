@@ -257,7 +257,7 @@ $config = ' . var_export($data, true) . ';
 	 */
 	protected function addAsset(string $type, string $file = null, callable $defaultContent = null): bool
 	{
-		if (!in_array($type, ['data', 'config']))
+		if (!in_array($type, ['data', 'config', 'app-data']))
 			$this->model->error('Unknown asset type in module definition');
 
 		$this->assets[] = [
@@ -283,6 +283,9 @@ $config = ' . var_export($data, true) . ';
 					break;
 				case 'config':
 					$base_dir = INCLUDE_PATH . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $this->getName();
+					break;
+				case 'app-data':
+					$base_dir = INCLUDE_PATH . DIRECTORY_SEPARATOR . 'app-data' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $this->getName();
 					break;
 				default:
 					$this->model->error('Unknown asset type encountered while checking assets');
