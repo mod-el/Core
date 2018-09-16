@@ -6,18 +6,11 @@ class Controller
 	protected $model;
 	/** @var array */
 	public $viewOptions = array(
-		'header' => [
-			'layoutHeader',
-		],
-		'footer' => [
-			'layoutFooter',
-		],
-		'template-module' => null,
-		'template-module-layout' => null,
-		'template-folder' => [],
-		'template' => false,
-		'errors' => [],
-		'messages' => [],
+		'header' => [], // Deprecated, use model->viewOptions
+		'footer' => [], // Deprecated, use model->viewOptions
+		'template-folder' => [], // Deprecated, use model->viewOptions
+		'errors' => [], // Deprecated, use model->viewOptions
+		'messages' => [], // Deprecated, use model->viewOptions
 	);
 
 	function __construct(\FrontController $model)
@@ -64,25 +57,29 @@ class Controller
 	 * Outputs the content
 	 * It uses Output model, by default, but this behaviour can be customized by extending the method
 	 * If Output module is not installed, it tries to execute outputCLI (only works if "outputCLI" was customized)
+	 *
+	 * @param array $options
 	 */
-	public function output()
+	public function output(array $options = [])
 	{
-		/* Backward compatibility */
-		if (isset($this->viewOptions['errori']))
-			$this->viewOptions['errors'] = $this->viewOptions['errori'];
-		if (isset($this->viewOptions['messaggi']))
-			$this->viewOptions['messages'] = $this->viewOptions['messaggi'];
+		$options = array_merge_recursive_distinct($options, $this->viewOptions);
 
-		if ($this->viewOptions['template'] === false) { // By default, load the template with the same name as the current controller
+		/* Backward compatibility */
+		if (isset($options['errori']))
+			$options['errors'] = $options['errori'];
+		if (isset($options['messaggi']))
+			$options['messages'] = $options['messaggi'];
+
+		if ($options['template'] === false) { // By default, load the template with the same name as the current controller
 			$classShortName = (new \ReflectionClass($this))->getShortName();
-			$this->viewOptions['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr($classShortName, 0, -10)));
+			$options['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr($classShortName, 0, -10)));
 		}
 
 		if ($this->model->moduleExists('Output')) {
-			$this->model->_Output->render($this->viewOptions);
+			$this->model->_Output->render($options);
 		} else {
 			echo '<pre>';
-			$this->outputCLI(true);
+			$this->outputCLI($options, true);
 			echo '</pre>';
 		}
 	}
@@ -91,9 +88,10 @@ class Controller
 	 * Optionally, this method can be expanded by the controller to override the default output method, if model is executed in a CLI environment
 	 * If it's called as a fallback for a missing Output module, it will not output anything
 	 *
+	 * @param array $options
 	 * @param bool $asFallback
 	 */
-	public function outputCLI(bool $asFallback = false)
+	public function outputCLI(array $options = [], bool $asFallback = false)
 	{
 		if (!$asFallback)
 			$this->output();

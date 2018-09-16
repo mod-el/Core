@@ -332,7 +332,7 @@ class ZkController extends Controller
 		}
 	}
 
-	public function outputCLI(bool $asFallback = false)
+	public function outputCLI(array $options = [], bool $asFallback = false)
 	{
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
@@ -363,12 +363,12 @@ class ZkController extends Controller
 		}
 	}
 
-	public function output()
+	public function output(array $options = [])
 	{
 		foreach ($this->model->injected() as $injName => $injObj)
 			${$injName} = $injObj;
 
-		$this->options = $this->viewOptions;
+		$this->options = array_merge_recursive_distinct($options, $this->viewOptions);
 
 		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutHeader.php');
