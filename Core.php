@@ -28,6 +28,13 @@ class Core implements \JsonSerializable
 	public $controller;
 	/** @var array */
 	public $viewOptions = [
+		'header' => [
+			'layoutHeader',
+		],
+		'footer' => [
+			'layoutFooter',
+		],
+		'template-folder' => [],
 		'errors' => [],
 		'messages' => [],
 	];
@@ -545,7 +552,6 @@ class Core implements \JsonSerializable
 
 		$this->controllerName = $controllerName;
 		$this->controller = new $controllerClassName($this);
-		$this->controller->viewOptions = array_merge_recursive_distinct($this->viewOptions, $this->controller->viewOptions);
 
 		/*
 		 * The init method is expanded in the specific controller and is executed beforehand
@@ -576,9 +582,9 @@ class Core implements \JsonSerializable
 		 * */
 		$this->trigger('Core', 'outputStart');
 		if ($this->isCLI())
-			$this->controller->outputCLI();
+			$this->controller->outputCLI($this->viewOptions);
 		else
-			$this->controller->output();
+			$this->controller->output($this->viewOptions);
 	}
 
 	/**

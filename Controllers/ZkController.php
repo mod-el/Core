@@ -13,7 +13,7 @@ class ZkController extends Controller
 
 	public function init()
 	{
-		$this->viewOptions['template-module'] = 'Core';
+		$this->model->viewOptions['template-module'] = 'Core';
 		$this->updater = new Updater($this->model);
 		if ($this->model->isLoaded('Log'))
 			$this->model->_Log->disableAutoLog();
@@ -25,16 +25,16 @@ class ZkController extends Controller
 		if ($qry_string)
 			$qry_string = '?' . $qry_string;
 
-		$this->viewOptions['cache'] = false;
+		$this->model->viewOptions['cache'] = false;
 
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
-				$this->viewOptions['template'] = 'modules';
+				$this->model->viewOptions['template'] = 'modules';
 
 				switch ($this->model->getRequest(2)) {
 					case 'install':
-						$this->viewOptions['showLayout'] = false;
-						$this->viewOptions['template'] = 'new-module';
+						$this->model->viewOptions['showLayout'] = false;
+						$this->model->viewOptions['template'] = 'new-module';
 						$modules = $this->updater->downloadableModules();
 						$this->model->inject('modules', $modules);
 
@@ -43,7 +43,7 @@ class ZkController extends Controller
 								$dir = INCLUDE_PATH . 'model/' . $this->model->getRequest(3);
 								if (!is_dir($dir)) {
 									if (!mkdir($dir))
-										$this->viewOptions['errors'][] = 'Can\'t write to folder.';
+										$this->model->viewOptions['errors'][] = 'Can\'t write to folder.';
 									@chmod($dir, 0755);
 								}
 								$tempModuleData = [
@@ -55,15 +55,15 @@ class ZkController extends Controller
 								file_put_contents($dir . DIRECTORY_SEPARATOR . 'manifest.json', json_encode($tempModuleData, JSON_PRETTY_PRINT));
 								@chmod(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $_GET['new'] . DIRECTORY_SEPARATOR . 'manifest.json', 0755);
 							} else {
-								$this->viewOptions['errors'][] = 'Module already exists.';
+								$this->model->viewOptions['errors'][] = 'Module already exists.';
 							}
 
 							if ($this->model->isCLI()) {
-								if (empty($this->viewOptions['errors'])) {
+								if (empty($this->model->viewOptions['errors'])) {
 									$this->updater->cliUpdate($this->model->getRequest(3));
 									$this->updater->cliConfig($this->model->getRequest(3), 'init');
 								} else {
-									echo implode("\n", $this->viewOptions['errors']) . "\n";
+									echo implode("\n", $this->model->viewOptions['errors']) . "\n";
 								}
 
 								die();
@@ -72,7 +72,7 @@ class ZkController extends Controller
 								$queue[] = $this->model->getRequest(3);
 								$this->updater->setUpdateQueue($queue);
 
-								if (empty($this->viewOptions['errors']))
+								if (empty($this->model->viewOptions['errors']))
 									die('ok');
 							}
 						}
@@ -98,20 +98,20 @@ class ZkController extends Controller
 							} else {
 								$config = $configClass->retrieveConfig();
 
-								$this->viewOptions['template-module'] = $this->model->getRequest(3);
-								$this->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
-								if ($this->viewOptions['template'] === null) {
+								$this->model->viewOptions['template-module'] = $this->model->getRequest(3);
+								$this->model->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
+								if ($this->model->viewOptions['template'] === null) {
 									if ($this->model->getRequest(2) == 'init') {
 										$installation = $this->updater->install($configClass);
 										if ($installation) {
 											$this->updater->firstInit($this->model->getRequest(3));
 											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 										} else {
-											$this->viewOptions['errors'][] = 'Something is wrong, can\'t initialize module ' . $this->model->getRequest(3);
+											$this->model->viewOptions['errors'][] = 'Something is wrong, can\'t initialize module ' . $this->model->getRequest(3);
 										}
 									}
 								}
-								$this->model->inject('config-class', $configClass);
+								$this->model->inject('config_class', $configClass);
 								$this->model->inject('config', $config);
 							}
 						} else {
@@ -177,7 +177,7 @@ class ZkController extends Controller
 
 							foreach ($m->dependencies as $depModule => $depVersion) {
 								if (!isset($modules[$depModule])) {
-									$this->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '" is not installed!';
+									$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '" is not installed!';
 								} else {
 									if ($depVersion == '*')
 										continue;
@@ -194,7 +194,7 @@ class ZkController extends Controller
 									}
 
 									if (!version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator))
-										$this->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
+										$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
 								}
 							}
 						}
@@ -216,8 +216,8 @@ class ZkController extends Controller
 								die(json_encode(['action' => 'init', 'module' => $nextToInstall->folder_name]));
 							}
 
-							$this->viewOptions['showLayout'] = false;
-							$this->viewOptions['template'] = 'module';
+							$this->model->viewOptions['showLayout'] = false;
+							$this->model->viewOptions['template'] = 'module';
 							$this->model->inject('module', $modules[$_GET['module']]);
 						} else {
 							if ($nextToInstall)
@@ -265,7 +265,7 @@ class ZkController extends Controller
 			case 'local-modules':
 				$modules = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
 				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
-					$this->viewOptions['template'] = 'local-module';
+					$this->model->viewOptions['template'] = 'local-module';
 					$this->model->inject('module', $modules[$this->model->getRequest(2)]);
 
 					if (isset($_POST['makeNewFile'])) {
@@ -276,14 +276,14 @@ class ZkController extends Controller
 							$maker->make($this->model->getRequest(2), $_POST['makeNewFile'], $data);
 							$this->updater->updateModuleCache('Core');
 						} catch (\Exception $e) {
-							$this->viewOptions['errors'][] = getErr($e);
+							$this->model->viewOptions['errors'][] = getErr($e);
 						}
 					} elseif ($this->model->getRequest(3) === 'make' and $this->model->getRequest(4)) {
-						$this->viewOptions['template'] = 'make-file';
-						$this->viewOptions['showLayout'] = false;
+						$this->model->viewOptions['template'] = 'make-file';
+						$this->model->viewOptions['showLayout'] = false;
 					}
 				} else {
-					$this->viewOptions['template'] = 'local-modules';
+					$this->model->viewOptions['template'] = 'local-modules';
 					$this->model->inject('modules', $modules);
 				}
 				break;
@@ -332,7 +332,7 @@ class ZkController extends Controller
 		}
 	}
 
-	public function outputCLI(bool $asFallback = false)
+	public function outputCLI(array $options = [], bool $asFallback = false)
 	{
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
@@ -363,24 +363,24 @@ class ZkController extends Controller
 		}
 	}
 
-	public function output()
+	public function output(array $options = [])
 	{
 		foreach ($this->model->injected() as $injName => $injObj)
 			${$injName} = $injObj;
 
-		$this->options = $this->viewOptions;
+		$this->options = array_merge_recursive_distinct($options, $this->model->viewOptions);
 
-		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
+		if (!isset($this->model->viewOptions['showLayout']) or $this->model->viewOptions['showLayout'])
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutHeader.php');
 
-		if (!empty($this->viewOptions['errors']))
-			echo '<div class="red-message">' . implode('<br />', $this->viewOptions['errors']) . '</div>';
-		if (!empty($this->viewOptions['messages']))
-			echo '<div class="green-message">' . implode('<br />', $this->viewOptions['messages']) . '</div>';
+		if (!empty($this->model->viewOptions['errors']))
+			echo '<div class="red-message">' . implode('<br />', $this->model->viewOptions['errors']) . '</div>';
+		if (!empty($this->model->viewOptions['messages']))
+			echo '<div class="green-message">' . implode('<br />', $this->model->viewOptions['messages']) . '</div>';
 
-		if ($this->viewOptions['template'])
-			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $this->viewOptions['template-module'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $this->viewOptions['template'] . '.php');
-		if (!isset($this->viewOptions['showLayout']) or $this->viewOptions['showLayout'])
+		if ($this->model->viewOptions['template'])
+			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $this->model->viewOptions['template-module'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $this->model->viewOptions['template'] . '.php');
+		if (!isset($this->model->viewOptions['showLayout']) or $this->model->viewOptions['showLayout'])
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutFooter.php');
 	}
 
@@ -401,14 +401,14 @@ class ZkController extends Controller
 								switch ($this->model->getRequest(2)) {
 									case 'config':
 										if ($configClass->saveConfig($this->model->getRequest(2), $_POST))
-											$this->viewOptions['messages'][] = 'Configuration saved.';
+											$this->model->viewOptions['messages'][] = 'Configuration saved.';
 										break;
 									case 'init':
 										if ($this->updater->install($configClass, $_POST)) {
 											$this->updater->firstInit($this->model->getRequest(3));
 											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 										} else {
-											$this->viewOptions['errors'][] = 'Some error occurred while installing.';
+											$this->model->viewOptions['errors'][] = 'Some error occurred while installing.';
 										}
 										break;
 								}
@@ -418,7 +418,7 @@ class ZkController extends Controller
 					break;
 			}
 		} catch (\Exception $e) {
-			$this->viewOptions['errors'][] = $e->getMessage();
+			$this->model->viewOptions['errors'][] = $e->getMessage();
 		}
 
 		$this->index();
