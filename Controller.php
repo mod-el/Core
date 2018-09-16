@@ -70,7 +70,7 @@ class Controller
 		if (isset($options['messaggi']))
 			$options['messages'] = $options['messaggi'];
 
-		if ($options['template'] === false) { // By default, load the template with the same name as the current controller
+		if (!array_key_exists('template', $options)) { // By default, load the template with the same name as the current controller
 			$classShortName = (new \ReflectionClass($this))->getShortName();
 			$options['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr($classShortName, 0, -10)));
 		}
