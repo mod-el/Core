@@ -79,7 +79,7 @@ class Autoloader
 
 		$fullClassName = '\\' . $className;
 
-		if (!class_exists($fullClassName, false) and !interface_exists($fullClassName, false)) {
+		if (!class_exists($fullClassName, false) and !interface_exists($fullClassName, false) and !trait_exists($fullClassName, false)) {
 			if ($errors)
 				throw new \Exception('The file for "' . $className . '" exists, but the class/interface does not. Check the definition spelling inside that file!!');
 			return false;
