@@ -54,7 +54,7 @@ class Core implements \JsonSerializable
 	 */
 	public function preInit()
 	{
-		if (version_compare(phpversion(), '7.0.0', '<'))
+		if (version_compare(phpversion(), '7.1.0', '<'))
 			die('PHP version (' . phpversion() . ') is not enough for ModEl framework to run.');
 
 		$this->trigger('Core', 'start');
