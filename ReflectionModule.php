@@ -32,6 +32,8 @@ class ReflectionModule
 	public $official = null;
 	/** @var Module_Config */
 	private $configClass = null;
+	/** @var bool */
+	public $configClassCompatible = false;
 
 	/** @var bool */
 	public $new_version = false;
@@ -172,6 +174,9 @@ class ReflectionModule
 	 */
 	private function loadConfigClass(): bool
 	{
+		if (!$this->configClassCompatible)
+			return false;
+
 		$configClassPath = $this->getConfigClassPath();
 		if (file_exists($configClassPath)) {
 			require_once($configClassPath);

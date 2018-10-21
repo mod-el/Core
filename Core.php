@@ -129,8 +129,8 @@ class Core implements \JsonSerializable, ModuleInterface
 		$this->controllers = $cacheFile['controllers'];
 		$this->availableModules = $cacheFile['modules'];
 		$this->modulesWithCleanUp = $cacheFile['cleanups'];
-		$this->boundMethods = $cacheFile['methods'];
-		$this->boundProperties = $cacheFile['properties'];
+		$this->boundMethods = $cacheFile['methods'] ?? [];
+		$this->boundProperties = $cacheFile['properties'] ?? [];
 	}
 
 	/**
