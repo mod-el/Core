@@ -6,10 +6,6 @@ class Module
 	public $model;
 	/** @var mixed */
 	public $module_id;
-	/** @var array */
-	public $methods = array();
-	/** @var array */
-	public $properties = array();
 	/** @var mixed */
 	private $configCache = null;
 

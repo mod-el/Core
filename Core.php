@@ -3,11 +3,11 @@
 class Core implements \JsonSerializable
 {
 	/** @var array[] */
-	public $modules = array();
-	/** @var string[] */
-	protected $boundMethods = array();
-	/** @var string[] */
-	protected $boundProperties = array();
+	public $modules = [];
+	/** @var array[] */
+	protected $boundMethods = [];
+	/** @var array[] */
+	protected $boundProperties = [];
 	/** @var array[] */
 	protected $availableModules = [];
 	/** @var array[] */
@@ -93,10 +93,6 @@ class Core implements \JsonSerializable
 		$this->modules['Core'][0] = $this;
 
 		$this->checkCleanUp();
-
-		// Output module, if present, is always loaded, to have its methods bound here
-		if ($this->moduleExists('Output'))
-			$this->load('Output');
 	}
 
 	private function defineConstants()
@@ -133,6 +129,8 @@ class Core implements \JsonSerializable
 		$this->controllers = $cacheFile['controllers'];
 		$this->availableModules = $cacheFile['modules'];
 		$this->modulesWithCleanUp = $cacheFile['cleanups'];
+		$this->boundMethods = $cacheFile['methods'];
+		$this->boundProperties = $cacheFile['properties'];
 	}
 
 	/**
@@ -265,29 +263,8 @@ class Core implements \JsonSerializable
 
 		if ($module['load']) {
 			$className = '\\Model\\' . $name . '\\' . $name;
-
 			$this->modules[$name][$idx] = new $className($this, $idx);
 			$this->modules[$name][$idx]->init($options);
-
-			foreach ($this->modules[$name][$idx]->methods as $m_name) {
-				if (method_exists($this, $m_name))
-					$this->error('Protected method name "' . $m_name . '", error while loading module ' . $name . '.');
-
-				if (isset($this->boundMethods[$m_name]) and $this->boundMethods[$m_name] != $name)
-					$this->error('Method "' . $m_name . '" already bound by another module, error while loading module ' . $name . '.');
-
-				$this->boundMethods[$m_name] = $name;
-			}
-
-			foreach ($this->modules[$name][$idx]->properties as $p_name) {
-				if (property_exists($this, $p_name))
-					$this->error('Protected property name "' . $p_name . '", error while loading module ' . $name . '.');
-
-				if (isset($this->boundProperties[$p_name]) and $this->boundProperties[$p_name] != $name)
-					$this->error('Property "' . $p_name . '" already bound by another module, error while loading module ' . $name . '.');
-
-				$this->boundProperties[$p_name] = $name;
-			}
 		} else {
 			$this->modules[$name][$idx] = true;
 		}
@@ -410,8 +387,8 @@ class Core implements \JsonSerializable
 				return false;
 			}
 		} elseif (isset($this->boundProperties[$i])) {
-			$module = $this->getModule($this->boundProperties[$i]);
-			return $module->{$i};
+			$module = $this->getModule($this->boundProperties[$i]['module']);
+			return $module->{$this->boundProperties[$i]['property']};
 		} else {
 			return null;
 		}
@@ -427,8 +404,8 @@ class Core implements \JsonSerializable
 	function __call(string $name, array $arguments)
 	{
 		if (isset($this->boundMethods[$name])) {
-			$module = $this->getModule($this->boundMethods[$name]);
-			return call_user_func_array(array($module, $name), $arguments);
+			$module = $this->getModule($this->boundMethods[$name]['module']);
+			return call_user_func_array([$module, $this->boundMethods[$name]['method']], $arguments);
 		} else {
 			return null;
 		}
