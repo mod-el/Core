@@ -232,9 +232,9 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * @param string $name
 	 * @param array $options
 	 * @param mixed $idx
-	 * @return Module|true
+	 * @return Module|null
 	 */
-	public function load(string $name, array $options = [], $idx = 0)
+	public function load(string $name, array $options = [], $idx = 0): ?ModuleInterface
 	{
 		if (isset($this->modules[$name][$idx])) {
 			return $this->modules[$name][$idx];
@@ -266,7 +266,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			$this->modules[$name][$idx] = new $className($this, $idx);
 			$this->modules[$name][$idx]->init($options);
 		} else {
-			$this->modules[$name][$idx] = true;
+			$this->modules[$name][$idx] = null;
 		}
 
 		$head = $module['assets-position'] === 'head' ? true : false;
