@@ -17,13 +17,13 @@ class ReflectionModule
 	/** @var string|bool */
 	public $description = false;
 	/** @var array */
-	public $dependencies = array();
+	public $dependencies = [];
 	/** @var bool */
 	public $installed = false;
 	/** @var string|bool */
 	public $version = false;
 	/** @var array */
-	public $files = array();
+	public $files = [];
 	/** @var string|bool */
 	public $md5 = false;
 	/** @var string|null */
@@ -140,10 +140,10 @@ class ReflectionModule
 				}
 			} else {
 				$f_name = substr($f, strlen($folder));
-				$files[] = array(
+				$files[] = [
 					'path' => $f_name,
 					'md5' => md5(file_get_contents($f)),
-				);
+				];
 			}
 		}
 

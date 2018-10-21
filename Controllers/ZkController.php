@@ -171,8 +171,25 @@ class ZkController extends Controller
 							if ($m->version != '0.0.0' and !$m->installed) {
 								$toBeInstalled[] = $m;
 							} else {
-								if ($m->getConfigClass())
-									$m->getConfigClass()->checkAssets();
+								// Load the config class only if the module is updated in respect of the Core (to avoid non-compatibility between classes)
+								$compatible = false;
+								if ($m->folder_name === 'Core')
+									$compatible = true;
+								if (!$compatible) {
+									foreach ($m->dependencies as $dependency => $dependencyVersion) {
+										if ($dependency === 'Core') {
+											$version = preg_replace('/^.*([0-9]+\.[0-9]+\.[0-9]+)$/', '$1', $dependencyVersion);
+											if (version_compare($version, $modules['Core']->version, '>=')) {
+												$compatible = true;
+												break;
+											}
+										}
+									}
+								}
+								if ($compatible) {
+									if ($m->getConfigClass())
+										$m->getConfigClass()->checkAssets();
+								}
 							}
 
 							foreach ($m->dependencies as $depModule => $depVersion) {
