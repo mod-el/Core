@@ -10,6 +10,8 @@ class ZkController extends Controller
 	private $updater;
 	/** @var array */
 	protected $options = [];
+	/** @var array */
+	private $injected = [];
 
 	public function init()
 	{
@@ -36,7 +38,7 @@ class ZkController extends Controller
 						$this->model->viewOptions['showLayout'] = false;
 						$this->model->viewOptions['template'] = 'new-module';
 						$modules = $this->updater->downloadableModules();
-						$this->model->inject('modules', $modules);
+						$this->injected['modules'] = $modules;
 
 						if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
 							if (!$this->model->moduleExists($this->model->getRequest(3))) {
@@ -111,8 +113,8 @@ class ZkController extends Controller
 										}
 									}
 								}
-								$this->model->inject('config_class', $configClass);
-								$this->model->inject('config', $config);
+								$this->injected['config_class'] = $configClass;
+								$this->injected['config'] = $config;
 							}
 						} else {
 							if ($this->model->getRequest(2) == 'init') {
@@ -235,7 +237,7 @@ class ZkController extends Controller
 
 							$this->model->viewOptions['showLayout'] = false;
 							$this->model->viewOptions['template'] = 'module';
-							$this->model->inject('module', $modules[$_GET['module']]);
+							$this->injected['module'] = $modules[$_GET['module']];
 						} else {
 							if ($nextToInstall)
 								$this->model->redirect(PATH . 'zk/modules/init/' . $nextToInstall->folder_name . $qry_string);
@@ -250,8 +252,8 @@ class ZkController extends Controller
 								if ($m->corrupted)
 									$somethingEdited = true;
 							}
-							$this->model->inject('something_to_update', count($toBeUpdated) > 0 ? true : false);
-							$this->model->inject('something_edited', $somethingEdited);
+							$this->injected['something_to_update'] = count($toBeUpdated) > 0 ? true : false;
+							$this->injected['something_edited'] = $somethingEdited;
 
 							if (isset($_GET['update-all'])) {
 								$queue = array_unique(array_merge($queue, $toBeUpdated));
@@ -273,8 +275,8 @@ class ZkController extends Controller
 								}
 							}
 
-							$this->model->inject('update_queue', $queue);
-							$this->model->inject('modules', $modules);
+							$this->injected['update_queue'] = $queue;
+							$this->injected['modules'] = $modules;
 						}
 						break;
 				}
@@ -283,7 +285,7 @@ class ZkController extends Controller
 				$modules = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
 				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
 					$this->model->viewOptions['template'] = 'local-module';
-					$this->model->inject('module', $modules[$this->model->getRequest(2)]);
+					$this->injected['module'] = $modules[$this->model->getRequest(2)];
 
 					if (isset($_POST['makeNewFile'])) {
 						try {
@@ -301,7 +303,7 @@ class ZkController extends Controller
 					}
 				} else {
 					$this->model->viewOptions['template'] = 'local-modules';
-					$this->model->inject('modules', $modules);
+					$this->injected['modules'] = $modules;
 				}
 				break;
 			case 'make-cache':
@@ -362,8 +364,8 @@ class ZkController extends Controller
 						break;
 				}
 
-				if (count($this->injected('modules')) > 0) {
-					foreach ($this->injected('modules') as $m) {
+				if (count($this->injected['modules'] ?? []) > 0) {
+					foreach ($this->injected['modules'] as $m) {
 						if (is_array($m)) {
 							echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
 						} else {
@@ -382,7 +384,7 @@ class ZkController extends Controller
 
 	public function output(array $options = [])
 	{
-		foreach ($this->model->injected() as $injName => $injObj)
+		foreach ($this->injected as $injName => $injObj)
 			${$injName} = $injObj;
 
 		$this->options = array_merge_recursive_distinct($options, $this->model->viewOptions);
