@@ -1,18 +1,18 @@
 <?php namespace Model\Core;
 
-class Core implements \JsonSerializable
+class Core implements \JsonSerializable, ModuleInterface
 {
 	/** @var array[] */
-	public $modules = array();
-	/** @var string[] */
-	protected $boundMethods = array();
-	/** @var string[] */
-	protected $boundProperties = array();
+	public $modules = [];
+	/** @var array[] */
+	protected $boundMethods = [];
+	/** @var array[] */
+	protected $boundProperties = [];
 	/** @var array[] */
 	protected $availableModules = [];
 	/** @var array[] */
 	protected $rules = [];
-	/** @var string[] */
+	/** @var array[] */
 	protected $controllers = [];
 	/** @var string */
 	public $leadingModule;
@@ -93,10 +93,6 @@ class Core implements \JsonSerializable
 		$this->modules['Core'][0] = $this;
 
 		$this->checkCleanUp();
-
-		// Output module, if present, is always loaded, to have its methods bound here
-		if ($this->moduleExists('Output'))
-			$this->load('Output');
 	}
 
 	private function defineConstants()
@@ -133,6 +129,8 @@ class Core implements \JsonSerializable
 		$this->controllers = $cacheFile['controllers'];
 		$this->availableModules = $cacheFile['modules'];
 		$this->modulesWithCleanUp = $cacheFile['cleanups'];
+		$this->boundMethods = $cacheFile['methods'];
+		$this->boundProperties = $cacheFile['properties'];
 	}
 
 	/**
@@ -234,7 +232,7 @@ class Core implements \JsonSerializable
 	 * @param string $name
 	 * @param array $options
 	 * @param mixed $idx
-	 * @return mixed
+	 * @return Module|true
 	 */
 	public function load(string $name, array $options = [], $idx = 0)
 	{
@@ -265,29 +263,8 @@ class Core implements \JsonSerializable
 
 		if ($module['load']) {
 			$className = '\\Model\\' . $name . '\\' . $name;
-
 			$this->modules[$name][$idx] = new $className($this, $idx);
 			$this->modules[$name][$idx]->init($options);
-
-			foreach ($this->modules[$name][$idx]->methods as $m_name) {
-				if (method_exists($this, $m_name))
-					$this->error('Protected method name "' . $m_name . '", error while loading module ' . $name . '.');
-
-				if (isset($this->boundMethods[$m_name]) and $this->boundMethods[$m_name] != $name)
-					$this->error('Method "' . $m_name . '" already bound by another module, error while loading module ' . $name . '.');
-
-				$this->boundMethods[$m_name] = $name;
-			}
-
-			foreach ($this->modules[$name][$idx]->properties as $p_name) {
-				if (property_exists($this, $p_name))
-					$this->error('Protected property name "' . $p_name . '", error while loading module ' . $name . '.');
-
-				if (isset($this->boundProperties[$p_name]) and $this->boundProperties[$p_name] != $name)
-					$this->error('Property "' . $p_name . '" already bound by another module, error while loading module ' . $name . '.');
-
-				$this->boundProperties[$p_name] = $name;
-			}
 		} else {
 			$this->modules[$name][$idx] = true;
 		}
@@ -315,10 +292,10 @@ class Core implements \JsonSerializable
 	 * Returns boolean true or false.
 	 *
 	 * @param string $name
-	 * @param mixed $idx
+	 * @param string|null $idx
 	 * @return bool
 	 */
-	public function isLoaded(string $name, $idx = null): bool
+	public function isLoaded(string $name, ?string $idx = null): bool
 	{
 		if ($idx === null) {
 			return isset($this->modules[$name]);
@@ -335,9 +312,9 @@ class Core implements \JsonSerializable
 	 * @param string $name
 	 * @param mixed $idx
 	 * @param bool $autoload
-	 * @return Module|null
+	 * @return ModuleInterface|null
 	 */
-	public function getModule(string $name, $idx = null, bool $autoload = true)
+	public function getModule(string $name, $idx = null, bool $autoload = true): ?ModuleInterface
 	{
 		if ($idx === null) {
 			if (isset($this->modules[$name])) {
@@ -365,10 +342,10 @@ class Core implements \JsonSerializable
 	/**
 	 * Returns all loaded modules, or all loaded modules of a specific type, if given.
 	 *
-	 * @param mixed $name
+	 * @param string|null $name
 	 * @return array
 	 */
-	public function allModules(string $name = null): array
+	public function allModules(?string $name = null): array
 	{
 		if ($name === null) {
 			$return = array();
@@ -410,8 +387,8 @@ class Core implements \JsonSerializable
 				return false;
 			}
 		} elseif (isset($this->boundProperties[$i])) {
-			$module = $this->getModule($this->boundProperties[$i]);
-			return $module->{$i};
+			$module = $this->getModule($this->boundProperties[$i]['module']);
+			return $module->{$this->boundProperties[$i]['property']};
 		} else {
 			return null;
 		}
@@ -427,8 +404,8 @@ class Core implements \JsonSerializable
 	function __call(string $name, array $arguments)
 	{
 		if (isset($this->boundMethods[$name])) {
-			$module = $this->getModule($this->boundMethods[$name]);
-			return call_user_func_array(array($module, $name), $arguments);
+			$module = $this->getModule($this->boundMethods[$name]['module']);
+			return call_user_func_array([$module, $this->boundMethods[$name]['method']], $arguments);
 		} else {
 			return null;
 		}
@@ -470,7 +447,7 @@ class Core implements \JsonSerializable
 
 			$match = $this->matchRule($request);
 
-			if ($match === false) {
+			if ($match === null) {
 				$module = 'Core';
 				$controllerName = 'Err404';
 				$this->viewOptions['404-reason'] = 'No rule matched the request.';
@@ -639,9 +616,9 @@ class Core implements \JsonSerializable
 	 * If more than one rule is matching, I assign a score to each one (the more specific is the rule, the higher is the score) and pick the highest one.
 	 *
 	 * @param array $request
-	 * @return bool|array
+	 * @return array|null
 	 */
-	private function matchRule(array $request)
+	private function matchRule(array $request): ?array
 	{
 		$matchedRules = [];
 
@@ -674,7 +651,7 @@ class Core implements \JsonSerializable
 		}
 
 		if (count($matchedRules) == 0) {
-			return false;
+			return null;
 		} else {
 			if (count($matchedRules) > 1)
 				arsort($matchedRules);
@@ -690,7 +667,7 @@ class Core implements \JsonSerializable
 	 * @param string $rule
 	 * @return array
 	 */
-	public function getController(array $request, string $rule): array
+	public function getController(array $request, string $rule): ?array
 	{
 		switch ($rule) {
 			case 'zk':
@@ -704,6 +681,8 @@ class Core implements \JsonSerializable
 				];
 				break;
 		}
+
+		return null;
 	}
 
 	/**
@@ -715,7 +694,7 @@ class Core implements \JsonSerializable
 	 * @param int $i
 	 * @return array|string|null
 	 */
-	public function getRequest(int $i = null)
+	public function getRequest(?int $i = null)
 	{
 		if ($this->request === false) {
 			if ($this->isCLI()) {
@@ -842,15 +821,15 @@ class Core implements \JsonSerializable
 	/**
 	 * Builds a request url based on the given parameters
 	 *
-	 * @param string|bool $controller
-	 * @param int|bool $id
+	 * @param string|null $controller
+	 * @param string|null $id
 	 * @param array $tags
 	 * @param array $opt
-	 * @return bool|string
+	 * @return null|string
 	 */
-	public function getUrl($controller = false, $id = false, array $tags = [], array $opt = [])
+	public function getUrl(?string $controller = null, ?string $id = null, array $tags = [], array $opt = []): ?string
 	{
-		if ($controller === false)
+		if ($controller === null)
 			$controller = $this->controllerName;
 
 		$opt = array_merge([
@@ -885,11 +864,11 @@ class Core implements \JsonSerializable
 			else
 				$module = reset($modules);
 		} else {
-			return false;
+			return null;
 		}
 
 		$url = $this->getModule($module)->getUrl($controller, $id, $tags, $opt);
-		return $url !== false ? $prefix . $url : false;
+		return $url !== false ? $prefix . $url : null;
 	}
 
 	/* ERRORS MANAGEMENT */

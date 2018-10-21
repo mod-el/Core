@@ -1,15 +1,11 @@
 <?php namespace Model\Core;
 
-class Module
+class Module implements ModuleInterface
 {
 	/** @var Core */
 	public $model;
 	/** @var mixed */
 	public $module_id;
-	/** @var array */
-	public $methods = array();
-	/** @var array */
-	public $properties = array();
 	/** @var mixed */
 	private $configCache = null;
 
@@ -92,7 +88,7 @@ class Module
 	 * @param array $data
 	 * @return bool
 	 */
-	public function trigger(string $event, array $data = [])
+	public function trigger(string $event, array $data = []): bool
 	{
 		return $this->model->trigger($this->getClass(), $event, $data);
 	}
@@ -122,24 +118,24 @@ class Module
 	 *
 	 * @param array $request
 	 * @param string $rule
-	 * @return array|bool
+	 * @return array|null
 	 */
-	public function getController(array $request, string $rule)
+	public function getController(array $request, string $rule): ?array
 	{
-		return false;
+		return null;
 	}
 
 	/**
 	 * Meant to be extended if needed
 	 *
 	 * @param string $controller
-	 * @param int|bool $id
+	 * @param string|null $id
 	 * @param array $tags
 	 * @param array $opt
-	 * @return bool|string
+	 * @return string|null
 	 */
-	public function getUrl(string $controller = null, $id = false, array $tags = [], array $opt = [])
+	public function getUrl(?string $controller = null, ?string $id = null, array $tags = [], array $opt = []): ?string
 	{
-		return false;
+		return null;
 	}
 }

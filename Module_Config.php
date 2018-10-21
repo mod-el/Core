@@ -89,9 +89,9 @@ class Module_Config
 	 * If the module has a configuration/installation page in the control panel, it's handled by this method
 	 *
 	 * @param array $request
-	 * @return string
+	 * @return string|null
 	 */
-	public function getTemplate(array $request)
+	public function getTemplate(array $request): ?string
 	{
 		return null;
 	}

@@ -40,6 +40,8 @@ class Config extends Module_Config
 		$modules = [];
 		$cleanups = [];
 		$zkpages = [];
+		$methods = [];
+		$properties = [];
 
 		if (!is_dir(INCLUDE_PATH . 'app-data'))
 			mkdir(INCLUDE_PATH . 'app-data');
@@ -106,8 +108,30 @@ class Config extends Module_Config
 					$modules[$d_info['filename']]['css'] = $moduleData['css'];
 				if (isset($moduleData['assets-position']))
 					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
-				if (isset($moduleData['dependencies']))
+				if (isset($moduleData['dependencies']) and is_array($moduleData['dependencies']))
 					$modules[$d_info['filename']]['dependencies'] = array_keys($moduleData['dependencies']);
+
+				if (isset($moduleData['bind-methods']) and is_array($moduleData['bind-methods'])) {
+					foreach ($moduleData['bind-methods'] as $coreMethod => $moduleMethod) {
+						if (isset($methods[$coreMethod]))
+							$this->model->error('Cannot bind method ' . $coreMethod . ' to ' . $d_info['filename'] . '; name already taken');
+						$methods[$coreMethod] = [
+							'module' => $d_info['filename'],
+							'method' => $moduleMethod,
+						];
+					}
+				}
+
+				if (isset($moduleData['bind-properties']) and is_array($moduleData['bind-properties'])) {
+					foreach ($moduleData['bind-properties'] as $coreProperty => $moduleProperty) {
+						if (isset($properties[$coreProperty]))
+							$this->model->error('Cannot bind property ' . $coreProperty . ' to ' . $d_info['filename'] . '; name already taken');
+						$properties[$coreProperty] = [
+							'module' => $d_info['filename'],
+							'property' => $moduleProperty,
+						];
+					}
+				}
 			}
 
 			$files = glob($d . DIRECTORY_SEPARATOR . '*');
@@ -191,6 +215,8 @@ class Config extends Module_Config
 			'file-types' => $fileTypes,
 			'cleanups' => $cleanups,
 			'zk-pages' => $zkpages,
+			'methods' => $methods,
+			'properties' => $properties,
 		];
 
 		$cacheDir = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data';
@@ -224,7 +250,7 @@ $cache = ' . var_export($cache, true) . ';
 	 * @param bool $isClass
 	 * @return array
 	 */
-	private function getModuleFiles($path, $isClass)
+	private function getModuleFiles(string $path, bool $isClass): array
 	{
 		$return = [];
 
@@ -266,9 +292,9 @@ $cache = ' . var_export($cache, true) . ';
 	 * Returns the config template
 	 *
 	 * @param array $request
-	 * @return string
+	 * @return string|null
 	 */
-	public function getTemplate(array $request)
+	public function getTemplate(array $request): ?string
 	{
 		return $request[2] == 'config' ? 'config' : null;
 	}
