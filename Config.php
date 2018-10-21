@@ -250,7 +250,7 @@ $cache = ' . var_export($cache, true) . ';
 	 * @param bool $isClass
 	 * @return array
 	 */
-	private function getModuleFiles($path, $isClass)
+	private function getModuleFiles(string $path, bool $isClass): array
 	{
 		$return = [];
 
@@ -292,9 +292,9 @@ $cache = ' . var_export($cache, true) . ';
 	 * Returns the config template
 	 *
 	 * @param array $request
-	 * @return string
+	 * @return string|null
 	 */
-	public function getTemplate(array $request)
+	public function getTemplate(array $request): ?string
 	{
 		return $request[2] == 'config' ? 'config' : null;
 	}
