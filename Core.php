@@ -1004,13 +1004,23 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
-	 * Turns off or on events
+	 * Turns off or on events logging
 	 *
 	 * @param bool $set
 	 */
 	public function switchEvents(bool $set)
 	{
 		$this->eventsOn = $set;
+	}
+
+	/**
+	 * Is events logging on?
+	 *
+	 * @return bool
+	 */
+	public function getEventsFlag(): bool
+	{
+		return $this->eventsOn;
 	}
 
 	/* VARIOUS UTILITIES */
