@@ -461,6 +461,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			if (!$moduleData)
 				$this->model->error('Module ' . $module . ' does not exist');
 
+			$this->leadingModule = $module;
 			$this->trigger('Core', 'leadingModuleFound', ['module' => $module]);
 
 			if ($moduleData['load']) {
@@ -517,7 +518,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			}
 		}
 
-		$this->leadingModule = $module;
+		$this->leadingModule = $module; // Let me set the leading module again, as it may have changed in the previous lines
 
 		$controllerClassName = Autoloader::searchFile('Controller', $controllerName . 'Controller');
 
