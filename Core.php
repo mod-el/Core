@@ -554,18 +554,21 @@ class Core implements \JsonSerializable, ModuleInterface
 			$controllerReturn = $this->controller->{$httpMethod}();
 		}
 		if ($controllerReturn !== null) {
+			/*
+			 * If I have a returning value from the controller, I send it to the output as a json
+			 * */
+			$this->trigger('Core', 'jsonResponse');
 			echo json_encode($controllerReturn);
-			die();
-		}
-
-		/*
-		 * Finally, I render the output content (default method in the controller use the Output module to handle this, but this behaviour can be customized.
+		} else {
+			/*
+		 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
 		 * */
-		$this->trigger('Core', 'outputStart');
-		if ($this->isCLI())
-			$this->controller->outputCLI($this->viewOptions);
-		else
-			$this->controller->output($this->viewOptions);
+			$this->trigger('Core', 'outputStart');
+			if ($this->isCLI())
+				$this->controller->outputCLI($this->viewOptions);
+			else
+				$this->controller->output($this->viewOptions);
+		}
 	}
 
 	/**
