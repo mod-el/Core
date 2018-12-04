@@ -542,17 +542,20 @@ class Core implements \JsonSerializable, ModuleInterface
 		$this->controller->init();
 		$this->controller->modelInit();
 
-		if (isset($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD'] == 'POST') {
-			if (array_keys($_POST) == ['zkbindings']) {
-				$this->trigger('Core', 'controllerIndex');
-				$this->controller->index();
-			} else {
-				$this->trigger('Core', 'controllerPost');
-				$this->controller->post();
-			}
+		if ($this->isCLI()) {
+			$this->trigger('Core', 'controllerExecution', ['method' => 'cli']);
+			$controllerReturn = $this->controller->cli();
 		} else {
-			$this->trigger('Core', 'controllerIndex');
-			$this->controller->index();
+			$httpMethod = strtolower($_SERVER['REQUEST_METHOD'] ?? 'GET');
+			if (!in_array($httpMethod, ['get', 'post', 'put', 'delete', 'patch']))
+				$httpMethod = 'get';
+
+			$this->trigger('Core', 'controllerExecution', ['method' => $httpMethod]);
+			$controllerReturn = $this->controller->{$httpMethod}();
+		}
+		if ($controllerReturn !== null) {
+			echo json_encode($controllerReturn);
+			die();
 		}
 
 		/*
