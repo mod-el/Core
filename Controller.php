@@ -35,20 +35,60 @@ class Controller
 	}
 
 	/**
-	 * Meant to be extended
-	 * This should contain the actual business logic of the application
+	 * Business logic of the application
+	 * You can use either this for generic response, or the various methods below
 	 *
 	 * @return mixed
 	 */
 	public function index()
 	{
-		return null;
+		return;
 	}
 
 	/**
-	 * Optionally, you can specify different behaviours for POST or GET requests
+	 * Called for GET requests
+	 */
+	public function get()
+	{
+		return $this->index();
+	}
+
+	/**
+	 * Called for POST requests
 	 */
 	public function post()
+	{
+		return $this->index();
+	}
+
+	/**
+	 * Called for PUT requests
+	 */
+	public function put()
+	{
+		return $this->index();
+	}
+
+	/**
+	 * Called for DELETE requests
+	 */
+	public function delete()
+	{
+		return $this->index();
+	}
+
+	/**
+	 * Called for PATCH requests
+	 */
+	public function patch()
+	{
+		return $this->index();
+	}
+
+	/**
+	 * Called when used in a CLI environment
+	 */
+	public function cli()
 	{
 		return $this->index();
 	}
