@@ -180,7 +180,7 @@ class ZkController extends Controller
 									foreach ($m->dependencies as $dependency => $dependencyVersion) {
 										if ($dependency === 'Core') {
 											$version = preg_replace('/^.*([0-9]+\.[0-9]+\.[0-9]+)$/', '$1', $dependencyVersion);
-											if (version_compare($version, $modules['Core']->version, '>=')) {
+											if (version_compare($modules['Core']->version, $version, '>=')) {
 												$m->configClassCompatible = true;
 												break;
 											}
