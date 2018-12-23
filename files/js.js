@@ -176,16 +176,15 @@ function array_merge(obj1, obj2) {
 function cmd(cmd, post) {
 	if (typeof post === 'undefined')
 		post = '';
-	if (typeof refresh === 'undefined')
-		refresh = false;
 
 	let div = document.getElementById('cmd-' + cmd);
 	if (!div)
 		return false;
 	let ex = div.innerHTML;
 	div.loading();
-	return ajax(absolute_path + 'zk/' + cmd, '', post).then(r => {
+	return ajax(absolute_path + 'zk/' + cmd, {}, post).then(r => {
 		div.innerHTML = ex;
+		return r;
 	});
 }
 
@@ -314,7 +313,10 @@ function updateNextFile() {
 	} else {
 		document.getElementById('update-action').innerHTML = 'Finalizing...';
 
-		ajax(absolute_path + 'zk/modules/finalize-update', {}, {'modules': updatingModules.join(','), 'c_id': c_id}).then(r => {
+		ajax(absolute_path + 'zk/modules/finalize-update', {}, {
+			'modules': updatingModules.join(','),
+			'c_id': c_id
+		}).then(r => {
 			if (r === 'ok') {
 				cmd('make-cache').then(() => document.location.reload());
 			} else {

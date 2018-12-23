@@ -248,13 +248,12 @@ class ZkController extends Controller
 					$this->updater->updateModuleCache('Core');
 
 					foreach ($modules as $mName => $m) {
-						if ($mName == 'Core')
+						if ($mName === 'Core')
 							continue;
 						if ($m->hasConfigClass()) {
 							$this->updater->updateModuleCache($mName);
 						}
 					}
-
 				} catch (Exception $e) {
 					die(getErr($e));
 				}
