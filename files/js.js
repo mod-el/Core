@@ -1,6 +1,8 @@
 if (typeof c_id === 'undefined')
 	var c_id = '';
 
+var selectedModules = [];
+
 var updateQueue = [];
 
 var updatingFileList = {};
@@ -11,7 +13,7 @@ var updatingModule = null;
 
 var myRequest = [];
 
-function CreateXmlHttpReq(n, handler, campi_addizionali) { // Funzione che verr� usata da richiestaAjax
+function CreateXmlHttpReq(n, handler, campi_addizionali) {
 	var xmlhttp = false;
 	try {
 		xmlhttp = new XMLHttpRequest();
@@ -64,6 +66,24 @@ function ajax(handler, indirizzo, parametri_get, parametri_post, campi_addiziona
 	return n;
 }
 
+Element.prototype.removeClass = function (name) {
+	var classi = this.className.split(' ');
+	var nuove = [];
+	for (var i in classi) {
+		if (classi[i] != name)
+			nuove.push(classi[i]);
+	}
+	this.className = nuove.join(' ');
+}
+
+Element.prototype.addClass = function (name) {
+	var classi = this.className.split(' ');
+	for (var i in classi) {
+		if (classi[i] == name) return;
+	}
+	this.className = this.className + ' ' + name;
+}
+
 Element.prototype.loading = function () {
 	this.innerHTML = '<img src="' + base_path + 'model/Output/files/loading.gif" alt="" class="loading-gif" />';
 	return this;
@@ -89,6 +109,30 @@ function cmd(cmd, post) {
 		};
 	})(cmd, post, refresh, div, ex));
 }
+
+function toggleModuleSelection(name) {
+	let index = selectedModules.indexOf(name);
+	if (index === -1) {
+		selectedModules.push(name);
+	} else {
+		selectedModules.splice(index, 1);
+	}
+
+	refreshSelectedModules();
+}
+
+function refreshSelectedModules() {
+	document.querySelectorAll('[data-module]').forEach(module => {
+		let name = module.getAttribute('data-module');
+		if (selectedModules.indexOf(name) === -1) {
+			module.removeClass('selected');
+		} else {
+			module.addClass('selected');
+		}
+	});
+}
+
+/*************************************** TODO: CHECK *****************************************/
 
 function queueModuleUpdate(name) {
 	if (updatingModule) {
@@ -268,5 +312,5 @@ function installModule(name) {
 
 function makeNewFile(module, type) {
 	let lb = lightbox('').loading();
-	ajax(lb, absolute_path + 'zk/local-modules/' + module + '/make/'+type, '', '');
+	ajax(lb, absolute_path + 'zk/local-modules/' + module + '/make/' + type, '', '');
 }

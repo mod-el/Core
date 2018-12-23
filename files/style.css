@@ -1,195 +1,219 @@
-html, body{
-    margin: 0;
-    font-family: Verdana;
-    font-size: 14px;
-    min-height: 100%;
+html, body {
+	margin: 0;
+	font-family: Verdana;
+	font-size: 14px;
+	min-height: 100%;
 }
 
-body{
-    background: #F9F9F9 url('logo.png') center no-repeat;
+body {
+	background: #F9F9F9 url('logo.png') center no-repeat;
 }
 
-.red-message{
-    padding: 10px;
-    background: #FBB;
-    color: #000;
-    border: solid #F33 1px;
-    margin: 15px auto;
-    font-weight: bold;
+.red-message {
+	padding: 10px;
+	background: #FBB;
+	color: #000;
+	border: solid #F33 1px;
+	margin: 15px auto;
+	font-weight: bold;
 }
 
-.green-message{
-    padding: 10px;
-    background: #9F9;
-    border: solid #080 1px;
-    color: #000;
-    margin: 15px auto;
-    font-weight: bold;
+.green-message {
+	padding: 10px;
+	background: #9F9;
+	border: solid #080 1px;
+	color: #000;
+	margin: 15px auto;
+	font-weight: bold;
 }
 
-#tools{
-    position: absolute;
-    z-index: 10;
-    top: 0px;
-    right: 0px;
-    padding: 20px;
-    background: #2693FF;
-    border-bottom-left-radius: 10px;
+#tools {
+	position: absolute;
+	z-index: 10;
+	top: 0px;
+	right: 0px;
+	padding: 20px;
+	background: #2693FF;
+	border-bottom-left-radius: 10px;
 }
 
-#tools a:link, #tools a:visited{
-    color: #FFF;
+#tools a:link, #tools a:visited {
+	color: #FFF;
 }
 
-a:link, a:visited{
-    text-decoration: none;
-    color: #2693FF;
+a:link, a:visited {
+	text-decoration: none;
+	color: #2693FF;
 }
 
-a:hover{
-    text-shadow: 0px 0px 2px #DDD;
+a:hover {
+	text-shadow: 0px 0px 2px #DDD;
 }
 
-input:not([type=checkbox]):not([type=radio]), select{
-    height: 30px;
-    padding: 0 7px;
+input:not([type=checkbox]):not([type=radio]), select {
+	height: 30px;
+	padding: 0 7px;
 }
 
-#header{
-    padding: 5px 10px;
-    background: rgba(255, 255, 255, 0.8);
-    border-bottom: solid #EEE 1px;
+#header {
+	padding: 5px 10px;
+	background: rgba(255, 255, 255, 0.8);
+	border-bottom: solid #EEE 1px;
 }
 
-#header a{
-    padding: 10px 30px;
-    border-right: solid #FFF 1px;
-    display: inline-block;
+#header a {
+	padding: 10px 30px;
+	border-right: solid #FFF 1px;
+	display: inline-block;
 }
 
-#main{
-    width: 1160px;
-    margin: auto;
-    margin-top: 15px;
-    background: rgba(255, 255, 255, 0.95);
-    border: solid #CCC 1px;
-    border-radius: 15px;
-    padding: 20px;
-    overflow: hidden;
+#main {
+	width: 1160px;
+	margin: auto;
+	margin-top: 15px;
+	background: rgba(255, 255, 255, 0.95);
+	border: solid #CCC 1px;
+	border-radius: 15px;
+	padding: 20px;
+	overflow: hidden;
 }
 
-.boxino{
-    border: solid #AAA 1px;
-    padding: 15px;
-    margin-top: 15px;
+.boxino {
+	border: solid #AAA 1px;
+	padding: 15px;
+	margin-top: 15px;
 }
 
-#lightbox-bg{
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: rgba(153, 153, 153, 0.6);
-    z-index: 1000;
-    top: 0;
-    left: 0;
-    box-sizing: border-box;
-    text-align: center;
+#lightbox-bg {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background: rgba(153, 153, 153, 0.6);
+	z-index: 1000;
+	top: 0;
+	left: 0;
+	box-sizing: border-box;
+	text-align: center;
 }
 
-#lightbox{
-    position: fixed;
-    padding: 15px;
-    z-index: 1001;
-    top: 50px;
-    bottom: 50px;
-    left: 50px;
-    right: 50px;
-    box-shadow: 1px 1px 5px #444;
-    background: #FFFFFF;
-    overflow: auto;
-    box-sizing: border-box;
+#lightbox {
+	position: fixed;
+	padding: 15px;
+	z-index: 1001;
+	top: 50px;
+	bottom: 50px;
+	left: 50px;
+	right: 50px;
+	box-shadow: 1px 1px 5px #444;
+	background: #FFFFFF;
+	overflow: auto;
+	box-sizing: border-box;
 }
 
-.modulo{
-    display: inline-block;
-    box-sizing: border-box;
-    padding: 5px;
-    width: calc(100% / 3);
-    font-size: 12px;
-    vertical-align: top;
+.module-cont {
+	display: inline-block;
+	box-sizing: border-box;
+	padding: 5px;
+	width: calc(100% / 3);
+	font-size: 12px;
+	vertical-align: top;
 }
 
-.modulo > div{
-    border: solid #CCC 1px;
-    min-height: 50px;
-    position: relative;
+.module {
+	border: solid #CCC 1px;
+	min-height: 50px;
+	position: relative;
+	box-sizing: border-box;
+	box-shadow: 3px 3px 6px #DDD;
 }
 
-.modulo > div > div:first-of-type{
-    box-sizing: border-box;
-    padding: 15px;
+.module > div:first-child {
+	padding: 15px;
 }
 
-.modulo.not-official > div{
-    border: dashed #F00 1px;
+.module > div:nth-child(2) {
+	overflow: hidden;
+	padding-right: 6px;
+	line-height: 26px;
+	border-top: solid #DDD 1px;
 }
 
-.versione{
-    font-style: italic;
-    float: right;
+.module-selector {
+	float: left;
+	width: 26px;
+	height: 26px;
+	border-right: solid #DDD 1px;
+	cursor: pointer;
+	margin-right: 6px;
+	text-align: center;
 }
 
-.modulo .md5{
-    position: absolute;
-    right: 5px;
-    bottom: 2px;
-    color: #BBB;
-    font-size: 10px;
+.module-selector:hover {
+	background: rgba(217, 236, 255, 0.5);
 }
 
-.clickable, .list-module{
-    cursor: pointer;
+.module.selected .module-selector:before {
+	content: '✓';
 }
 
-.list-module{
-    padding: 5px 10px;
+.module.not-official {
+	border: dashed #F00 1px;
 }
 
-.clickable:hover, .list-module:hover, .list-module.selected{
-    background: #D9ECFF;
+.module-version {
+	font-style: italic;
+	float: right;
 }
 
-.module-loading-bar{
-    position: absolute;
-    bottom: 0;
-    width: 100%;
+.module .md5 {
+	float: right;
+	color: #BBB;
+	font-size: 10px;
 }
 
-.module-loading-bar > div{
-    width: 0%;
-    height: 5px;
-    background: #2693FF;
-    -webkit-transition: width 0.4s ease-out;
-    -moz-transition: width 0.4s ease-out;
-    -o-transition: width 0.4s ease-out;
-    -ms-transition: width 0.4s ease-out;
-    transition: width 0.4s ease-out;
+.clickable, .list-module {
+	cursor: pointer;
 }
 
-.module-files{
-    display: inline-block;
-    box-sizing: border-box;
-    padding: 5px;
-    width: calc(100% / 3);
-    font-size: 12px;
-    vertical-align: top;
+.list-module {
+	padding: 5px 10px;
 }
 
-.module-files > div{
-    border: solid #CCC 1px;
-    padding: 10px;
+.clickable:hover, .module.selected, .list-module:hover, .list-module.selected {
+	background: #D9ECFF;
 }
 
-.module-files > div > div:last-child{
-    padding: 10px;
+.module-loading-bar {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+}
+
+.module-loading-bar > div {
+	width: 0%;
+	height: 5px;
+	background: #2693FF;
+	-webkit-transition: width 0.4s ease-out;
+	-moz-transition: width 0.4s ease-out;
+	-o-transition: width 0.4s ease-out;
+	-ms-transition: width 0.4s ease-out;
+	transition: width 0.4s ease-out;
+}
+
+.module-files {
+	display: inline-block;
+	box-sizing: border-box;
+	padding: 5px;
+	width: calc(100% / 3);
+	font-size: 12px;
+	vertical-align: top;
+}
+
+.module-files > div {
+	border: solid #CCC 1px;
+	padding: 10px;
+}
+
+.module-files > div > div:last-child {
+	padding: 10px;
 }

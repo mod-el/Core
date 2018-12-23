@@ -16,19 +16,14 @@ if ($something_to_update) {
 
 	<div style="font-size: 0">
 		<?php foreach ($modules as $module) { ?>
-			<div class="modulo<?= (!$module->official) ? ' not-official' : '' ?>">
-				<div>
-					<div id="module-<?= $module->folder_name ?>"<?= ($module->isConfigurable()) ? ' class="clickable" onclick="document.location.href=\'' . PATH . 'zk/modules/config/' . entities($module->folder_name) . '\'"' : '' ?>>
-						<?php include(INCLUDE_PATH . 'model/Core/templates/module.php'); ?>
-					</div>
-					<div class="module-loading-bar" id="loading-bar-<?= $module->folder_name ?>" style="visibility: hidden">
-						<div></div>
-					</div>
+			<div class="module-cont">
+				<div class="module<?= (!$module->official) ? ' not-official' : '' ?>" data-module="<?= $module->folder_name ?>">
+					<?php include(INCLUDE_PATH . 'model/Core/templates/module.php'); ?>
 				</div>
 			</div>
 		<?php } ?>
-		<div class="modulo" style="width: 100%">
-			<div id="module-new" class="clickable" onclick="lightboxNewModule()">
+		<div class="module-cont" style="width: 100%">
+			<div id="module-new" class="clickable module" onclick="lightboxNewModule()">
 				<div>
 					<b>Install new module</b>
 				</div>
