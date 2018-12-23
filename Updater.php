@@ -140,58 +140,62 @@ class Updater
 	/**
 	 * Retrieves file list for a module from the repository
 	 *
-	 * @param string $name
-	 * @return array|bool
+	 * @param array $modules
+	 * @return array|null
 	 */
-	public function getModuleFileList(string $name)
+	public function getFilesList(array $modules): ?array
 	{
 		$config = $this->model->retrieveConfig();
 
-		$files = file_get_contents($config['repository'] . '?act=get-files&module=' . urlencode($name) . '&key=' . urlencode($config['license']) . '&md5');
+		$files = file_get_contents($config['repository'] . '?act=get-files&modules=' . urlencode(implode(',', $modules)) . '&key=' . urlencode($config['license']) . '&md5');
 		$files = json_decode($files, true);
 		if (!$files)
-			return false;
+			return null;
 
 		$filesToUpdate = [];
 		$filesToDelete = [];
 		$filesArr = [];
 		foreach ($files as $f) {
-			$filesArr[] = $f['path'];
-			if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $f['path'])) {
-				$md5 = md5(file_get_contents(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $f['path']));
+			$filesArr[] = $f['module'] . '/' . $f['path'];
+			if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $f['module'] . DIRECTORY_SEPARATOR . $f['path'])) {
+				$md5 = md5(file_get_contents(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $f['module'] . DIRECTORY_SEPARATOR . $f['path']));
 				if ($md5 != $f['md5'])
-					$filesToUpdate[] = $f['path'];
+					$filesToUpdate[] = $f['module'] . DIRECTORY_SEPARATOR . $f['path'];
 			} else {
-				$filesToUpdate[] = $f['path'];
+				$filesToUpdate[] = $f['module'] . DIRECTORY_SEPARATOR . $f['path'];
 			}
 		}
 
-		$module = new ReflectionModule($name, $this->model);
-		foreach ($module->files as $f) {
-			if (!in_array(str_replace(DIRECTORY_SEPARATOR, '/', $f['path']), $filesArr))
-				$filesToDelete[] = $f['path'];
+		foreach ($modules as $name) {
+			$module = new ReflectionModule($name, $this->model);
+			foreach ($module->files as $f) {
+				if (!in_array($name . '/' . str_replace(DIRECTORY_SEPARATOR, '/', $f['path']), $filesArr))
+					$filesToDelete[] = $name . DIRECTORY_SEPARATOR . $f['path'];
+			}
 		}
 
-		return ['update' => $filesToUpdate, 'delete' => $filesToDelete];
+		return [
+			'update' => $filesToUpdate,
+			'delete' => $filesToDelete,
+		];
 	}
 
 	/**
 	 * Retrieves a single file from the repository and writes it in the temp folder
 	 *
-	 * @param string $name
 	 * @param string $file
 	 * @return bool
 	 * @throws Exception
 	 */
-	public function updateFile(string $name, string $file): bool
+	public function updateFile(string $file): bool
 	{
 		$config = $this->model->retrieveConfig();
 
-		$content = file_get_contents($config['repository'] . '?act=get-file&module=' . urlencode($name) . '&file=' . urlencode($file) . '&key=' . urlencode($config['license']));
+		$content = file_get_contents($config['repository'] . '?act=get-file&file=' . urlencode($file) . '&key=' . urlencode($config['license']));
 		if ($content == 'File not found')
 			$this->model->error('File ' . $file . ' not found');
 
-		$temppath = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . $file;
+		$temppath = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . $file;
 		$path = pathinfo($temppath, PATHINFO_DIRNAME);
 
 		if (!is_dir($path))
@@ -208,50 +212,52 @@ class Updater
 	/**
 	 * After all files have been downloaded, this method copies them all at once in the correct location, and executes post updates
 	 *
-	 * @param string $name
+	 * @param array $modules
 	 * @param array $delete
 	 * @return bool
-	 * @throws \Exception
 	 */
-	public function finalizeUpdate(string $name, array $delete): bool
+	public function finalizeUpdate(array $modules, array $delete): bool
 	{
-		$old_version = null;
-
-		$module = new ReflectionModule($name, $this->model);
-		$old_version = $module->version;
-
-		foreach ($delete as $f) {
-			unlink(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $f);
-		}
-		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name, true))
-			return false;
-		if (!$this->recursiveCopy('model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp', 'model' . DIRECTORY_SEPARATOR . $name))
-			return false;
-		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp'))
-			return false;
-
 		$config = $this->model->retrieveConfig();
-		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&modules=' . urlencode($name) . '&key=' . urlencode($config['license']));
+		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&modules=' . urlencode(implode(',', $modules)) . '&key=' . urlencode($config['license']));
 		$remote = json_decode($remote_str, true);
-		if (!isset($remote[$name]))
-			return false;
-		$this->changeModuleInternalVar($name, 'md5', $remote[$name]['md5']);
 
-		$coreConfig = new Config($this->model);
-		$coreConfig->makeCache();
+		foreach ($delete as $f)
+			unlink(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $f);
 
-		$module = new ReflectionModule($name, $this->model);
-		if ($module->hasConfigClass()) {
-			$new_version = $module->version;
+		foreach ($modules as $name) {
+			$old_version = null;
 
-			$configClass = $module->getConfigClass();
-			if ($configClass) {
-				$postUpdate = $configClass->postUpdate($old_version, $new_version);
-				if (!$postUpdate)
-					return false;
-				$configClass->makeCache();
+			$module = new ReflectionModule($name, $this->model);
+			$old_version = $module->version;
+
+			if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name, true))
+				return false;
+			if (!$this->recursiveCopy('model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . $name, 'model' . DIRECTORY_SEPARATOR . $name))
+				return false;
+
+			if (isset($remote[$name]))
+				$this->changeModuleInternalVar($name, 'md5', $remote[$name]['md5']);
+
+			$coreConfig = new Config($this->model);
+			$coreConfig->makeCache();
+
+			$module = new ReflectionModule($name, $this->model);
+			if ($module->hasConfigClass()) {
+				$new_version = $module->version;
+
+				$configClass = $module->getConfigClass();
+				if ($configClass) {
+					$postUpdate = $configClass->postUpdate($old_version, $new_version);
+					if (!$postUpdate)
+						return false;
+					$configClass->makeCache();
+				}
 			}
 		}
+
+		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp'))
+			return false;
 
 		return true;
 	}

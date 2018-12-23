@@ -183,15 +183,24 @@ input:not([type=checkbox]):not([type=radio]), select {
 	background: #D9ECFF;
 }
 
-.module-loading-bar {
-	position: absolute;
-	bottom: 0;
-	width: 100%;
+#update-info {
+	padding-bottom: 15px;
+	margin: auto;
+	width: 90%;
 }
 
-.module-loading-bar > div {
-	width: 0%;
-	height: 5px;
+#update-action {
+	font-style: italic;
+}
+
+#update-loading-bar {
+	margin-top: 10px;
+	height: 20px;
+	border: solid #2693FF 1px;
+}
+
+#update-loading-bar > div {
+	height: 20px;
 	background: #2693FF;
 	-webkit-transition: width 0.4s ease-out;
 	-moz-transition: width 0.4s ease-out;

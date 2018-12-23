@@ -1,24 +1,59 @@
 <?php
-if ($something_to_update) {
+$toBeUpdated = false;
+
+foreach ($modules as $module) {
+	if ($module->new_version or $module->corrupted) {
+		$toBeUpdated = true;
+		break;
+	}
+}
+
+if ($toBeUpdated) {
 	?>
 	<div style="float: right">
-		[<a href="?update-all"<?php
-		if ($something_edited) {
-			echo ' onclick="if(!confirm(\'Some modules are marked as edited. Are you sure you want to overwrite them as well?\')) return false"';
-		}
-		?>> update all </a>]
+		[<a href="#" onclick="updateSelectedModules(); return false"> update selected </a>]
+		[<a href="#" onclick="updateAllModules(); return false"> update all </a>]
 	</div>
 	<?php
 }
 ?>
-
 	<h2>Modules</h2>
+
+	<div id="update-info" style="display: none">
+		<div id="update-action"></div>
+		<div id="update-loading-bar">
+			<div style="width: 0%"></div>
+		</div>
+	</div>
 
 	<div style="font-size: 0">
 		<?php foreach ($modules as $module) { ?>
 			<div class="module-cont">
-				<div class="module<?= (!$module->official) ? ' not-official' : '' ?>" data-module="<?= $module->folder_name ?>">
-					<?php include(INCLUDE_PATH . 'model/Core/templates/module.php'); ?>
+				<div class="module<?= (!$module->official) ? ' not-official' : '' ?>" data-module="<?= $module->folder_name ?>" data-priority="<?= $priorities[$module->folder_name] ?? 999 ?>"<?= $module->corrupted ? ' data-corrupted="1"' : '' ?><?= ($module->corrupted or $module->new_version) ? ' data-update="1"' : '' ?>>
+					<div<?= ($module->isConfigurable()) ? ' class="clickable" onclick="document.location.href=\'' . PATH . 'zk/modules/config/' . entities($module->folder_name) . '\'"' : '' ?>>
+						<div>
+							<div class="module-version"><?= entities($module->version) ?></div>
+							<b><?= entities($module->name) ?></b>
+						</div>
+						<?php if ($module->description) { ?><p><i><?= entities($module->description, true) ?></i>
+							</p><?php } ?>
+					</div>
+
+					<div>
+						<div class="md5"><?= entities($module->version_md5) ?></div>
+						<div class="module-selector" onclick="toggleModuleSelection('<?= $module->folder_name ?>')"></div>
+						<?php
+						if ($module->new_version) {
+							?>
+							<b style="color: #0C0">New version <?= $module->new_version !== true ? ': ' . $module->new_version : '' ?></b>
+							<?php
+						} elseif ($module->corrupted) {
+							?>
+							<b style="color: #F00">Edited!</b>
+							<?php
+						}
+						?>
+					</div>
 				</div>
 			</div>
 		<?php } ?>
