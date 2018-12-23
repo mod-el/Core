@@ -1,184 +1,339 @@
 if (typeof c_id === 'undefined')
 	var c_id = '';
 
-var updateQueue = [];
+var selectedModules = [];
+var updatingModules = [];
+var updatingFileList = [];
+var updatingTotalSteps = null;
 
-var updatingFileList = {};
-var updatingTotalSteps = {};
-var updatingStep = {};
+/**************************************************************************************/
 
-var updatingModule = null;
+/**************************************************************************************/
 
-var myRequest = [];
+function ajax(url, get, post, options) {
+	options = array_merge({
+		'additional': [],
+		'bind': true,
+		'fullResponse': false,
+		'onprogress': null,
+		'method': null,
+		'headers': {}
+	}, options);
 
-function CreateXmlHttpReq(n, handler, campi_addizionali) { // Funzione che verr� usata da richiestaAjax
-	var xmlhttp = false;
-	try {
-		xmlhttp = new XMLHttpRequest();
-	} catch (e) {
-		try {
-			xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-		} catch (e) {
-			xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	if (typeof get === 'undefined')
+		get = '';
+	if (typeof post === 'undefined')
+		post = '';
+
+	if (typeof get === 'object')
+		get = queryStringFromObject(get);
+	if (typeof post === 'object')
+		post = queryStringFromObject(post);
+
+	if (window.fetch && options['onprogress'] === null) {
+		var fetchOptions = {
+			'credentials': 'include'
+		};
+		if (post) {
+			if (options['method'] === null)
+				options['method'] = 'POST';
+
+			fetchOptions['body'] = post;
+			options['headers']['Content-Type'] = 'application/x-www-form-urlencoded';
 		}
-	}
-	xmlhttp.onreadystatechange = function () {
-		if (myRequest[n].readyState == 4) {
-			if (handler != false) {
-				try {
-					var r = JSON.parse(myRequest[n].responseText);
-				} catch (e) {
-					var r = myRequest[n].responseText;
-				}
 
-				if (typeof handler === 'object' && handler.nodeType && handler.nodeType == 1) {
-					handler.innerHTML = r;
-				} else {
-					if (typeof handler !== 'function')
-						eval('handler = ' + handler + ';');
+		if (options['method'])
+			fetchOptions['method'] = options['method'];
+		fetchOptions['headers'] = options['headers'];
 
-					if (myRequest[n].status == 200) handler.call(myRequest[n], r, campi_addizionali);
-					else handler.call(myRequest[n], false, campi_addizionali);
-				}
-			}
-			delete myRequest[n];
-		}
+		return fetch(url + '?' + get, fetchOptions).then(function (response) {
+			if (options['fullResponse'])
+				return response;
+			else
+				return response.text();
+		}).then(function (text) {
+			if (!options['fullResponse'])
+				text = handleAjaxResponse(text);
+
+			return text;
+		});
+	} else {
+		return new Promise(function (resolve) {
+			oldAjax(resolve, url, get, post, options['additional'], options['bind'], options['onprogress']);
+		});
 	}
-	return xmlhttp;
 }
 
-function ajax(handler, indirizzo, parametri_get, parametri_post, campi_addizionali) {
-	if (typeof campi_addizionali === 'undefined' || campi_addizionali === '') campi_addizionali = [];
-	let r = Math.random();
-	n = 0;
-	while (myRequest[n]) n++;
-	myRequest[n] = CreateXmlHttpReq(n, handler, campi_addizionali);
-	myRequest[n].open('POST', indirizzo + '?zkrand=' + r + '&' + parametri_get);
-	myRequest[n].setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+function queryStringFromObject(obj) {
+	var string = [];
+	for (var k in obj) {
+		string.push(k + '=' + encodeURIComponent(obj[k]));
+	}
+	return string.join('&');
+}
 
-	if (typeof parametri_post === 'undefined')
-		parametri_post = '';
+Element.prototype.ajax = function (url, get, post, options) {
+	return ajax(url, get, post, options).then((function (el) {
+		return function (r) {
+			el.jsFill(r);
+			return r;
+		};
+	})(this)).then(function (r) {
+		return changedHtml().then(function () {
+			return r;
+		});
+	});
+};
 
-	myRequest[n].send(parametri_post);
+function handleAjaxResponse(text) {
+	try {
+		var r = JSON.parse(text);
 
-	return n;
+		if (typeof r.ZKDEBUG != 'undefined') {
+			infoDebugJSON.push(r.ZKDEBUG);
+		}
+		if (typeof r.ZKBINDINGS != 'undefined') {
+			for (var i in r.ZKBINDINGS) {
+				if (!r.ZKBINDINGS.hasOwnProperty(i)) continue;
+				var b = r.ZKBINDINGS[i];
+				switch (b['type']) {
+					case 'element':
+						if (typeof b['field'] != 'undefined') {
+							var elements = document.querySelectorAll('[data-bind-element="' + b['element'] + '-' + b['id'] + '"][data-bind-field="' + b['field'] + '"]');
+						} else if (typeof b['method'] != 'undefined') {
+							var elements = document.querySelectorAll('[data-bind-element="' + b['element'] + '-' + b['id'] + '"][data-bind-method="' + b['method'] + '"]');
+						}
+						break;
+					case 'table':
+						var elements = document.querySelectorAll('[data-bind-table="' + b['table'] + '-' + b['id'] + '"][data-bind-field="' + b['field'] + '"]');
+						break;
+				}
+				for (var il in elements) {
+					if (!elements.hasOwnProperty(il)) continue;
+					var elemType = elements[il].nodeName.toLowerCase();
+					if (elemType == 'input' || elemType == 'textarea' || elemType == 'select' || elemType == 'radio') {
+						elements[il].setValue(b['v'], false);
+					} else {
+						elements[il].innerHTML = b['v'];
+					}
+				}
+			}
+		}
+		if (typeof r.ZKDATA != 'undefined') {
+			r = r.ZKDATA;
+		}
+	} catch (e) {
+		var r = text;
+	}
+
+	return r;
+}
+
+Element.prototype.removeClass = function (name) {
+	var classi = this.className.split(' ');
+	var nuove = [];
+	for (var i in classi) {
+		if (classi[i] != name)
+			nuove.push(classi[i]);
+	}
+	this.className = nuove.join(' ');
+}
+
+Element.prototype.addClass = function (name) {
+	var classi = this.className.split(' ');
+	for (var i in classi) {
+		if (classi[i] == name) return;
+	}
+	this.className = this.className + ' ' + name;
 }
 
 Element.prototype.loading = function () {
-	this.innerHTML = '<img src="' + base_path + 'model/Output/files/loading.gif" alt="" class="loading-gif" />';
+	this.innerHTML = '<img src="' + base_path + 'model/Output/files/loading.gif" alt="Loading..." class="loading-gif" />';
 	return this;
 }
+
+Element.prototype.jsFill = function (text) {
+	var split = splitScripts(text);
+	this.innerHTML = split.html;
+	eval(split.js);
+}
+
+function array_merge(obj1, obj2) {
+	var obj3 = {};
+	for (var attrname in obj1) {
+		obj3[attrname] = obj1[attrname];
+	}
+	for (var attrname in obj2) {
+		obj3[attrname] = obj2[attrname];
+	}
+	return obj3;
+}
+
+/**************************************************************************************/
+
+/**************************************************************************************/
 
 function cmd(cmd, post) {
 	if (typeof post === 'undefined')
 		post = '';
-	if (typeof refresh === 'undefined')
-		refresh = false;
 
 	let div = document.getElementById('cmd-' + cmd);
 	if (!div)
 		return false;
 	let ex = div.innerHTML;
 	div.loading();
-	return new Promise(((cmd, post, refresh, div, ex) => {
-		return function (resolve) {
-			ajax(r => {
-				div.innerHTML = ex;
-				resolve(r);
-			}, absolute_path + 'zk/' + cmd, '', post)
-		};
-	})(cmd, post, refresh, div, ex));
+	return ajax(absolute_path + 'zk/' + cmd, {}, post).then(r => {
+		div.innerHTML = ex;
+		return r;
+	});
 }
 
-function queueModuleUpdate(name) {
-	if (updatingModule) {
-		updateQueue.push(name);
-
-		let cont = document.getElementById('module-' + name);
-		cont.loading();
+function toggleModuleSelection(name) {
+	let index = selectedModules.indexOf(name);
+	if (index === -1) {
+		selectedModules.push(name);
 	} else {
-		updateModule(name);
+		selectedModules.splice(index, 1);
 	}
+
+	refreshSelectedModules();
 }
 
-function updateModule(name) {
-	if (updatingModule)
+function refreshSelectedModules() {
+	document.querySelectorAll('[data-module]').forEach(module => {
+		let name = module.getAttribute('data-module');
+		if (selectedModules.indexOf(name) === -1) {
+			module.removeClass('selected');
+		} else {
+			module.addClass('selected');
+		}
+	});
+}
+
+function selectAllModules(onlyUpdate) {
+	if (typeof onlyUpdate === 'undefined')
+		onlyUpdate = false;
+
+	if (onlyUpdate)
+		deselectAllModules();
+
+	document.querySelectorAll('[data-module]').forEach(module => {
+		let name = module.getAttribute('data-module');
+		let index = selectedModules.indexOf(name);
+		if (index === -1) {
+			if (!onlyUpdate || module.getAttribute('data-update'))
+				selectedModules.push(name);
+		}
+	});
+
+	refreshSelectedModules();
+}
+
+function deselectAllModules() {
+	selectedModules = [];
+	refreshSelectedModules();
+}
+
+function updateAllModules() {
+	selectAllModules(true);
+	updateSelectedModules();
+}
+
+function updateSelectedModules() {
+	let updateList = [], corrupted = false;
+	selectedModules.forEach(module => {
+		let priority = 999;
+		let div = document.querySelector('[data-module="' + module + '"]');
+		if (div.getAttribute('data-corrupted'))
+			corrupted = true;
+
+		if (div) {
+			priority = parseInt(div.getAttribute('data-priority'));
+			if (isNaN(priority))
+				priority = 999;
+		}
+
+		updateList.push({
+			'name': module,
+			'priority': priority
+		});
+	});
+
+	deselectAllModules();
+
+	if (corrupted && !confirm('Some modules are marked as edited. Are you sure you want to overwrite them as well?'))
 		return false;
 
-	let cont = document.getElementById('module-' + name);
-	cont.loading();
+	updateList.sort((a, b) => {
+		if (a.priority < b.priority)
+			return -1;
+		if (a.priority > b.priority)
+			return 1;
+		return 0;
+	});
 
-	let bar = document.getElementById('loading-bar-' + name);
-	bar.style.visibility = 'visible';
+	document.getElementById('update-info').style.display = 'block';
+	document.getElementById('update-action').innerHTML = 'Downloading files list...';
 
-	updatingStep[name] = 0;
-	updatingModule = name;
+	updatingModules = updateList.map(module => module.name);
 
-	ajax(function (r, name) {
-		if (typeof r !== 'object') {
-			alert('Errore nell\'aggiornamento del modulo ' + name + ":\n" + r);
-			refreshModule(name);
+	ajax(absolute_path + 'zk/modules/files-list', {
+		'modules': updatingModules.join(',')
+	}).then(list => {
+		if (typeof list !== 'object')
+			throw list;
 
-			updatingModule = null;
-			if (updateQueue.length > 0)
-				updateModule(updateQueue.shift());
-		} else {
-			updatingFileList[name] = r;
-			updatingTotalSteps[name] = r.length + 2;
-			updatingStep[name]++;
-			updateModuleBar(name);
-			updateNextFile(name);
-		}
-	}, absolute_path + 'zk/modules/update', 'module=' + encodeURIComponent(name), 'c_id=' + c_id, name);
+		updatingFileList = list;
+		updatingTotalSteps = list.length + 1;
+		updateNextFile();
+	}).catch(err => {
+		alert(err);
+	});
 }
 
-function updateModuleBar(name) {
-	if (typeof updatingTotalSteps[name] === 'undefined' || !updatingTotalSteps[name] || typeof updatingStep[name] === 'undefined')
-		return;
-	let bar = document.getElementById('loading-bar-' + name);
-	bar.firstElementChild.style.width = parseInt(updatingStep[name] / updatingTotalSteps[name] * 100) + '%';
-}
+function updateNextFile() {
+	refreshLoadingBar();
 
-function updateNextFile(name) {
-	if (typeof !updatingFileList[name] === 'undefined' || !updatingFileList[name])
-		return;
-	if (updatingFileList[name].length > 0) {
-		let file = updatingFileList[name].shift();
-		ajax(function (r, name) {
+	if (updatingFileList.length > 0) {
+		let file = updatingFileList.shift();
+
+		document.getElementById('update-action').innerHTML = 'Downloading ' + file;
+
+		ajax(absolute_path + 'zk/modules/update-file', {}, {
+			'file': file,
+			'c_id': c_id
+		}).then(r => {
 			if (r === 'ok') {
-				updatingStep[name]++;
-				updateModuleBar(name);
-				updateNextFile(name);
+				updateNextFile();
 			} else {
 				alert(r);
-				refreshModule(name);
-
-				updatingModule = null;
-				if (updateQueue.length > 0)
-					updateModule(updateQueue.shift());
+				document.location.reload();
 			}
-		}, absolute_path + 'zk/modules/update-file', 'module=' + encodeURIComponent(name) + '&file=' + encodeURIComponent(file), 'c_id=' + c_id, name);
+		});
 	} else {
-		ajax(function (r, name) {
-			if (r === 'ok') {
-				updatingStep[name]++;
-				updateModuleBar(name);
-				refreshModule(name);
-				resetModuleLoadingBar(name);
+		document.getElementById('update-action').innerHTML = 'Finalizing...';
 
-				updatingModule = null;
-				if (updateQueue.length > 0) {
-					updateModule(updateQueue.shift());
-				} else {
-					cmd('make-cache').then(() => document.location.reload());
-				}
+		ajax(absolute_path + 'zk/modules/finalize-update', {}, {
+			'modules': updatingModules.join(','),
+			'c_id': c_id
+		}).then(r => {
+			if (r === 'ok') {
+				cmd('make-cache').then(() => document.location.reload());
 			} else {
 				alert(r);
-				refreshModule(name);
+				document.location.reload();
 			}
-		}, absolute_path + 'zk/modules/finalize-update', 'module=' + encodeURIComponent(name), 'c_id=' + c_id, name);
+		});
 	}
 }
+
+function refreshLoadingBar() {
+	let current = updatingTotalSteps - updatingFileList.length;
+	let percentage = Math.round(current / updatingTotalSteps * 100);
+	document.getElementById('update-loading-bar').firstElementChild.style.width = percentage + '%';
+}
+
+/*************************************** TODO: CHECK *****************************************/
 
 function resetModuleLoadingBar(name) {
 	let bar = document.getElementById('loading-bar-' + name);
@@ -204,11 +359,6 @@ function refreshModule(name) {
 		}
 	}, absolute_path + 'zk/modules/refresh', 'module=' + encodeURIComponent(name), '', cont);
 }
-
-window.addEventListener('load', function () {
-	if (updateQueue.length > 0)
-		updateModule(updateQueue.shift());
-});
 
 function lightbox(html) {
 	let lightbox = document.getElementById('lightbox');
@@ -239,8 +389,7 @@ function closeLightbox() {
 
 function lightboxNewModule() {
 	let lb = lightbox('');
-	lb.loading();
-	ajax(lb, absolute_path + 'zk/modules/install', '', '');
+	lb.loading().ajax(absolute_path + 'zk/modules/install');
 }
 
 function selectDownloadableModule(el) {
@@ -257,16 +406,15 @@ function selectDownloadableModule(el) {
 function installModule(name) {
 	document.getElementById('lightbox').loading();
 
-	ajax(function (r) {
+	ajax(absolute_path + 'zk/modules/install/' + encodeURIComponent(name), '', 'c_id=' + c_id).then(r => {
 		if (r === 'ok') {
 			document.location.reload();
 		} else {
 			document.getElementById('lightbox').innerHTML = r;
 		}
-	}, absolute_path + 'zk/modules/install/' + encodeURIComponent(name), '', 'c_id=' + c_id);
+	});
 }
 
 function makeNewFile(module, type) {
-	let lb = lightbox('').loading();
-	ajax(lb, absolute_path + 'zk/local-modules/' + module + '/make/'+type, '', '');
+	return lightbox('').loading().ajax(absolute_path + 'zk/local-modules/' + module + '/make/' + type);
 }
