@@ -21,7 +21,7 @@ class ZkController extends Controller
 			$this->model->_Log->disableAutoLog();
 	}
 
-	public function index()
+	public function get()
 	{
 		$qry_string = http_build_query($this->model->getInput(null, 'get'));
 		if ($qry_string)
@@ -123,46 +123,17 @@ class ZkController extends Controller
 							}
 						}
 						break;
-					case 'update':
-						if ($this->model->isCLI()) {
-							$this->updater->cliUpdate($this->model->getInput('module'));
-						} else {
-							$this->updater->checkUpdateQueue($this->model->getInput('module'));
+					case 'files-list':
+						if (!$this->model->getInput('modules'))
+							die('Invalid data');
 
-							$files = $this->updater->getModuleFileList($this->model->getInput('module'));
-							if (!$files)
-								die("File list not found\n");
+						$modules = explode(',', $this->model->getInput('modules'));
+						$files = $this->updater->getFilesList($modules);
+						if (!$files)
+							die("File list not found\n");
 
-							$_SESSION[SESSION_ID]['delete-from-module-' . $this->model->getInput('module')] = $files['delete'];
-							echo json_encode($files['update']);
-							die();
-						}
-
-						die();
-						break;
-					case 'update-file':
-						if ($this->model->isCLI()) {
-							die('Unsupported action in CLI');
-						} else {
-							if (!isset($_GET['file']))
-								die('Missing data');
-							if ($this->updater->updateFile($_GET['module'], $_GET['file']))
-								echo 'ok';
-							else
-								echo 'Error while updating file.';
-							die();
-						}
-						break;
-					case 'finalize-update':
-						if ($this->model->isCLI()) {
-							die('Unsupported action in CLI');
-						} else {
-							if ($this->updater->finalizeUpdate($_GET['module'], $_SESSION[SESSION_ID]['delete-from-module-' . $_GET['module']]))
-								echo 'ok';
-							else
-								echo 'Error while finalizing the update, you might need to update manually.';
-							die();
-						}
+						$_SESSION['delete-files'] = $files['delete'];
+						return $files['update'];
 						break;
 					default:
 						$modules = $this->updater->getModules(true);
@@ -228,54 +199,14 @@ class ZkController extends Controller
 							$nextToInstall = reset($toBeInstalled);
 						}
 
-						if ($this->model->getRequest(2) == 'refresh') {
-							if ($nextToInstall) {
-								die(json_encode(['action' => 'init', 'module' => $nextToInstall->folder_name]));
-							}
+						if ($nextToInstall)
+							$this->model->redirect(PATH . 'zk/modules/init/' . $nextToInstall->folder_name . $qry_string);
 
-							$this->model->viewOptions['showLayout'] = false;
-							$this->model->viewOptions['template'] = 'module';
-							$this->injected['module'] = $modules[$_GET['module']];
-						} else {
-							if ($nextToInstall)
-								$this->model->redirect(PATH . 'zk/modules/init/' . $nextToInstall->folder_name . $qry_string);
+						// I sort the modules so that I can update the modules without dependencies first
+						$priorities = $this->updater->getModulesPriority($modules);
 
-							$queue = $this->updater->getUpdateQueue();
-
-							$toBeUpdated = [];
-							$somethingEdited = false;
-							foreach ($modules as $m) {
-								if ($m->new_version or $m->corrupted)
-									$toBeUpdated[] = $m->folder_name;
-								if ($m->corrupted)
-									$somethingEdited = true;
-							}
-							$this->injected['something_to_update'] = count($toBeUpdated) > 0 ? true : false;
-							$this->injected['something_edited'] = $somethingEdited;
-
-							if (isset($_GET['update-all'])) {
-								$queue = array_unique(array_merge($queue, $toBeUpdated));
-								$this->updater->setUpdateQueue($queue);
-								$this->model->redirect(PATH . 'zk/modules');
-							}
-
-							if (count($queue) > 0) {
-								// I sort the modules so that I can update the modules without dependencies first
-								$priorities = $this->updater->getModulesPriority($modules);
-
-								usort($queue, function ($a, $b) use ($priorities) {
-									return $priorities[$a] <=> $priorities[$b];
-								});
-
-								if ($this->model->isCLI()) {
-									$this->updater->cliUpdate($queue[0]);
-									$modules = $this->updater->getModules(true);
-								}
-							}
-
-							$this->injected['update_queue'] = $queue;
-							$this->injected['modules'] = $modules;
-						}
+						$this->injected['priorities'] = $priorities;
+						$this->injected['modules'] = $modules;
 						break;
 				}
 				break;
@@ -317,13 +248,12 @@ class ZkController extends Controller
 					$this->updater->updateModuleCache('Core');
 
 					foreach ($modules as $mName => $m) {
-						if ($mName == 'Core')
+						if ($mName === 'Core')
 							continue;
 						if ($m->hasConfigClass()) {
 							$this->updater->updateModuleCache($mName);
 						}
 					}
-
 				} catch (Exception $e) {
 					die(getErr($e));
 				}
@@ -331,15 +261,15 @@ class ZkController extends Controller
 				die('Cache succesfully updated.');
 				break;
 			case 'empty-session':
-				$_SESSION[SESSION_ID] = array();
+				$_SESSION = [];
 				die('Session cleared.');
 				break;
 			case 'inspect-session':
 				if ($this->model->isCLI()) {
-					echo json_encode($_SESSION[SESSION_ID]);
+					echo json_encode($_SESSION);
 					die();
 				} else {
-					zkdump($_SESSION[SESSION_ID]);
+					zkdump($_SESSION);
 				}
 				die();
 				break;
@@ -347,6 +277,68 @@ class ZkController extends Controller
 				$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 				break;
 		}
+	}
+
+	public function post()
+	{
+		$qry_string = http_build_query($this->model->getInput(null, 'get'));
+		if ($qry_string)
+			$qry_string = '?' . $qry_string;
+
+		try {
+			switch ($this->model->getRequest(1)) {
+				case 'modules':
+					switch ($this->model->getRequest(2)) {
+						case 'config':
+						case 'init':
+							$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
+							if ($configClass) {
+								switch ($this->model->getRequest(2)) {
+									case 'config':
+										if ($configClass->saveConfig($this->model->getRequest(2), $_POST))
+											$this->model->viewOptions['messages'][] = 'Configuration saved.';
+										break;
+									case 'init':
+										if ($this->updater->install($configClass, $_POST)) {
+											$this->updater->firstInit($this->model->getRequest(3));
+											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
+										} else {
+											$this->model->viewOptions['errors'][] = 'Some error occurred while installing.';
+										}
+										break;
+								}
+							}
+							break;
+						case 'update-file':
+							if (!isset($_POST['file']))
+								die('Missing data');
+
+							if ($this->updater->updateFile($_POST['file']))
+								echo 'ok';
+							else
+								echo 'Error while updating file.';
+							die();
+							break;
+						case 'finalize-update':
+							$modules = $this->model->getInput('modules');
+							if (!$modules)
+								die('Missing data');
+
+							$modules = explode(',', $modules);
+							if ($this->updater->finalizeUpdate($modules, $_SESSION['delete-files']))
+								echo 'ok';
+							else
+								echo 'Error while finalizing the update, you might need to update manually.';
+							die();
+							break;
+					}
+					break;
+			}
+		} catch (\Exception $e) {
+			$this->model->viewOptions['errors'][] = $e->getMessage();
+		}
+
+		$this->index();
 	}
 
 	public function outputCLI(array $options = [], bool $asFallback = false)
@@ -399,45 +391,5 @@ class ZkController extends Controller
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $this->model->viewOptions['template-module'] . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . $this->model->viewOptions['template'] . '.php');
 		if (!isset($this->model->viewOptions['showLayout']) or $this->model->viewOptions['showLayout'])
 			require(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'layoutFooter.php');
-	}
-
-	public function post()
-	{
-		$qry_string = http_build_query($this->model->getInput(null, 'get'));
-		if ($qry_string)
-			$qry_string = '?' . $qry_string;
-
-		try {
-			switch ($this->model->getRequest(1)) {
-				case 'modules':
-					switch ($this->model->getRequest(2)) {
-						case 'config':
-						case 'init':
-							$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
-							if ($configClass) {
-								switch ($this->model->getRequest(2)) {
-									case 'config':
-										if ($configClass->saveConfig($this->model->getRequest(2), $_POST))
-											$this->model->viewOptions['messages'][] = 'Configuration saved.';
-										break;
-									case 'init':
-										if ($this->updater->install($configClass, $_POST)) {
-											$this->updater->firstInit($this->model->getRequest(3));
-											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-										} else {
-											$this->model->viewOptions['errors'][] = 'Some error occurred while installing.';
-										}
-										break;
-								}
-							}
-							break;
-					}
-					break;
-			}
-		} catch (\Exception $e) {
-			$this->model->viewOptions['errors'][] = $e->getMessage();
-		}
-
-		$this->index();
 	}
 }
