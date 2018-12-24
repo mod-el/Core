@@ -118,6 +118,12 @@ class Updater
 		return true;
 	}
 
+	/**
+	 * @param string $name
+	 * @param string $k
+	 * @param $v
+	 * @return bool
+	 */
 	protected function changeModuleInternalVar(string $name, string $k, $v): bool
 	{
 		$folder_path = $file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data';
@@ -219,8 +225,8 @@ class Updater
 	/**
 	 * After all files have been downloaded, this method copies them all at once in the correct location, and executes post updates
 	 *
-	 * @param array $modules
-	 * @param array $delete
+	 * @param string[] $modules
+	 * @param string[] $delete
 	 * @return bool
 	 */
 	public function finalizeUpdate(array $modules, array $delete): bool
@@ -332,46 +338,70 @@ class Updater
 	}
 
 	/**
-	 * Module update via CLI
+	 * Modules update via CLI
 	 *
-	 * @param string $module
-	 * @throws \Exception
+	 * @param ReflectionModule[]|null $modules
 	 */
-	public function cliUpdate(string $module)
+	public function cliUpdate(?array $modules = null)
 	{
-		echo "--------------------\n";
-		echo "Updating " . $module . "\n";
-		echo "--------------------\n";
+		if ($modules === null) {
+			echo "Updating all modules\n";
 
-		$files = $this->getModuleFileList($module);
-
-		if (!$files) {
-			echo "File list not found\n";
-		} elseif (!$files['update'] and !$files['delete']) {
-			echo "Nothing to update\n";
+			$modules = $this->getModules(true);
 		} else {
-			$cf = 0;
-			$tot_steps = count($files['update']) + 2;
-
-			foreach ($files['update'] as $f) {
-				$cf++;
-
-				$this->showCliPercentage('Downloading ' . $f, $cf, $tot_steps);
-
-				if (!$this->updateFile($module, $f)) {
-					die("Error in file download, aborting.\n");
-				}
-			}
-
-			$cf++;
-			$this->showCliPercentage('Finalizing update', $cf, $tot_steps);
-
-			if (!$this->finalizeUpdate($module, $files['delete']))
-				die("Error in finalizing update, aborting.\n");
-
-			$cf++;
-			$this->showCliPercentage('Update successful', $cf, $tot_steps);
+			echo "Updating " . count($modules) . " modules\n";
 		}
+
+		$realModules = [];
+		foreach ($modules as $module) {
+			if ($module->new_version or $module->corrupted)
+				$realModules[] = $module;
+		}
+		$modules = $realModules;
+
+		$priorities = $this->getModulesPriority($modules);
+		usort($modules, function ($a, $b) use ($priorities) {
+			return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
+		});
+
+		echo count($modules) . " modules to update\n";
+
+		$modulesNames = array_map(function ($module) {
+			return $module->folder_name;
+		}, $modules);
+
+		echo "(" . implode(', ', $modulesNames) . ")\n";
+
+		$files = $this->getFilesList($modulesNames);
+		if (!$files)
+			die("File list not found\n");
+
+		if (!$files['update'] and !$files['delete'])
+			die("No file to update\n");
+
+		echo count($files['update']) . " files to update\n";
+		echo count($files['delete']) . " files to delete\n";
+
+		$cf = 0;
+		$tot_steps = count($files['update']) + 2;
+
+		foreach ($files['update'] as $f) {
+			$cf++;
+
+			$this->showCliPercentage('Downloading ' . $f, $cf, $tot_steps);
+
+			if (!$this->updateFile($f))
+				die("Error in file download, aborting.\n");
+		}
+
+		$cf++;
+		$this->showCliPercentage('Finalizing update', $cf, $tot_steps);
+
+		if (!$this->finalizeUpdate($modulesNames, $files['delete']))
+			die("Error in finalizing update, aborting.\n");
+
+		$cf++;
+		$this->showCliPercentage('Update successful', $cf, $tot_steps);
 	}
 
 	/**
@@ -404,7 +434,7 @@ class Updater
 		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&key=' . urlencode($config['license']));
 		$remote = json_decode($remote_str, true);
 		if ($remote !== null) {
-			$return = array();
+			$return = [];
 			foreach ($remote as $m => $mod) {
 				if (array_key_exists($m, $modules))
 					continue;
@@ -562,6 +592,10 @@ class Updater
 		return $updated;
 	}
 
+	/**
+	 * @param ReflectionModule[] $modules
+	 * @return array
+	 */
 	public function getModulesPriority(array $modules): array
 	{
 		$priorities = [
@@ -595,5 +629,26 @@ class Updater
 		}
 
 		return $priorities;
+	}
+
+	public function addModuleToCache(string $name): bool
+	{
+		$cache = $this->model->retrieveCacheFile();
+		$cache['modules'][$name] = [
+			'path' => 'model' . DIRECTORY_SEPARATOR . $name,
+			'load' => false,
+			'custom' => false,
+			'js' => [],
+			'css' => [],
+			'dependencies' => [],
+			'assets-position' => 'head',
+			'version' => '0.0.0',
+		];
+
+		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+		$scrittura = file_put_contents($cacheFile, '<?php
+$cache = ' . var_export($cache, true) . ';
+');
+		return (bool)$scrittura;
 	}
 }
