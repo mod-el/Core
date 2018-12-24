@@ -2,6 +2,7 @@
 
 use Model\Core\Controller;
 use Model\Core\Exception;
+use Model\Core\ReflectionModule;
 use Model\Core\Updater;
 
 class ZkController extends Controller
@@ -361,6 +362,20 @@ $cache = ' . var_export($cache, true) . ';
 							echo "No module found\n";
 						}
 						break;
+					case 'update':
+						$modules = null;
+						if ($this->model->getInput('modules')) {
+							$modulesNames = explode(',', $this->model->getInput('modules'));
+							$modules = [];
+							foreach ($modulesNames as $name) {
+								if (!$name)
+									continue;
+								$modules[] = new ReflectionModule($name, $this->model);
+							}
+						}
+
+						$this->updater->cliUpdate($modules);
+						break;
 					default:
 						$this->get();
 
@@ -387,10 +402,9 @@ $cache = ' . var_export($cache, true) . ';
 				break;
 			case 'inspect-session':
 				echo json_encode($_SESSION) . "\n";
-				die();
 				break;
 			default:
-				die("CLI not supported for the request.\n");
+				echo "CLI not supported for the request.\n";
 				break;
 		}
 	}
