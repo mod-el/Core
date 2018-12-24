@@ -96,7 +96,6 @@ class Controller
 	/**
 	 * Outputs the content
 	 * It uses Output model, by default, but this behaviour can be customized by extending the method
-	 * If Output module is not installed, it tries to execute outputCLI (only works if "outputCLI" was customized)
 	 *
 	 * @param array $options
 	 */
@@ -115,26 +114,8 @@ class Controller
 			$options['template'] = strtolower(preg_replace('/(?<!^)([A-Z])/', '-\\1', substr($classShortName, 0, -10)));
 		}
 
-		if ($this->model->moduleExists('Output')) {
+		if ($this->model->moduleExists('Output'))
 			$this->model->_Output->render($options);
-		} else {
-			echo '<pre>';
-			$this->outputCLI($options, true);
-			echo '</pre>';
-		}
-	}
-
-	/**
-	 * Optionally, this method can be expanded by the controller to override the default output method, if model is executed in a CLI environment
-	 * If it's called as a fallback for a missing Output module, it will not output anything
-	 *
-	 * @param array $options
-	 * @param bool $asFallback
-	 */
-	public function outputCLI(array $options = [], bool $asFallback = false)
-	{
-		if (!$asFallback)
-			$this->output();
 	}
 
 	/**
