@@ -333,11 +333,14 @@ class ZkController extends Controller
 								echo "Adding module to cache...\n";
 								$this->updater->addModuleToCache($name);
 								echo "Starting the update...\n";
+								$allModules = $this->updater->getModules(true);
+								if (!isset($allModules[$name]))
+									die("Something's wrong, can\'t find new module.\n");
+
 								$modules = [
-									$name => new ReflectionModule($name, $this->model),
+									$name => $allModules[$name],
 								];
 								$this->updater->cliUpdate($modules);
-								echo "Module downloaded!\n";
 							} else {
 								die("Module already exists.\n");
 							}
