@@ -258,19 +258,14 @@ class ZkController extends Controller
 					die(getErr($e));
 				}
 
-				die('Cache succesfully updated.');
+				die("Cache succesfully updated.\n");
 				break;
 			case 'empty-session':
 				$_SESSION = [];
-				die('Session cleared.');
+				die("Session cleared.\n");
 				break;
 			case 'inspect-session':
-				if ($this->model->isCLI()) {
-					echo json_encode($_SESSION);
-					die();
-				} else {
-					zkdump($_SESSION);
-				}
+				zkdump($_SESSION);
 				die();
 				break;
 			default:
@@ -341,33 +336,53 @@ class ZkController extends Controller
 		$this->index();
 	}
 
-	public function outputCLI(array $options = [], bool $asFallback = false)
+	public function cli()
 	{
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
 				switch ($this->model->getRequest(2)) {
 					case 'install':
+						$this->get();
+
 						echo "Downloadable modules:\n";
+
+						if (count($this->injected['modules'] ?? []) > 0) {
+							foreach ($this->injected['modules'] as $m)
+								echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
+						} else {
+							echo "No module found\n";
+						}
 						break;
 					default:
+						$this->get();
+
 						echo "Installed modules:\n";
+
+						if (count($this->injected['modules'] ?? []) > 0) {
+							foreach ($this->injected['modules'] as $m) {
+								echo '* ' . $m->name . " (v" . $m->version . ")";
+								if ($m->new_version)
+									echo ' - New version available';
+								elseif ($m->corrupted)
+									echo ' - Edited';
+								echo "\n";
+							}
+						} else {
+							echo "No module found\n";
+						}
 						break;
 				}
-
-				if (count($this->injected['modules'] ?? []) > 0) {
-					foreach ($this->injected['modules'] as $m) {
-						if (is_array($m)) {
-							echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
-						} else {
-							echo '* ' . $m->name . " (v" . $m->version . ")\n";
-						}
-					}
-				} else {
-					echo "No module found\n";
-				}
+				break;
+			case 'make-cache':
+			case 'empty-session':
+				$this->get();
+				break;
+			case 'inspect-session':
+				echo json_encode($_SESSION) . "\n";
+				die();
 				break;
 			default:
-				die('CLI not supported for the request.');
+				die("CLI not supported for the request.\n");
 				break;
 		}
 	}
