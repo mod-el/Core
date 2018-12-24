@@ -39,46 +39,6 @@ class ZkController extends Controller
 						$this->model->viewOptions['template'] = 'new-module';
 						$modules = $this->updater->downloadableModules();
 						$this->injected['modules'] = $modules;
-
-						if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
-							if (!$this->model->moduleExists($this->model->getRequest(3))) {
-								$cache = $this->model->retrieveCacheFile();
-								$name = $this->model->getRequest(3);
-								$cache['modules'][$name] = [
-									'path' => 'model' . DIRECTORY_SEPARATOR . $name,
-									'load' => false,
-									'custom' => false,
-									'js' => [],
-									'css' => [],
-									'dependencies' => [],
-									'assets-position' => 'head',
-									'version' => '0.0.0',
-								];
-
-								$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
-								file_put_contents($cacheFile, '<?php
-$cache = ' . var_export($cache, true) . ';
-');
-								if (!isset($_SESSION['update-queue']))
-									$_SESSION['update-queue'] = [];
-								$_SESSION['update-queue'][] = $name;
-
-								die('ok');
-							} else {
-								$this->model->viewOptions['errors'][] = 'Module already exists.';
-							}
-
-							/*if ($this->model->isCLI()) {
-								if (empty($this->model->viewOptions['errors'])) {
-									$this->updater->cliUpdate($this->model->getRequest(3));
-									$this->updater->cliConfig($this->model->getRequest(3), 'init');
-								} else {
-									echo implode("\n", $this->model->viewOptions['errors']) . "\n";
-								}
-
-								die();
-							}*/
-						}
 						break;
 					case 'config':
 					case 'init':
@@ -285,6 +245,51 @@ $cache = ' . var_export($cache, true) . ';
 			switch ($this->model->getRequest(1)) {
 				case 'modules':
 					switch ($this->model->getRequest(2)) {
+						case 'install':
+							$modules = $this->updater->downloadableModules();
+
+							if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
+								if (!$this->model->moduleExists($this->model->getRequest(3))) {
+									$cache = $this->model->retrieveCacheFile();
+									$name = $this->model->getRequest(3);
+									$cache['modules'][$name] = [
+										'path' => 'model' . DIRECTORY_SEPARATOR . $name,
+										'load' => false,
+										'custom' => false,
+										'js' => [],
+										'css' => [],
+										'dependencies' => [],
+										'assets-position' => 'head',
+										'version' => '0.0.0',
+									];
+
+									$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+									file_put_contents($cacheFile, '<?php
+$cache = ' . var_export($cache, true) . ';
+');
+									if (!isset($_SESSION['update-queue']))
+										$_SESSION['update-queue'] = [];
+									$_SESSION['update-queue'][] = $name;
+
+									die('ok');
+								} else {
+									$this->model->viewOptions['errors'][] = 'Module already exists.';
+								}
+
+								/*if ($this->model->isCLI()) {
+									if (empty($this->model->viewOptions['errors'])) {
+										$this->updater->cliUpdate($this->model->getRequest(3));
+										$this->updater->cliConfig($this->model->getRequest(3), 'init');
+									} else {
+										echo implode("\n", $this->model->viewOptions['errors']) . "\n";
+									}
+
+									die();
+								}*/
+							} else {
+								die('No module selected');
+							}
+							break;
 						case 'config':
 						case 'init':
 							$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
