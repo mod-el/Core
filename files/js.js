@@ -79,9 +79,7 @@ Element.prototype.ajax = function (url, get, post, options) {
 			return r;
 		};
 	})(this)).then(function (r) {
-		return changedHtml().then(function () {
-			return r;
-		});
+		return r;
 	});
 };
 
@@ -147,9 +145,22 @@ Element.prototype.addClass = function (name) {
 	this.className = this.className + ' ' + name;
 }
 
+Element.prototype.hasClass = function (name) {
+	return new RegExp('(\\s|^)' + name + '(\\s|$)').test(this.className);
+}
+
 Element.prototype.loading = function () {
 	this.innerHTML = '<img src="' + base_path + 'model/Output/files/loading.gif" alt="Loading..." class="loading-gif" />';
 	return this;
+}
+
+function splitScripts(text) {
+	var scripts = '';
+	var cleaned = text.toString().replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function () {
+		scripts += arguments[1] + '\n';
+		return '';
+	});
+	return {'html': cleaned, 'js': scripts};
 }
 
 Element.prototype.jsFill = function (text) {
@@ -393,17 +404,25 @@ function lightboxNewModule() {
 }
 
 function selectDownloadableModule(el) {
-	let selected = document.getElementById('.list-module.selected');
-	if (selected)
-		selected.className = 'list-module';
-	el.className = 'list-module selected';
+	if (el.hasClass('selected')) {
+		el.removeClass('selected');
+	} else {
+		el.addClass('selected');
+	}
 
 	let div = document.getElementById('downloadable-module-details');
 	let name = el.dataset.name;
-	div.innerHTML = '<div><div class="versione">' + el.dataset.version + '</div><b>' + name + '</b></div><p><i>' + el.dataset.description + '</i></p><div style="text-align: right"><input type="button" value="Scarica e installa" onclick="installModule(\'' + name + '\')" /></div>';
+	div.innerHTML = '<div><div class="module-version">' + el.dataset.version + '</div><b>' + name + '</b></div><p><i>' + el.dataset.description + '</i></p>';
 }
 
-function installModule(name) {
+function installSelectedModules() {
+	let el = document.querySelector('.list-module.selected');
+	if(!el)
+		return;
+
+	alert('Funzione in costruzione, momentaneamente verrà installato solo il primo selezionato');
+	let name = el.dataset.name;
+
 	document.getElementById('lightbox').loading();
 
 	ajax(absolute_path + 'zk/modules/install/' + encodeURIComponent(name), '', 'c_id=' + c_id).then(r => {

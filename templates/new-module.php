@@ -1,6 +1,6 @@
 <div style="font-size: 0; min-width: 600px">
-	<div class="modulo" style="width: 40%">
-		<div>
+	<div class="module-cont" style="width: 40%">
+		<div class="module">
 			<div style="overflow: auto; padding: 0">
 				<?php
 				if (count($modules) > 0) {
@@ -9,16 +9,23 @@
 						<div class="list-module" data-name="<?= entities($m) ?>" data-description="<?= entities($mod['description']) ?>" data-version="<?= $mod['current_version'] ?>" onclick="selectDownloadableModule(this)"><?= entities($mod['name']) ?></div><?php
 					}
 				} else {
-					echo 'No new downloadable module';
+					echo '<div style="padding: 10px">No new downloadable module</div>';
 				}
 				?>
 			</div>
 		</div>
 	</div>
 
-	<div class="modulo" style="width: 60%">
-		<div>
-			<div id="downloadable-module-details"></div>
+	<?php
+	if (count($modules) > 0) {
+		?>
+		<div class="module-cont" style="width: 60%">
+			<div class="module">
+				<div id="downloadable-module-details"></div>
+			</div>
+			<div style="text-align: right; padding: 20px 0"><input type="button" value="Install selected modules" onclick="installSelectedModules()" /></div>
 		</div>
-	</div>
+		<?php
+	}
+	?>
 </div>
