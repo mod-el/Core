@@ -86,6 +86,7 @@ class Config extends Module_Config
 				'css' => [],
 				'dependencies' => [],
 				'assets-position' => 'head',
+				'version' => '0.0.0',
 			];
 
 			if (file_exists($d . DIRECTORY_SEPARATOR . 'manifest.json')) {
@@ -341,6 +342,4 @@ $config = ' . var_export($config, true) . ';
 			],
 		];
 	}
-
-
 }

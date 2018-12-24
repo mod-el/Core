@@ -242,6 +242,9 @@ class Core implements \JsonSerializable, ModuleInterface
 				'version' => $module['version'],
 			];
 		}
+		usort($modules, function ($a, $b) {
+			return $a['name'] <=> $b['name'];
+		});
 		return $modules;
 	}
 

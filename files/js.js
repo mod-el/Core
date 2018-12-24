@@ -187,6 +187,9 @@ function array_merge(obj1, obj2) {
 
 window.addEventListener('load', function () {
 	if (updateQueue.length > 0) {
+		setTimeout(function () {
+			window.scrollTo(0, 0);
+		}, 100);
 		updateQueue.forEach(name => selectModule(name));
 		updateSelectedModules();
 	}
