@@ -44,7 +44,7 @@ class ZkController extends Controller
 					case 'config':
 					case 'init':
 						if ($this->model->getRequest(2) == 'init') { // Check if already installed
-							$checkModule = new \Model\Core\ReflectionModule($this->model->getRequest(3), $this->model);
+							$checkModule = new ReflectionModule($this->model->getRequest(3), $this->model);
 							if ($checkModule->installed) {
 								if ($this->model->isCLI()) {
 									die("Module already installed\n");
@@ -250,24 +250,9 @@ class ZkController extends Controller
 							$modules = $this->updater->downloadableModules();
 
 							if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
-								if (!$this->model->moduleExists($this->model->getRequest(3))) {
-									$cache = $this->model->retrieveCacheFile();
-									$name = $this->model->getRequest(3);
-									$cache['modules'][$name] = [
-										'path' => 'model' . DIRECTORY_SEPARATOR . $name,
-										'load' => false,
-										'custom' => false,
-										'js' => [],
-										'css' => [],
-										'dependencies' => [],
-										'assets-position' => 'head',
-										'version' => '0.0.0',
-									];
-
-									$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
-									file_put_contents($cacheFile, '<?php
-$cache = ' . var_export($cache, true) . ';
-');
+								$name = $this->model->getRequest(3);
+								if (!$this->model->moduleExists($name)) {
+									$this->updater->addModuleToCache($name);
 									if (!isset($_SESSION['update-queue']))
 										$_SESSION['update-queue'] = [];
 									$_SESSION['update-queue'][] = $name;
@@ -276,17 +261,6 @@ $cache = ' . var_export($cache, true) . ';
 								} else {
 									$this->model->viewOptions['errors'][] = 'Module already exists.';
 								}
-
-								/*if ($this->model->isCLI()) {
-									if (empty($this->model->viewOptions['errors'])) {
-										$this->updater->cliUpdate($this->model->getRequest(3));
-										$this->updater->cliConfig($this->model->getRequest(3), 'init');
-									} else {
-										echo implode("\n", $this->model->viewOptions['errors']) . "\n";
-									}
-
-									die();
-								}*/
 							} else {
 								die('No module selected');
 							}
@@ -353,13 +327,29 @@ $cache = ' . var_export($cache, true) . ';
 					case 'install':
 						$this->get();
 
-						echo "Downloadable modules:\n";
-
-						if (count($this->injected['modules'] ?? []) > 0) {
-							foreach ($this->injected['modules'] as $m)
-								echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
+						if ($this->model->getRequest(3) and isset($this->injected['modules'][$this->model->getRequest(3)])) {
+							$name = $this->model->getRequest(3);
+							if (!$this->model->moduleExists($name)) {
+								echo "Adding module to cache...\n";
+								$this->updater->addModuleToCache($name);
+								echo "Starting the update...\n";
+								$modules = [
+									$name => new ReflectionModule($name, $this->model),
+								];
+								$this->updater->cliUpdate($modules);
+								echo "Module downloaded!\n";
+							} else {
+								die("Module already exists.\n");
+							}
 						} else {
-							echo "No module found\n";
+							echo "Downloadable modules:\n";
+
+							if (count($this->injected['modules'] ?? []) > 0) {
+								foreach ($this->injected['modules'] as $m)
+									echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
+							} else {
+								echo "No module found\n";
+							}
 						}
 						break;
 					case 'update':

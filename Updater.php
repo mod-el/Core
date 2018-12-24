@@ -434,7 +434,7 @@ class Updater
 		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&key=' . urlencode($config['license']));
 		$remote = json_decode($remote_str, true);
 		if ($remote !== null) {
-			$return = array();
+			$return = [];
 			foreach ($remote as $m => $mod) {
 				if (array_key_exists($m, $modules))
 					continue;
@@ -629,5 +629,26 @@ class Updater
 		}
 
 		return $priorities;
+	}
+
+	public function addModuleToCache(string $name): bool
+	{
+		$cache = $this->model->retrieveCacheFile();
+		$cache['modules'][$name] = [
+			'path' => 'model' . DIRECTORY_SEPARATOR . $name,
+			'load' => false,
+			'custom' => false,
+			'js' => [],
+			'css' => [],
+			'dependencies' => [],
+			'assets-position' => 'head',
+			'version' => '0.0.0',
+		];
+
+		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+		$scrittura = file_put_contents($cacheFile, '<?php
+$cache = ' . var_export($cache, true) . ';
+');
+		return (bool)$scrittura;
 	}
 }
