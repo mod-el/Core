@@ -17,9 +17,6 @@ class Config extends Module_Config
 			];
 			return "<?php\n\$cache = " . var_export($arr, true) . ";\n";
 		});
-		$this->addAsset('data', 'update-queue.php', function () {
-			return "<?php\n\$queue = [];\n";
-		});
 	}
 
 	/**
@@ -345,29 +342,5 @@ $config = ' . var_export($config, true) . ';
 		];
 	}
 
-	public function postUpdate_2_5_0()
-	{
-		$updater = new \Model\Core\Updater($this->model);
-		$queue = $updater->getUpdateQueue();
 
-		foreach (glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*') as $dir) {
-			$file_path = $dir . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
-			file_put_contents($file_path, "<?php\n\$vars = ['installed'=>true, 'md5'=>null];\n");
-
-			$queue[] = pathinfo($dir, PATHINFO_BASENAME);
-		}
-
-		$updater->setUpdateQueue($queue);
-
-		return true;
-	}
-
-	public function postUpdate_2_5_0_Backup()
-	{
-		foreach (glob(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . '*') as $dir) {
-			$file_path = $dir . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
-			file_put_contents($file_path, "<?php\n\$installed = true;\n");
-		}
-		return true;
-	}
 }

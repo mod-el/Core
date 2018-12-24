@@ -59,6 +59,8 @@ class ReflectionModule
 		if ($manifestExists) {
 			$this->exists = true;
 		} else {
+			$this->name = $this->folder_name;
+
 			if ($base_dir === 'model') {
 				$this->exists = false;
 				return;

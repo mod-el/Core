@@ -42,25 +42,33 @@ class ZkController extends Controller
 
 						if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
 							if (!$this->model->moduleExists($this->model->getRequest(3))) {
-								$dir = INCLUDE_PATH . 'model/' . $this->model->getRequest(3);
-								if (!is_dir($dir)) {
-									if (!mkdir($dir))
-										$this->model->viewOptions['errors'][] = 'Can\'t write to folder.';
-									@chmod($dir, 0755);
-								}
-								$tempModuleData = [
-									'name' => $this->model->getRequest(3),
-									'description' => '',
-									'version' => '0.0.0',
+								$cache = $this->model->retrieveCacheFile();
+								$name = $this->model->getRequest(3);
+								$cache['modules'][$name] = [
+									'path' => 'model' . DIRECTORY_SEPARATOR . $name,
+									'load' => false,
+									'custom' => false,
+									'js' => [],
+									'css' => [],
 									'dependencies' => [],
+									'assets-position' => 'head',
+									'version' => '0.0.0',
 								];
-								file_put_contents($dir . DIRECTORY_SEPARATOR . 'manifest.json', json_encode($tempModuleData, JSON_PRETTY_PRINT));
-								@chmod(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $_GET['new'] . DIRECTORY_SEPARATOR . 'manifest.json', 0755);
+
+								$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+								file_put_contents($cacheFile, '<?php
+$cache = ' . var_export($cache, true) . ';
+');
+								if (!isset($_SESSION['update-queue']))
+									$_SESSION['update-queue'] = [];
+								$_SESSION['update-queue'][] = $name;
+
+								die('ok');
 							} else {
 								$this->model->viewOptions['errors'][] = 'Module already exists.';
 							}
 
-							if ($this->model->isCLI()) {
+							/*if ($this->model->isCLI()) {
 								if (empty($this->model->viewOptions['errors'])) {
 									$this->updater->cliUpdate($this->model->getRequest(3));
 									$this->updater->cliConfig($this->model->getRequest(3), 'init');
@@ -69,14 +77,7 @@ class ZkController extends Controller
 								}
 
 								die();
-							} else {
-								$queue = $this->updater->getUpdateQueue();
-								$queue[] = $this->model->getRequest(3);
-								$this->updater->setUpdateQueue($queue);
-
-								if (empty($this->model->viewOptions['errors']))
-									die('ok');
-							}
+							}*/
 						}
 						break;
 					case 'config':
@@ -141,7 +142,7 @@ class ZkController extends Controller
 						// Check that all dependencies are satisfied, and check if some module still has to be installed
 						$toBeInstalled = [];
 						foreach ($modules as $m) {
-							if ($m->version != '0.0.0' and !$m->installed) {
+							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
 								$toBeInstalled[] = $m;
 							} else {
 								// Load the config class only if the module is updated in respect of the Core (to avoid non-compatibility between classes)

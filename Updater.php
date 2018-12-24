@@ -2,10 +2,6 @@
 
 class Updater
 {
-	/** @var bool|array */
-	private $queue = false;
-	/** @var string */
-	private $queue_file;
 	/** @var Core */
 	private $model;
 	/** @var array */
@@ -17,7 +13,6 @@ class Updater
 	function __construct(Core $model)
 	{
 		$this->model = $model;
-		$this->queue_file = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'update-queue.php';
 	}
 
 	/**
@@ -25,22 +20,34 @@ class Updater
 	 * If $get_updates is true, check on the repository if a new version is available
 	 *
 	 * @param bool $get_updates
-	 * @param string $base_dir
+	 * @param string|null $base_dir
+	 * @param bool|null $custom
 	 * @return ReflectionModule[]
 	 */
-	public function getModules(bool $get_updates = false, string $base_dir = 'model'): array
+	public function getModules(bool $get_updates = false, ?string $base_dir = null, ?bool $custom = false): array
 	{
 		$modules = [];
 
-		$dirs = glob(INCLUDE_PATH . $base_dir . DIRECTORY_SEPARATOR . '*');
-		foreach ($dirs as $f) {
-			if (!is_dir($f))
-				continue;
-			$name = explode(DIRECTORY_SEPARATOR, $f);
-			$name = end($name);
-			$module = new ReflectionModule($name, $this->model, $base_dir);
-			if ($module->exists)
-				$modules[$name] = $module;
+		if ($base_dir === null) {
+			$cacheModules = $this->model->listModules($custom);
+
+			foreach ($cacheModules as $m) {
+				if (!is_dir(INCLUDE_PATH . $m['path']))
+					mkdir(INCLUDE_PATH . $m['path'], 0777, true);
+
+				$modules[$m['name']] = new ReflectionModule($m['name'], $this->model, $custom ? 'app' . DIRECTORY_SEPARATOR . 'modules' : 'model');
+			}
+		} else { // For Repository module
+			$dirs = glob(INCLUDE_PATH . $base_dir . DIRECTORY_SEPARATOR . '*');
+			foreach ($dirs as $f) {
+				if (!is_dir($f))
+					continue;
+				$name = explode(DIRECTORY_SEPARATOR, $f);
+				$name = end($name);
+				$module = new ReflectionModule($name, $this->model, $base_dir);
+				if ($module->exists)
+					$modules[$name] = $module;
+			}
 		}
 
 		if ($get_updates) {
@@ -259,6 +266,9 @@ class Updater
 		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp'))
 			return false;
 
+		if (isset($_SESSION['update-queue']))
+			unset($_SESSION['update-queue']);
+
 		return true;
 	}
 
@@ -329,8 +339,6 @@ class Updater
 	 */
 	public function cliUpdate(string $module)
 	{
-		$this->checkUpdateQueue($module);
-
 		echo "--------------------\n";
 		echo "Updating " . $module . "\n";
 		echo "--------------------\n";
@@ -364,10 +372,6 @@ class Updater
 			$cf++;
 			$this->showCliPercentage('Update successful', $cf, $tot_steps);
 		}
-
-		if (count($this->queue) > 0) {
-			$this->cliUpdate($this->queue[0]);
-		}
 	}
 
 	/**
@@ -384,57 +388,6 @@ class Updater
 		echo str_pad($string, 60, ' ', STR_PAD_RIGHT);
 		echo str_pad(implode('', array_fill(0, $perc, '*')), 100, ' ', STR_PAD_RIGHT) . '  ';
 		echo $perc . "%\n";
-	}
-
-	/**
-	 * Checks if the next module is in the update queue, and eventually removes it
-	 *
-	 * @param string $module
-	 * @return bool
-	 */
-	public function checkUpdateQueue(string $module): bool
-	{
-		if ($this->queue === false)
-			$this->getUpdateQueue();
-
-		if (count($this->queue) > 0 and ($key = array_search($module, $this->queue)) !== false) {
-			unset($this->queue[$key]);
-			file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($this->queue, true) . ";");
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	/**
-	 * Returns current update queue
-	 *
-	 * @return array
-	 */
-	public function getUpdateQueue(): array
-	{
-		if ($this->queue === false) {
-			if (file_exists($this->queue_file)) {
-				include($this->queue_file);
-				$this->queue = $queue;
-			} else {
-				$this->queue = [];
-			}
-		}
-		return $this->queue;
-	}
-
-	/**
-	 * Sets the update queue
-	 *
-	 * @param array $queue
-	 * @return bool
-	 */
-	public function setUpdateQueue(array $queue): bool
-	{
-		$this->queue = $queue;
-		$w = file_put_contents($this->queue_file, "<?php\n\$queue = " . var_export($queue, true) . ";\n");
-		return (bool)$w;
 	}
 
 	/**

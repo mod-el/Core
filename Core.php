@@ -224,6 +224,28 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
+	 * List all modules in cache
+	 *
+	 * @param bool|null $custom
+	 * @return array
+	 */
+	public function listModules(bool $custom = null): array
+	{
+		$modules = [];
+		foreach ($this->availableModules as $name => $module) {
+			if ($custom !== null and $module['custom'] !== $custom)
+				continue;
+			$modules[] = [
+				'name' => $name,
+				'custom' => $module['custom'],
+				'path' => $module['path'],
+				'version' => $module['version'],
+			];
+		}
+		return $modules;
+	}
+
+	/**
 	 * Attempts to load a specific module.
 	 * Raise an exception if the module does not exist.
 	 * Otherwise it returns the loaded module.
