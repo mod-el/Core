@@ -359,12 +359,14 @@ class Updater
 		}
 		$modules = $realModules;
 
+		echo count($modules) . " modules to update\n";
+		if (count($modules) === 0)
+			return;
+
 		$priorities = $this->getModulesPriority($modules);
 		usort($modules, function ($a, $b) use ($priorities) {
 			return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
 		});
-
-		echo count($modules) . " modules to update\n";
 
 		$modulesNames = array_map(function ($module) {
 			return $module->folder_name;
@@ -649,6 +651,7 @@ class Updater
 		$scrittura = file_put_contents($cacheFile, '<?php
 $cache = ' . var_export($cache, true) . ';
 ');
+		$this->model->reloadCacheFile();
 		return (bool)$scrittura;
 	}
 }
