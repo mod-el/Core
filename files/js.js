@@ -1,6 +1,7 @@
 if (typeof c_id === 'undefined')
 	var c_id = '';
 
+var updateQueue = [];
 var selectedModules = [];
 var updatingModules = [];
 var updatingFileList = [];
@@ -184,6 +185,13 @@ function array_merge(obj1, obj2) {
 
 /**************************************************************************************/
 
+window.addEventListener('load', function () {
+	if (updateQueue.length > 0) {
+		updateQueue.forEach(name => selectModule(name));
+		updateSelectedModules();
+	}
+});
+
 function cmd(cmd, post) {
 	if (typeof post === 'undefined')
 		post = '';
@@ -197,6 +205,14 @@ function cmd(cmd, post) {
 		div.innerHTML = ex;
 		return r;
 	});
+}
+
+function selectModule(name) {
+	let index = selectedModules.indexOf(name);
+	if (index === -1)
+		selectedModules.push(name);
+
+	refreshSelectedModules();
 }
 
 function toggleModuleSelection(name) {
@@ -270,8 +286,6 @@ function updateSelectedModules() {
 		});
 	});
 
-	deselectAllModules();
-
 	if (corrupted && !confirm('Some modules are marked as edited. Are you sure you want to overwrite them as well?'))
 		return false;
 
@@ -344,33 +358,6 @@ function refreshLoadingBar() {
 	document.getElementById('update-loading-bar').firstElementChild.style.width = percentage + '%';
 }
 
-/*************************************** TODO: CHECK *****************************************/
-
-function resetModuleLoadingBar(name) {
-	let bar = document.getElementById('loading-bar-' + name);
-	bar.style.visibility = 'hidden';
-	bar.style.width = '0%';
-}
-
-function refreshModule(name) {
-	let cont = document.getElementById('module-' + name);
-	cont.loading();
-	ajax(function (r, cont) {
-		if (typeof r === 'object') {
-			switch (r.action) {
-				case 'init':
-					document.location.href = absolute_path + 'zk/modules/init/' + r.module;
-					break;
-				default:
-					alert('Unknown response');
-					break;
-			}
-		} else {
-			cont.innerHTML = r;
-		}
-	}, absolute_path + 'zk/modules/refresh', 'module=' + encodeURIComponent(name), '', cont);
-}
-
 function lightbox(html) {
 	let lightbox = document.getElementById('lightbox');
 
@@ -417,7 +404,7 @@ function selectDownloadableModule(el) {
 
 function installSelectedModules() {
 	let el = document.querySelector('.list-module.selected');
-	if(!el)
+	if (!el)
 		return;
 
 	alert('Funzione in costruzione, momentaneamente verrà installato solo il primo selezionato');

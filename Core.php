@@ -224,6 +224,28 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
+	 * List all modules in cache
+	 *
+	 * @param bool|null $custom
+	 * @return array
+	 */
+	public function listModules(bool $custom = null): array
+	{
+		$modules = [];
+		foreach ($this->availableModules as $name => $module) {
+			if ($custom !== null and $module['custom'] !== $custom)
+				continue;
+			$modules[] = [
+				'name' => $name,
+				'custom' => $module['custom'],
+				'path' => $module['path'],
+				'version' => $module['version'],
+			];
+		}
+		return $modules;
+	}
+
+	/**
 	 * Attempts to load a specific module.
 	 * Raise an exception if the module does not exist.
 	 * Otherwise it returns the loaded module.
@@ -553,21 +575,19 @@ class Core implements \JsonSerializable, ModuleInterface
 			$this->trigger('Core', 'controllerExecution', ['method' => $httpMethod]);
 			$controllerReturn = $this->controller->{$httpMethod}();
 		}
+
 		if ($controllerReturn !== null) {
 			/*
-			 * If I have a returning value from the controller, I send it to the output as a json
+			 * If I have a returning value from the controller, I send it to the output stream as a json string
 			 * */
 			$this->trigger('Core', 'jsonResponse');
 			echo json_encode($controllerReturn);
-		} else {
+		} elseif (!$this->isCLI()) {
 			/*
 		 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
 		 * */
 			$this->trigger('Core', 'outputStart');
-			if ($this->isCLI())
-				$this->controller->outputCLI($this->viewOptions);
-			else
-				$this->controller->output($this->viewOptions);
+			$this->controller->output($this->viewOptions);
 		}
 	}
 

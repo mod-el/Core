@@ -42,25 +42,33 @@ class ZkController extends Controller
 
 						if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
 							if (!$this->model->moduleExists($this->model->getRequest(3))) {
-								$dir = INCLUDE_PATH . 'model/' . $this->model->getRequest(3);
-								if (!is_dir($dir)) {
-									if (!mkdir($dir))
-										$this->model->viewOptions['errors'][] = 'Can\'t write to folder.';
-									@chmod($dir, 0755);
-								}
-								$tempModuleData = [
-									'name' => $this->model->getRequest(3),
-									'description' => '',
-									'version' => '0.0.0',
+								$cache = $this->model->retrieveCacheFile();
+								$name = $this->model->getRequest(3);
+								$cache['modules'][$name] = [
+									'path' => 'model' . DIRECTORY_SEPARATOR . $name,
+									'load' => false,
+									'custom' => false,
+									'js' => [],
+									'css' => [],
 									'dependencies' => [],
+									'assets-position' => 'head',
+									'version' => '0.0.0',
 								];
-								file_put_contents($dir . DIRECTORY_SEPARATOR . 'manifest.json', json_encode($tempModuleData, JSON_PRETTY_PRINT));
-								@chmod(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $_GET['new'] . DIRECTORY_SEPARATOR . 'manifest.json', 0755);
+
+								$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+								file_put_contents($cacheFile, '<?php
+$cache = ' . var_export($cache, true) . ';
+');
+								if (!isset($_SESSION['update-queue']))
+									$_SESSION['update-queue'] = [];
+								$_SESSION['update-queue'][] = $name;
+
+								die('ok');
 							} else {
 								$this->model->viewOptions['errors'][] = 'Module already exists.';
 							}
 
-							if ($this->model->isCLI()) {
+							/*if ($this->model->isCLI()) {
 								if (empty($this->model->viewOptions['errors'])) {
 									$this->updater->cliUpdate($this->model->getRequest(3));
 									$this->updater->cliConfig($this->model->getRequest(3), 'init');
@@ -69,14 +77,7 @@ class ZkController extends Controller
 								}
 
 								die();
-							} else {
-								$queue = $this->updater->getUpdateQueue();
-								$queue[] = $this->model->getRequest(3);
-								$this->updater->setUpdateQueue($queue);
-
-								if (empty($this->model->viewOptions['errors']))
-									die('ok');
-							}
+							}*/
 						}
 						break;
 					case 'config':
@@ -141,7 +142,7 @@ class ZkController extends Controller
 						// Check that all dependencies are satisfied, and check if some module still has to be installed
 						$toBeInstalled = [];
 						foreach ($modules as $m) {
-							if ($m->version != '0.0.0' and !$m->installed) {
+							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
 								$toBeInstalled[] = $m;
 							} else {
 								// Load the config class only if the module is updated in respect of the Core (to avoid non-compatibility between classes)
@@ -258,19 +259,14 @@ class ZkController extends Controller
 					die(getErr($e));
 				}
 
-				die('Cache succesfully updated.');
+				die("Cache succesfully updated.\n");
 				break;
 			case 'empty-session':
 				$_SESSION = [];
-				die('Session cleared.');
+				die("Session cleared.\n");
 				break;
 			case 'inspect-session':
-				if ($this->model->isCLI()) {
-					echo json_encode($_SESSION);
-					die();
-				} else {
-					zkdump($_SESSION);
-				}
+				zkdump($_SESSION);
 				die();
 				break;
 			default:
@@ -341,33 +337,53 @@ class ZkController extends Controller
 		$this->index();
 	}
 
-	public function outputCLI(array $options = [], bool $asFallback = false)
+	public function cli()
 	{
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
 				switch ($this->model->getRequest(2)) {
 					case 'install':
+						$this->get();
+
 						echo "Downloadable modules:\n";
+
+						if (count($this->injected['modules'] ?? []) > 0) {
+							foreach ($this->injected['modules'] as $m)
+								echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
+						} else {
+							echo "No module found\n";
+						}
 						break;
 					default:
+						$this->get();
+
 						echo "Installed modules:\n";
+
+						if (count($this->injected['modules'] ?? []) > 0) {
+							foreach ($this->injected['modules'] as $m) {
+								echo '* ' . $m->name . " (v" . $m->version . ")";
+								if ($m->new_version)
+									echo ' - New version available';
+								elseif ($m->corrupted)
+									echo ' - Edited';
+								echo "\n";
+							}
+						} else {
+							echo "No module found\n";
+						}
 						break;
 				}
-
-				if (count($this->injected['modules'] ?? []) > 0) {
-					foreach ($this->injected['modules'] as $m) {
-						if (is_array($m)) {
-							echo '* ' . $m['name'] . " (v" . $m['current_version'] . ")\n";
-						} else {
-							echo '* ' . $m->name . " (v" . $m->version . ")\n";
-						}
-					}
-				} else {
-					echo "No module found\n";
-				}
+				break;
+			case 'make-cache':
+			case 'empty-session':
+				$this->get();
+				break;
+			case 'inspect-session':
+				echo json_encode($_SESSION) . "\n";
+				die();
 				break;
 			default:
-				die('CLI not supported for the request.');
+				die("CLI not supported for the request.\n");
 				break;
 		}
 	}
