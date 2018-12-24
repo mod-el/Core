@@ -270,8 +270,6 @@ function updateSelectedModules() {
 		});
 	});
 
-	deselectAllModules();
-
 	if (corrupted && !confirm('Some modules are marked as edited. Are you sure you want to overwrite them as well?'))
 		return false;
 
