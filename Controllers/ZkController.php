@@ -309,6 +309,8 @@ $cache = ' . var_export($cache, true) . ';
 										break;
 								}
 							}
+
+							$this->get();
 							break;
 						case 'update-file':
 							if (!isset($_POST['file']))
