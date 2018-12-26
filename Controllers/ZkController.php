@@ -315,8 +315,6 @@ class ZkController extends Controller
 		} catch (\Exception $e) {
 			$this->model->viewOptions['errors'][] = $e->getMessage();
 		}
-
-		$this->index();
 	}
 
 	public function cli()
@@ -369,7 +367,7 @@ class ZkController extends Controller
 
 						$this->updater->cliUpdate($modules);
 						break;
-					default:
+					case null:
 						$this->get();
 
 						echo "Installed modules:\n";
@@ -387,6 +385,9 @@ class ZkController extends Controller
 							echo "No module found\n";
 						}
 						break;
+					default:
+						echo $this->model->getRequest(2) . " is not a recognized command\n";
+						break;
 				}
 				break;
 			case 'make-cache':
@@ -396,8 +397,20 @@ class ZkController extends Controller
 			case 'inspect-session':
 				echo json_encode($_SESSION) . "\n";
 				break;
+			case null:
+				echo "Usage: zk/<command> [parameter1=value1] [parameter2=value2] ...\n\n"
+					. "Available commands:\n\n"
+					. "make-cache                   Re-make the cache of all modules\n"
+					. "modules                      List all installed modules\n"
+					. "modules/install              List all installable modules\n"
+					. "modules/install/<module>     Downloads and installs specified module\n"
+					. "modules/update               Updates all modules\n"
+					. "                             You can optionally specify \"modules\" parameter,\n"
+					. "                             with a comma-separated list of modules to update:\n"
+					. "modules/update modules=Output,Router,Ecc\n\n";
+				break;
 			default:
-				echo "CLI not supported for the request.\n";
+				echo $this->model->getRequest(1) . " is not a recognized command\n";
 				break;
 		}
 	}
