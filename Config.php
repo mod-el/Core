@@ -294,7 +294,7 @@ $cache = ' . var_export($cache, true) . ';
 	 */
 	public function getTemplate(string $type): ?string
 	{
-		return $type[2] === 'config' ? 'config' : null;
+		return $type === 'config' ? 'config' : null;
 	}
 
 	/**
