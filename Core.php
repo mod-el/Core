@@ -64,22 +64,24 @@ class Core implements \JsonSerializable, ModuleInterface
 		error_reporting(E_ALL);
 		ini_set('display_errors', DEBUG_MODE);
 
-		header('Content-type: text/html; charset=utf-8');
 		mb_internal_encoding('utf-8');
+		if (!$this->isCLI()) {
+			header('Content-type: text/html; charset=utf-8');
+
+			if (!isset($_COOKIE['ZKID'])) {
+				$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0;
+				$zkid = sha1($ip . time());
+				setcookie('ZKID', $zkid, time() + 60 * 60 * 24 * 30, PATH);
+			}
+
+			setcookie('ZK', PATH, time() + (60 * 60 * 24 * 365), PATH);
+		}
 
 		if (DEBUG_MODE and function_exists('opcache_reset'))
 			opcache_reset();
 
-		if (!isset($_SESSION[SESSION_ID]))
-			$_SESSION[SESSION_ID] = [];
-
-		if (!isset($_COOKIE['ZKID'])) {
-			$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0;
-			$zkid = sha1($ip . time());
-			setcookie('ZKID', $zkid, time() + 60 * 60 * 24 * 30, PATH);
-		}
-
-		setcookie('ZK', PATH, time() + (60 * 60 * 24 * 365), PATH);
+		if (!isset($_SESSION))
+			$_SESSION = [];
 
 		$model = $this;
 		register_shutdown_function(function () use ($model) {
@@ -112,7 +114,7 @@ class Core implements \JsonSerializable, ModuleInterface
 		else
 			define('DEBUG_MODE', MAIN_DEBUG_MODE);
 
-		define('SESSION_ID', md5(PATH));
+		define('SESSION_ID', md5(PATH)); // TODO: here for backward compatibility, to be removed
 
 		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
 	}

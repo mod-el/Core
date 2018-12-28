@@ -93,10 +93,11 @@ class Updater
 	/**
 	 * Sets the internal status of a module as installed
 	 *
-	 * @param $name
+	 * @param string $name
+	 * @param Module_Config $configClass
 	 * @return bool
 	 */
-	public function firstInit(string $name): bool
+	public function markAsInitialized(string $name, Module_Config $configClass): bool
 	{
 		if (!file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data'))
 			mkdir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data');
@@ -106,7 +107,6 @@ class Updater
 		$module = new ReflectionModule($name, $this->model);
 		$this->changeModuleInternalVar($name, 'md5', $module->md5);
 
-		$configClass = $this->getConfigClassFor($name);
 		if ($configClass) {
 			try {
 				$configClass->makeCache();
@@ -116,6 +116,30 @@ class Updater
 		}
 
 		return true;
+	}
+
+	/**
+	 * @param string $name
+	 * @param array|null $data
+	 * @return bool
+	 */
+	public function initModule(string $name, ?array $data = null): bool
+	{
+		$configClass = $this->getConfigClassFor($name);
+		if ($configClass) {
+			$configClass->checkAssets();
+			if ($configClass->init($data)) {
+				return $this->markAsInitialized($name, $configClass);
+			} elseif ($data === null) {
+				return false;
+			} else {
+				$this->model->error('Something is wrong, can\'t initialize module ' . $name);
+			}
+
+			return false;
+		} else {
+			return $this->markAsInitialized($name, $configClass);
+		}
 	}
 
 	/**
@@ -452,7 +476,7 @@ class Updater
 	 * @param string $name
 	 * @return \Model\Core\Module_Config|null
 	 */
-	public function getConfigClassFor(string $name)
+	public function getConfigClassFor(string $name): ?Module_Config
 	{
 		if (file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php')) {
 			require_once(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'Config.php');
@@ -470,7 +494,7 @@ class Updater
 	 * Module configuration via CLI
 	 *
 	 * @param string $module
-	 * @param string $type
+	 * @param string $type ("init" or "config")
 	 * @return bool
 	 * @throws \Exception
 	 */
@@ -481,6 +505,10 @@ class Updater
 			return true;
 
 		$configData = $configClass->getConfigData();
+		if (!$configData) {
+			echo "Module " . $module . " cannot be configured via CLI\n";
+			return false;
+		}
 
 		$data = [];
 		if ($configData) {
@@ -514,8 +542,7 @@ class Updater
 				}
 				break;
 			case 'init':
-				if ($this->install($configClass, $data)) {
-					$this->firstInit($module);
+				if ($this->initModule($module, $data)) {
 					echo "----------------------\n";
 					echo "Module " . $module . " initialized\n";
 					echo "----------------------\n";
@@ -527,20 +554,6 @@ class Updater
 		}
 
 		return false;
-	}
-
-	/**
-	 * Installs a module
-	 *
-	 * @param Module_Config $configClass
-	 * @param array $data
-	 * @return bool
-	 * @throws \Exception
-	 */
-	public function install(Module_Config $configClass, array $data = []): bool
-	{
-		$configClass->checkAssets();
-		return $configClass->install($data);
 	}
 
 	/**
@@ -633,6 +646,10 @@ class Updater
 		return $priorities;
 	}
 
+	/**
+	 * @param string $name
+	 * @return bool
+	 */
 	public function addModuleToCache(string $name): bool
 	{
 		$cache = $this->model->retrieveCacheFile();
