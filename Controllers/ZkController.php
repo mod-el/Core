@@ -13,6 +13,8 @@ class ZkController extends Controller
 	protected $options = [];
 	/** @var array */
 	private $injected = [];
+	/** @var string */
+	private $lastBreakingChange = '2.8.1';
 
 	public function init()
 	{
@@ -96,7 +98,7 @@ class ZkController extends Controller
 									foreach ($m->dependencies as $dependency => $dependencyVersion) {
 										if ($dependency === 'Core') {
 											$version = preg_replace('/^.*([0-9]+\.[0-9]+\.[0-9]+)$/', '$1', $dependencyVersion);
-											if (version_compare($modules['Core']->version, $version, '>=')) {
+											if (version_compare($modules['Core']->version, $version, '>=') and version_compare($this->lastBreakingChange, $version, '<=')) {
 												$m->configClassCompatible = true;
 												break;
 											}
