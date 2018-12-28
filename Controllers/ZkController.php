@@ -43,46 +43,29 @@ class ZkController extends Controller
 						break;
 					case 'config':
 					case 'init':
+						if (!$this->model->getRequest(3))
+							die('No module specified');
+
 						if ($this->model->getRequest(2) == 'init') { // Check if already installed
 							$checkModule = new ReflectionModule($this->model->getRequest(3), $this->model);
-							if ($checkModule->installed) {
-								if ($this->model->isCLI()) {
-									die("Module already installed\n");
-								} else {
-									$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-								}
-							}
+							if ($checkModule->installed)
+								$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 						}
+
 						$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
 						if ($configClass) {
-							if ($this->model->isCLI()) {
-								if ($this->updater->cliConfig($this->model->getRequest(3), $this->model->getRequest(2)))
-									$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-								die();
-							} else {
-								$config = $configClass->retrieveConfig();
+							$this->model->viewOptions['template-module'] = $this->model->getRequest(3);
+							$this->model->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest(2));
 
-								$this->model->viewOptions['template-module'] = $this->model->getRequest(3);
-								$this->model->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest());
-								if ($this->model->viewOptions['template'] === null) {
-									if ($this->model->getRequest(2) == 'init') {
-										$installation = $this->updater->install($configClass);
-										if ($installation) {
-											$this->updater->firstInit($this->model->getRequest(3));
-											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-										} else {
-											$this->model->viewOptions['errors'][] = 'Something is wrong, can\'t initialize module ' . $this->model->getRequest(3);
-										}
-									}
-								}
-								$this->injected['config_class'] = $configClass;
-								$this->injected['config'] = $config;
-							}
+							if ($this->model->viewOptions['template'] === null)
+								die('Can\'t find init template for the module');
+
+							$config = $configClass->retrieveConfig();
+							$this->injected['configClass'] = $configClass;
+							$this->injected['config'] = $config;
+							/*}*/
 						} else {
-							if ($this->model->getRequest(2) == 'init') {
-								$this->updater->firstInit($this->model->getRequest(3));
-								$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-							}
+							die('Can\'t find config class for the module');
 						}
 						break;
 					case 'files-list':
@@ -97,14 +80,14 @@ class ZkController extends Controller
 						$_SESSION['delete-files'] = $files['delete'];
 						return $files['update'];
 						break;
-					default:
+					case null:
 						$modules = $this->updater->getModules(true);
 
-						// Check that all dependencies are satisfied, and check if some module still has to be installed
-						$toBeInstalled = [];
+						// Check that all dependencies are satisfied, and check if some module still has to be initialized
+						$toBeInitialized = [];
 						foreach ($modules as $m) {
 							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
-								$toBeInstalled[] = $m;
+								$toBeInitialized[] = $m;
 							} else {
 								// Load the config class only if the module is updated in respect of the Core (to avoid non-compatibility between classes)
 								if ($m->folder_name === 'Core')
@@ -149,26 +132,25 @@ class ZkController extends Controller
 							}
 						}
 
-						$nextToInstall = false;
-						if (count($toBeInstalled) > 0) {
-							// I sort the modules so that I can install the modules without dependencies first
-							$priorities = $this->updater->getModulesPriority($modules);
+						$priorities = $this->updater->getModulesPriority($modules);
 
-							usort($toBeInstalled, function ($a, $b) use ($priorities) {
+						if (count($toBeInitialized) > 0) {
+							usort($toBeInitialized, function ($a, $b) use ($priorities) {
 								return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
 							});
 
-							$nextToInstall = reset($toBeInstalled);
+							foreach ($toBeInitialized as $moduleToInit) {
+								$response = $this->updater->initModule($moduleToInit->folder_name);
+								if (!$response)
+									$this->model->redirect(PATH . 'zk/modules/init/' . $moduleToInit->folder_name);
+							}
 						}
-
-						if ($nextToInstall)
-							$this->model->redirect(PATH . 'zk/modules/init/' . $nextToInstall->folder_name . $qry_string);
-
-						// I sort the modules so that I can update the modules without dependencies first
-						$priorities = $this->updater->getModulesPriority($modules);
 
 						$this->injected['priorities'] = $priorities;
 						$this->injected['modules'] = $modules;
+						break;
+					default:
+						die('Unknwon action');
 						break;
 				}
 				break;
@@ -267,7 +249,9 @@ class ZkController extends Controller
 							break;
 						case 'config':
 						case 'init':
-							$configClass = $this->updater->getConfigClassFor($this->model->getRequest(3));
+							$this->get();
+
+							$configClass = $this->injected['configClass'];
 							if ($configClass) {
 								switch ($this->model->getRequest(2)) {
 									case 'config':
@@ -275,11 +259,14 @@ class ZkController extends Controller
 											$this->model->viewOptions['messages'][] = 'Configuration saved.';
 										break;
 									case 'init':
-										if ($this->updater->install($configClass, $_POST)) {
-											$this->updater->firstInit($this->model->getRequest(3));
-											$this->model->redirect(PATH . 'zk/modules' . $qry_string);
-										} else {
-											$this->model->viewOptions['errors'][] = 'Some error occurred while installing.';
+										try {
+											if ($this->updater->initModule($this->model->getRequest(3), $_POST)) {
+												$this->model->redirect(PATH . 'zk/modules' . $qry_string);
+											} else {
+												$this->model->error('Some error occurred while installing.');
+											}
+										} catch (\Exception $e) {
+											$this->model->viewOptions['errors'][] = getErr($e);
 										}
 										break;
 								}
@@ -367,6 +354,17 @@ class ZkController extends Controller
 
 						$this->updater->cliUpdate($modules);
 						break;
+					case 'init':
+					case 'config':
+						if ($this->model->getRequest(3)) {
+							if ($this->updater->cliConfig($this->model->getRequest(3), $this->model->getRequest(2)))
+								echo "Module " . $this->model->getRequest(3) . " successful configured\n";
+							else
+								echo "Error while configuring module " . $this->model->getRequest(3) . "\n";
+						} else {
+							echo "Usage: zk/modules/config/<module>\n";
+						}
+						break;
 					case null:
 						$this->get();
 
@@ -407,7 +405,9 @@ class ZkController extends Controller
 					. "modules/update               Updates all modules\n"
 					. "                             You can optionally specify \"modules\" parameter,\n"
 					. "                             with a comma-separated list of modules to update:\n"
-					. "modules/update modules=Output,Router,Ecc\n\n";
+					. "                                 modules/update modules=Output,Router,Ecc\n"
+					. "modules/config/<module>      Configure options for a module\n"
+					. "\n";
 				break;
 			default:
 				echo $this->model->getRequest(1) . " is not a recognized command\n";

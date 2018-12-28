@@ -88,21 +88,23 @@ class Module_Config
 	/**
 	 * If the module has a configuration/installation page in the control panel, it's handled by this method
 	 *
-	 * @param array $request
+	 * @param string $type ("init" or "config")
 	 * @return string|null
 	 */
-	public function getTemplate(array $request): ?string
+	public function getTemplate(string $type): ?string
 	{
 		return null;
 	}
 
 	/**
-	 * Executed after the first installation of the module
+	 * First initialization of the module
+	 * Has to return true in case of success, or false if more data are needed (the user will be redirected to the init page)
+	 * Has to throw an exception in case of failure
 	 *
 	 * @param array $data
 	 * @return bool
 	 */
-	public function install(array $data = []): bool
+	public function init(?array $data = null): bool
 	{
 		return true;
 	}
@@ -152,11 +154,11 @@ $config = ' . var_export($data, true) . ';
 	/**
 	 * It has to return the required data for the configuration of the module via CLI, in the form of [ k => ['label'=>label, 'default'=>default], etc... ]
 	 *
-	 * @return array
+	 * @return array|null
 	 */
-	public function getConfigData(): array
+	public function getConfigData(): ?array
 	{
-		return [];
+		return null;
 	}
 
 	/**
