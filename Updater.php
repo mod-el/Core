@@ -97,7 +97,7 @@ class Updater
 	 * @param Module_Config $configClass
 	 * @return bool
 	 */
-	public function markAsInitialized(string $name, Module_Config $configClass): bool
+	public function markAsInitialized(string $name, ?Module_Config $configClass = null): bool
 	{
 		if (!file_exists(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data'))
 			mkdir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data');
@@ -138,7 +138,7 @@ class Updater
 
 			return false;
 		} else {
-			return $this->markAsInitialized($name, $configClass);
+			return $this->markAsInitialized($name);
 		}
 	}
 
