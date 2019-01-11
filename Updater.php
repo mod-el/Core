@@ -662,6 +662,7 @@ class Updater
 			'dependencies' => [],
 			'assets-position' => 'head',
 			'version' => '0.0.0',
+			'initialized' => false,
 		];
 
 		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
