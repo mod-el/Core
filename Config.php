@@ -87,6 +87,7 @@ class Config extends Module_Config
 				'dependencies' => [],
 				'assets-position' => 'head',
 				'version' => '0.0.0',
+				'initialized' => in_array($d, $customDirs) ? true : false,
 			];
 
 			if (file_exists($d . DIRECTORY_SEPARATOR . 'manifest.json')) {
@@ -130,6 +131,13 @@ class Config extends Module_Config
 						];
 					}
 				}
+			}
+
+			$vars_file = $d . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
+			if (file_exists($vars_file)) {
+				require($vars_file);
+				if (isset($vars['installed']) and $vars['installed'])
+					$modules[$d_info['filename']]['initialized'] = true;
 			}
 
 			$files = glob($d . DIRECTORY_SEPARATOR . '*');
