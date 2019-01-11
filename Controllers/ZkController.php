@@ -85,6 +85,11 @@ class ZkController extends Controller
 					case null:
 						$modules = $this->updater->getModules(true);
 
+						$priorities = $this->updater->getModulesPriority($modules);
+						uasort($modules, function ($a, $b) use ($priorities) {
+							return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
+						});
+
 						// Check that all dependencies are satisfied, and check if some module still has to be initialized
 						$toBeInitialized = [];
 						foreach ($modules as $m) {
@@ -114,7 +119,7 @@ class ZkController extends Controller
 										$allDependenciesSatisfied = false;
 									}
 
-									if (!$modules[$depModule]->installed) // Installed but not initalized
+									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function($m){ return $m->folder_name; }, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
 										$allDependenciesSatisfied = false;
 								}
 							}
@@ -143,13 +148,7 @@ class ZkController extends Controller
 							}
 						}
 
-						$priorities = $this->updater->getModulesPriority($modules);
-
 						if (count($toBeInitialized) > 0) {
-							usort($toBeInitialized, function ($a, $b) use ($priorities) {
-								return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
-							});
-
 							foreach ($toBeInitialized as $moduleToInit) {
 								$response = $this->updater->initModule($moduleToInit->folder_name);
 								if ($response)
@@ -158,6 +157,10 @@ class ZkController extends Controller
 									$this->model->redirect(PATH . 'zk/modules/init/' . $moduleToInit->folder_name);
 							}
 						}
+
+						uasort($modules, function ($a, $b) {
+							return $a->folder_name <=> $b->folder_name;
+						});
 
 						$this->injected['priorities'] = $priorities;
 						$this->injected['modules'] = $modules;
