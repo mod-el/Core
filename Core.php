@@ -222,7 +222,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function moduleExists(string $name)
 	{
-		if (isset($this->availableModules[$name]) and $this->availableModules[$name]['initialized'])
+		if (isset($this->availableModules[$name]) and ($this->availableModules[$name]['initialized'] ?? true))
 			return $this->availableModules[$name];
 		else
 			return false;
