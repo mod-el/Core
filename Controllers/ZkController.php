@@ -152,7 +152,9 @@ class ZkController extends Controller
 
 							foreach ($toBeInitialized as $moduleToInit) {
 								$response = $this->updater->initModule($moduleToInit->folder_name);
-								if (!$response)
+								if ($response)
+									$moduleToInit->installed = true;
+								else
 									$this->model->redirect(PATH . 'zk/modules/init/' . $moduleToInit->folder_name);
 							}
 						}
