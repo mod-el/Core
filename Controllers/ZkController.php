@@ -89,7 +89,16 @@ class ZkController extends Controller
 						$toBeInitialized = [];
 						foreach ($modules as $m) {
 							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
-								$toBeInitialized[] = $m;
+								$allDependenciesSatisfied = true;
+								foreach ($m->dependencies as $depModule => $depVersion) { // Modules can be initialized only if all dependencies are installed
+									if (!isset($modules[$depModule]) or !$modules[$depModule]->installed) {
+										$allDependenciesSatisfied = false;
+										break;
+									}
+								}
+
+								if ($allDependenciesSatisfied)
+									$toBeInitialized[] = $m;
 							} else {
 								// Load the config class only if the module is updated in respect of the Core (to avoid non-compatibility between classes)
 								if ($m->folder_name === 'Core')

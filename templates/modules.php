@@ -35,8 +35,17 @@ if ($toBeUpdated) {
 						<div class="module-version"><?= entities($module->version) ?></div>
 						<b><?= entities($module->name) ?></b>
 					</div>
-					<?php if ($module->description) { ?><p><i><?= entities($module->description, true) ?></i>
-						</p><?php } ?>
+					<?php
+					if ($module->description) {
+						?>
+						<p><i><?= entities($module->description, true) ?></i></p>
+						<?php
+					}
+
+					if (!$module->installed) {
+						?><i style="color: #C00">(not initialized)</i><?php
+					}
+					?>
 				</div>
 
 				<div>
