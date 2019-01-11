@@ -88,15 +88,38 @@ class ZkController extends Controller
 						// Check that all dependencies are satisfied, and check if some module still has to be initialized
 						$toBeInitialized = [];
 						foreach ($modules as $m) {
-							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
-								$allDependenciesSatisfied = true;
-								foreach ($m->dependencies as $depModule => $depVersion) { // Modules can be initialized only if all dependencies are installed
-									if (!isset($modules[$depModule]) or !$modules[$depModule]->installed) {
-										$allDependenciesSatisfied = false;
-										break;
-									}
-								}
+							$allDependenciesSatisfied = true;
 
+							foreach ($m->dependencies as $depModule => $depVersion) {
+								if (!isset($modules[$depModule])) {
+									$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '" is not installed!';
+									$allDependenciesSatisfied = false;
+								} else {
+									if ($depVersion === '*')
+										continue;
+
+									if (strpos($depVersion, '>=') === 0 or strpos($depVersion, '<=') === 0 or strpos($depVersion, '<>') === 0 or strpos($depVersion, '!=') === 0 or strpos($depVersion, '==') === 0) {
+										$compareOperator = substr($depVersion, 0, 2);
+										$compareToVersion = substr($depVersion, 2);
+									} elseif (strpos($depVersion, '>') === 0 or strpos($depVersion, '<') === 0 or strpos($depVersion, '=') === 0) {
+										$compareOperator = substr($depVersion, 0, 1);
+										$compareToVersion = substr($depVersion, 1);
+									} else {
+										$compareOperator = '=';
+										$compareToVersion = $depVersion;
+									}
+
+									if (!version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator)) {
+										$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
+										$allDependenciesSatisfied = false;
+									}
+
+									if (!$modules[$depModule]->installed) // Installed but not initalized
+										$allDependenciesSatisfied = false;
+								}
+							}
+
+							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
 								if ($allDependenciesSatisfied)
 									$toBeInitialized[] = $m;
 							} else {
@@ -117,29 +140,6 @@ class ZkController extends Controller
 
 								if ($m->getConfigClass())
 									$m->getConfigClass()->checkAssets();
-							}
-
-							foreach ($m->dependencies as $depModule => $depVersion) {
-								if (!isset($modules[$depModule])) {
-									$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '" is not installed!';
-								} else {
-									if ($depVersion == '*')
-										continue;
-
-									if (strpos($depVersion, '>=') === 0 or strpos($depVersion, '<=') === 0 or strpos($depVersion, '<>') === 0 or strpos($depVersion, '!=') === 0 or strpos($depVersion, '==') === 0) {
-										$compareOperator = substr($depVersion, 0, 2);
-										$compareToVersion = substr($depVersion, 2);
-									} elseif (strpos($depVersion, '>') === 0 or strpos($depVersion, '<') === 0 or strpos($depVersion, '=') === 0) {
-										$compareOperator = substr($depVersion, 0, 1);
-										$compareToVersion = substr($depVersion, 1);
-									} else {
-										$compareOperator = '=';
-										$compareToVersion = $depVersion;
-									}
-
-									if (!version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator))
-										$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
-								}
 							}
 						}
 
