@@ -97,6 +97,9 @@ class Core implements \JsonSerializable, ModuleInterface
 		$this->checkCleanUp();
 	}
 
+	/**
+	 *
+	 */
 	private function defineConstants()
 	{
 		if (defined('START_TIME'))
@@ -388,6 +391,15 @@ class Core implements \JsonSerializable, ModuleInterface
 		} else {
 			return isset($this->modules[$name]) ? $this->modules[$name] : array();
 		}
+	}
+
+	/**
+	 * @param string $name
+	 */
+	public function markModuleAsInitialized(string $name)
+	{
+		if (isset($this->availableModules[$name]))
+			$this->availableModules[$name]['initialized'] = true;
 	}
 
 	/**
