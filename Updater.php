@@ -314,7 +314,7 @@ class Updater
 		if (!file_exists(INCLUDE_PATH . $folder))
 			return true;
 
-		$ff = glob(INCLUDE_PATH . $folder . DIRECTORY_SEPARATOR . '*');
+		$ff = glob(INCLUDE_PATH . $folder . DIRECTORY_SEPARATOR . '{*,.[!.]*,..?*}', GLOB_BRACE);
 		foreach ($ff as $f) {
 			$f_name = substr($f, strlen(INCLUDE_PATH . $folder . DIRECTORY_SEPARATOR));
 			if (is_dir($f)) {
@@ -671,5 +671,36 @@ $cache = ' . var_export($cache, true) . ';
 ');
 		$this->model->reloadCacheFile();
 		return (bool)$scrittura;
+	}
+
+	/**
+	 * @param string $module
+	 * @return bool
+	 */
+	public function deleteModule(string $module): bool
+	{
+		if (strpos($module, '/') !== false)
+			throw new Exception('Invalid module name');
+
+		if (is_dir(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $module)) {
+			if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $module))
+				return false;
+		}
+
+		if (is_dir(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $module)) {
+			if (!$this->deleteDirectory('app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $module))
+				return false;
+		}
+
+		$cache = $this->model->retrieveCacheFile();
+		if (array_key_exists($module, $cache['modules']))
+			unset($cache['modules'][$module]);
+
+		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
+		file_put_contents($cacheFile, '<?php
+$cache = ' . var_export($cache, true) . ';
+');
+
+		return true;
 	}
 }

@@ -119,7 +119,9 @@ class ZkController extends Controller
 										$allDependenciesSatisfied = false;
 									}
 
-									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function($m){ return $m->folder_name; }, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
+									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function ($m) {
+											return $m->folder_name;
+										}, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
 										$allDependenciesSatisfied = false;
 								}
 							}
@@ -245,23 +247,29 @@ class ZkController extends Controller
 				case 'modules':
 					switch ($this->model->getRequest(2)) {
 						case 'install':
-							$modules = $this->updater->downloadableModules();
+							try {
+								$modules = (string)$this->model->getInput('modules');
+								$modules = array_filter(explode(',', $modules));
+								if (count($modules) === 0)
+									throw new Exception('No module selected');
 
-							if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
-								$name = $this->model->getRequest(3);
-								if (!$this->model->moduleExists($name)) {
-									$this->updater->addModuleToCache($name);
+								foreach ($modules as $module) {
+									if ($this->model->moduleExists($module))
+										throw new Exception('Module ' . $module . ' already exists.');
+								}
+
+								foreach ($modules as $module) {
+									$this->updater->addModuleToCache($module);
 									if (!isset($_SESSION['update-queue']))
 										$_SESSION['update-queue'] = [];
-									$_SESSION['update-queue'][] = $name;
-
-									die('ok');
-								} else {
-									$this->model->viewOptions['errors'][] = 'Module already exists.';
+									$_SESSION['update-queue'][] = $module;
 								}
-							} else {
-								die('No module selected');
+
+								echo 'ok';
+							} catch (\Exception $e) {
+								echo getErr($e);
 							}
+							die();
 							break;
 						case 'config':
 						case 'init':
@@ -310,6 +318,30 @@ class ZkController extends Controller
 								echo 'ok';
 							else
 								echo 'Error while finalizing the update, you might need to update manually.';
+							die();
+							break;
+						case 'delete':
+							$modules = $this->model->getInput('modules');
+							if (!$modules)
+								die('Missing data');
+
+							$modules = explode(',', $modules);
+
+							try {
+								foreach ($modules as $m) {
+									$m = trim($m);
+									if (!$m or strpos($m, '/'))
+										throw new Exception('Invalid module name');
+									if ($m === 'Core')
+										throw new Exception('You cannot delete ModEl Core');
+									if (!$this->updater->deleteModule($m))
+										throw new Exception('Error while deleting module ' . $m);
+								}
+
+								echo 'ok';
+							} catch (\Exception $e) {
+								echo getErr($e);
+							}
 							die();
 							break;
 					}

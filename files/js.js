@@ -319,6 +319,27 @@ function updateSelectedModules() {
 	});
 }
 
+function removeModules() {
+	if (!confirm('Are you sure? All configuration data of selected modules will be removed as well'))
+		return false;
+	if (selectedModules.indexOf('Core') !== -1) {
+		alert('You cannot remove ModEl Core');
+		return false;
+	}
+
+	document.getElementById('header-right').innerHTML = 'Please wait...';
+	document.body.style.cursor = 'wait';
+
+	ajax(absolute_path + 'zk/modules/delete', {}, {'modules': selectedModules.join(',')}).then(r => {
+		document.body.style.cursor = 'auto';
+		if (r === 'ok') {
+			cmd('make-cache').then(() => document.location.reload());
+		} else {
+			alert(r);
+		}
+	});
+}
+
 function updateNextFile() {
 	refreshLoadingBar();
 
@@ -406,16 +427,17 @@ function selectDownloadableModule(el) {
 }
 
 function installSelectedModules() {
-	let el = document.querySelector('.list-module.selected');
-	if (!el)
-		return;
-
-	alert('Funzione in costruzione, momentaneamente verrà installato solo il primo selezionato');
-	let name = el.dataset.name;
+	let modules = [];
+	document.querySelectorAll('.list-module.selected').forEach(module => modules.push(module.dataset.name));
+	if (modules.length === 0)
+		return false;
 
 	document.getElementById('lightbox').loading();
 
-	ajax(absolute_path + 'zk/modules/install/' + encodeURIComponent(name), '', 'c_id=' + c_id).then(r => {
+	ajax(absolute_path + 'zk/modules/install', {}, {
+		'modules': modules.join(','),
+		'c_id': c_id
+	}).then(r => {
 		if (r === 'ok') {
 			document.location.reload();
 		} else {

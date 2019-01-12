@@ -8,15 +8,20 @@ foreach ($modules as $module) {
 	}
 }
 
-if ($toBeUpdated) {
-	?>
-	<div style="float: right">
-		[<a href="#" onclick="updateSelectedModules(); return false"> update selected </a>]
-		[<a href="#" onclick="updateAllModules(); return false"> update all </a>]
-	</div>
-	<?php
-}
 ?>
+<div id="header-right">
+	[<a href="#" onclick="removeModules(); return false"> remove selected </a>]
+	<?php
+	if ($toBeUpdated) {
+		?>
+		[<a href="#" onclick="updateSelectedModules(); return false"> update selected </a>]
+																						  [
+		<a href="#" onclick="updateAllModules(); return false"> update all </a>]
+		<?php
+	}
+	?>
+</div>
+
 <h2>Modules</h2>
 
 <div id="update-info" style="display: none">
