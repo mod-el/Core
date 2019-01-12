@@ -110,6 +110,10 @@ input:not([type=checkbox]):not([type=radio]), select {
 	box-sizing: border-box;
 }
 
+#header-right {
+	float: right;
+}
+
 .module-cont {
 	display: inline-block;
 	box-sizing: border-box;

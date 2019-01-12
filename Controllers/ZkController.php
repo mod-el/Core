@@ -119,7 +119,9 @@ class ZkController extends Controller
 										$allDependenciesSatisfied = false;
 									}
 
-									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function($m){ return $m->folder_name; }, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
+									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function ($m) {
+											return $m->folder_name;
+										}, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
 										$allDependenciesSatisfied = false;
 								}
 							}
@@ -310,6 +312,30 @@ class ZkController extends Controller
 								echo 'ok';
 							else
 								echo 'Error while finalizing the update, you might need to update manually.';
+							die();
+							break;
+						case 'delete':
+							$modules = $this->model->getInput('modules');
+							if (!$modules)
+								die('Missing data');
+
+							$modules = explode(',', $modules);
+
+							try {
+								foreach ($modules as $m) {
+									$m = trim($m);
+									if (!$m or strpos($m, '/'))
+										throw new Exception('Invalid module name');
+									if ($m === 'Core')
+										throw new Exception('You cannot delete ModEl Core');
+									if (!$this->updater->deleteModule($m))
+										throw new Exception('Error while deleting module ' . $m);
+								}
+
+								echo 'ok';
+							} catch (\Exception $e) {
+								echo getErr($e);
+							}
 							die();
 							break;
 					}

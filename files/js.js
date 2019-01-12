@@ -319,6 +319,27 @@ function updateSelectedModules() {
 	});
 }
 
+function removeModules() {
+	if (!confirm('Are you sure? All configuration data of selected modules will be removed as well'))
+		return false;
+	if (selectedModules.indexOf('Core') !== -1) {
+		alert('You cannot remove ModEl Core');
+		return false;
+	}
+
+	document.getElementById('header-right').innerHTML = 'Please wait...';
+	document.body.style.cursor = 'wait';
+
+	ajax(absolute_path + 'zk/modules/delete', {}, {'modules': selectedModules.join(',')}).then(r => {
+		document.body.style.cursor = 'auto';
+		if (r === 'ok') {
+			cmd('make-cache').then(() => document.location.reload());
+		} else {
+			alert(r);
+		}
+	});
+}
+
 function updateNextFile() {
 	refreshLoadingBar();
 
