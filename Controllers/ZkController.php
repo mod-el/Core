@@ -247,23 +247,29 @@ class ZkController extends Controller
 				case 'modules':
 					switch ($this->model->getRequest(2)) {
 						case 'install':
-							$modules = $this->updater->downloadableModules();
+							try {
+								$modules = (string)$this->model->getInput('modules');
+								$modules = array_filter(explode(',', $modules));
+								if (count($modules) === 0)
+									throw new Exception('No module selected');
 
-							if ($this->model->getRequest(3) and isset($modules[$this->model->getRequest(3)])) {
-								$name = $this->model->getRequest(3);
-								if (!$this->model->moduleExists($name)) {
-									$this->updater->addModuleToCache($name);
+								foreach ($modules as $module) {
+									if ($this->model->moduleExists($module))
+										throw new Exception('Module ' . $module . ' already exists.');
+								}
+
+								foreach ($modules as $module) {
+									$this->updater->addModuleToCache($module);
 									if (!isset($_SESSION['update-queue']))
 										$_SESSION['update-queue'] = [];
-									$_SESSION['update-queue'][] = $name;
-
-									die('ok');
-								} else {
-									$this->model->viewOptions['errors'][] = 'Module already exists.';
+									$_SESSION['update-queue'][] = $module;
 								}
-							} else {
-								die('No module selected');
+
+								echo 'ok';
+							} catch (\Exception $e) {
+								echo getErr($e);
 							}
+							die();
 							break;
 						case 'config':
 						case 'init':
