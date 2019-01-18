@@ -178,17 +178,7 @@ class ZkController extends Controller
 					$this->model->viewOptions['template'] = 'local-module';
 					$this->injected['module'] = $modules[$this->model->getRequest(2)];
 
-					if (isset($_POST['makeNewFile'])) {
-						try {
-							$maker = new \Model\Core\Maker($this->model);
-							$data = $_POST;
-							unset($data['makeNewFile']);
-							$maker->make($this->model->getRequest(2), $_POST['makeNewFile'], $data);
-							$this->updater->updateModuleCache('Core');
-						} catch (\Exception $e) {
-							$this->model->viewOptions['errors'][] = getErr($e);
-						}
-					} elseif ($this->model->getRequest(3) === 'make' and $this->model->getRequest(4)) {
+					if ($this->model->getRequest(3) === 'make' and $this->model->getRequest(4)) {
 						$this->model->viewOptions['template'] = 'make-file';
 						$this->model->viewOptions['showLayout'] = false;
 					}
@@ -344,6 +334,21 @@ class ZkController extends Controller
 							}
 							die();
 							break;
+					}
+					break;
+				case 'local-modules':
+					$this->get();
+
+					if (isset($_POST['makeNewFile'])) {
+						try {
+							$maker = new \Model\Core\Maker($this->model);
+							$data = $_POST;
+							unset($data['makeNewFile']);
+							$maker->make($this->model->getRequest(2), $_POST['makeNewFile'], $data);
+							$this->updater->updateModuleCache('Core');
+						} catch (\Exception $e) {
+							$this->model->viewOptions['errors'][] = getErr($e);
+						}
 					}
 					break;
 			}
