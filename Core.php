@@ -926,19 +926,19 @@ class Core implements \JsonSerializable, ModuleInterface
 	public function error(string $gen, $options = '')
 	{
 		if (!is_array($options))
-			$options = array('mex' => $options);
-		$options = array_merge(array(
-			'code' => 'ModEl',
+			$options = ['mex' => $options];
+
+		$options = array_merge([
+			'code' => 0,
 			'mex' => '',
-			'details' => array(),
-		), $options);
+			'details' => [],
+		], $options);
 
 		$b = debug_backtrace();
 
 		$this->errorHandler('ModEl', $gen . ' - ' . $options['mex'], $b[0]['file'], $b[0]['line']); // Log
 
-		$e = new Exception($gen);
-		$e->_code = $options['code'];
+		$e = new Exception($gen, $options['code']);
 		$e->_mex = $options['mex'];
 		$e->_details = $options['details'];
 

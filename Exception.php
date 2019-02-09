@@ -3,13 +3,12 @@
 class Exception extends \Exception
 {
 	public $_mex = '';
-	public $_code = 'ModEl';
-	public $_details = array();
+	public $_details = [];
 
 	function show()
 	{
 		$message = parent::getMessage();
-		if (DEBUG_MODE) return $this->_code . ' - ' . $message . ($this->_mex ? '<br />' . $this->_mex : '');
+		if (DEBUG_MODE) return ($this->getCode() ? $this->getCode() . ' - ' : '') . $message . ($this->_mex ? '<br />' . $this->_mex : '');
 		else return $message;
 	}
 }
