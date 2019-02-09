@@ -134,6 +134,12 @@ class Config extends Module_Config
 						];
 					}
 				}
+
+				if (isset($moduleData['autoload'])) {
+					foreach ($moduleData['autoload'] as $namespace => $path) {
+						$classes = array_merge($classes, $this->buildClassesPathFromAutoload($namespace, $d . DIRECTORY_SEPARATOR . $path));
+					}
+				}
 			}
 
 			$vars_file = $d . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
@@ -242,6 +248,23 @@ $cache = ' . var_export($cache, true) . ';
 		$this->model->reloadCacheFile();
 
 		return true;
+	}
+
+	private function buildClassesPathFromAutoload(string $namespace, string $path): array
+	{
+		$classes = [];
+
+		$folders = glob($path . DIRECTORY_SEPARATOR . '*');
+		foreach ($folders as $f) {
+			$f_info = pathinfo($f);
+			if (is_dir($f)) {
+				$classes = array_merge($classes, $this->buildClassesPathFromAutoload($namespace . '\\' . $f_info['filename'], $f));
+			} else {
+				$classes[$namespace . '\\' . $f_info['filename']] = $f;
+			}
+		}
+
+		return $classes;
 	}
 
 	/**
