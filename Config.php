@@ -14,6 +14,9 @@ class Config extends Module_Config
 				'modules' => [],
 				'file-types' => [],
 				'cleanups' => [],
+				'zk-pages' => [],
+				'methods' => [],
+				'properties' => [],
 			];
 			return "<?php\n\$cache = " . var_export($arr, true) . ";\n";
 		});
