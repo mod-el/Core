@@ -151,7 +151,7 @@ Element.prototype.hasClass = function (name) {
 }
 
 Element.prototype.loading = function () {
-	this.innerHTML = '<img src="' + base_path + 'model/Output/files/loading.gif" alt="Loading..." class="loading-gif" />';
+	this.innerHTML = '<img src="' + PATHBASE + 'model/Output/files/loading.gif" alt="Loading..." class="loading-gif" />';
 	return this;
 }
 
@@ -204,7 +204,7 @@ function cmd(cmd, post) {
 		return false;
 	let ex = div.innerHTML;
 	div.loading();
-	return ajax(absolute_path + 'zk/' + cmd, {}, post).then(r => {
+	return ajax(PATH + 'zk/' + cmd, {}, post).then(r => {
 		div.innerHTML = ex;
 		return r;
 	});
@@ -305,7 +305,7 @@ function updateSelectedModules() {
 
 	updatingModules = updateList.map(module => module.name);
 
-	ajax(absolute_path + 'zk/modules/files-list', {
+	ajax(PATH + 'zk/modules/files-list', {
 		'modules': updatingModules.join(',')
 	}).then(list => {
 		if (typeof list !== 'object')
@@ -330,7 +330,7 @@ function removeModules() {
 	document.getElementById('header-right').innerHTML = 'Please wait...';
 	document.body.style.cursor = 'wait';
 
-	ajax(absolute_path + 'zk/modules/delete', {}, {'modules': selectedModules.join(',')}).then(r => {
+	ajax(PATH + 'zk/modules/delete', {}, {'modules': selectedModules.join(',')}).then(r => {
 		document.body.style.cursor = 'auto';
 		if (r === 'ok') {
 			cmd('make-cache').then(() => document.location.reload());
@@ -348,7 +348,7 @@ function updateNextFile() {
 
 		document.getElementById('update-action').innerHTML = 'Downloading ' + file;
 
-		ajax(absolute_path + 'zk/modules/update-file', {}, {
+		ajax(PATH + 'zk/modules/update-file', {}, {
 			'file': file,
 			'c_id': c_id
 		}).then(r => {
@@ -362,7 +362,7 @@ function updateNextFile() {
 	} else {
 		document.getElementById('update-action').innerHTML = 'Finalizing...';
 
-		ajax(absolute_path + 'zk/modules/finalize-update', {}, {
+		ajax(PATH + 'zk/modules/finalize-update', {}, {
 			'modules': updatingModules.join(','),
 			'c_id': c_id
 		}).then(r => {
@@ -411,7 +411,7 @@ function closeLightbox() {
 
 function lightboxNewModule() {
 	let lb = lightbox('');
-	lb.loading().ajax(absolute_path + 'zk/modules/install');
+	lb.loading().ajax(PATH + 'zk/modules/install');
 }
 
 function selectDownloadableModule(el) {
@@ -434,7 +434,7 @@ function installSelectedModules() {
 
 	document.getElementById('lightbox').loading();
 
-	ajax(absolute_path + 'zk/modules/install', {}, {
+	ajax(PATH + 'zk/modules/install', {}, {
 		'modules': modules.join(','),
 		'c_id': c_id
 	}).then(r => {
@@ -447,5 +447,5 @@ function installSelectedModules() {
 }
 
 function makeNewFile(module, type) {
-	return lightbox('').loading().ajax(absolute_path + 'zk/local-modules/' + module + '/make/' + type);
+	return lightbox('').loading().ajax(PATH + 'zk/local-modules/' + module + '/make/' + type);
 }
