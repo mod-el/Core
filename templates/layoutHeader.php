@@ -5,9 +5,9 @@
 <head>
 	<title>Model Framework Control Panel - <?= APP_NAME ?></title>
 	<script type="text/javascript">
-		var base_path = '<?=PATH?>';
-		var absolute_path = '<?=$this->model->prefix()?>';
-		var absolute_url = <?=json_encode($this->model->getRequest())?>;
+		var PATHBASE = '<?=PATH?>';
+		var PATH = '<?=$this->model->prefix()?>';
+		var REQUEST = <?=json_encode($this->model->getRequest())?>;
 	</script>
 	<link rel="stylesheet" href="<?= PATH ?>model/Core/files/style.css" type="text/css"/>
 	<script src="<?= PATH ?>model/Core/files/js.js" type="text/javascript"></script>
