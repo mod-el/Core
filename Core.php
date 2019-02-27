@@ -598,6 +598,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			 * If I have a returning value from the controller, I send it to the output stream as a json string
 			 * */
 			$this->trigger('Core', 'jsonResponse');
+			header('Content-Type: application/json');
 			echo json_encode($controllerReturn);
 		} elseif (!$this->isCLI()) {
 			/*
