@@ -6,6 +6,8 @@ class Updater
 	private $model;
 	/** @var array */
 	private $updating = [];
+	/** @var array */
+	private $moduleVarsCache = [];
 
 	/**
 	 * @param Core $model
@@ -143,6 +145,40 @@ class Updater
 	}
 
 	/**
+	 * Retrieves module internal vars and caches them
+	 *
+	 * @param string $name
+	 * @return array
+	 */
+	protected function getModuleInternalVars(string $name): array
+	{
+		if (!isset($this->moduleVarsCache[$name])) {
+			$folder_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data';
+			if (!is_dir($folder_path))
+				mkdir($folder_path, 0755, true);
+
+			$file_path = $folder_path . DIRECTORY_SEPARATOR . 'vars.php';
+			if (!file_exists($file_path)) {
+				file_put_contents($file_path, "<?php\n");
+				@chmod($file_path, 0755);
+			}
+
+			require($file_path);
+
+			if (!isset($vars)) {
+				$vars = [
+					'installed' => false,
+					'md5' => null,
+				];
+			}
+
+			$this->moduleVarsCache[$name] = $vars;
+		}
+
+		return $this->moduleVarsCache[$name];
+	}
+
+	/**
 	 * @param string $name
 	 * @param string $k
 	 * @param $v
@@ -150,27 +186,12 @@ class Updater
 	 */
 	protected function changeModuleInternalVar(string $name, string $k, $v): bool
 	{
-		$folder_path = $file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data';
-		if (!is_dir($folder_path))
-			mkdir($folder_path, 0755, true);
-
-		$file_path = $folder_path . DIRECTORY_SEPARATOR . 'vars.php';
-		if (!file_exists($file_path)) {
-			file_put_contents($file_path, "<?php\n");
-			@chmod($file_path, 0755);
-		}
-
-		require($file_path);
-
-		if (!isset($vars)) {
-			$vars = [
-				'installed' => false,
-				'md5' => null,
-			];
-		}
+		$vars = $this->getModuleInternalVars($name);
 
 		$vars[$k] = $v;
+		$this->moduleVarsCache[$name][$k] = $v;
 
+		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
 		return (bool)file_put_contents($file_path, "<?php\n\$vars = " . var_export($vars, true) . ";\n");
 	}
 
