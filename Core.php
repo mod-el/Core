@@ -266,9 +266,8 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function load(string $name, array $options = [], $idx = 0): ?ModuleInterface
 	{
-		if (isset($this->modules[$name][$idx])) {
+		if (isset($this->modules[$name][$idx]))
 			return $this->modules[$name][$idx];
-		}
 
 		$this->trigger('Core', 'loadModule', [
 			'module' => $name,
