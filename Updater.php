@@ -113,9 +113,11 @@ class Updater
 			try {
 				$configClass->makeCache();
 			} catch (\Exception $e) {
-
 			}
 		}
+
+		$coreConfigClass = $this->getConfigClassFor('Core');
+		$coreConfigClass->makeCache();
 
 		return true;
 	}
