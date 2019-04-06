@@ -36,6 +36,7 @@ class Core implements \JsonSerializable, ModuleInterface
 		],
 		'template-folder' => [],
 		'errors' => [],
+		'warnings' => [],
 		'messages' => [],
 	];
 	/** @var bool|array */
