@@ -131,8 +131,8 @@ class ZkController extends Controller
 									$toBeInitialized[] = $m;
 							} else {
 								// Load the config class only if the module is updated in respect of the Core (to avoid non-compatibility between classes)
-								if ($m->folder_name === 'Core')
-									$m->configClassCompatible = true;
+								$m->configClassCompatible = ($m->folder_name === 'Core');
+
 								if (!$m->configClassCompatible) {
 									foreach ($m->dependencies as $dependency => $dependencyVersion) {
 										if ($dependency === 'Core') {

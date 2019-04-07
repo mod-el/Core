@@ -33,7 +33,7 @@ class ReflectionModule
 	/** @var Module_Config */
 	private $configClass = null;
 	/** @var bool */
-	public $configClassCompatible = false;
+	public $configClassCompatible = true;
 
 	/** @var bool */
 	public $new_version = false;
