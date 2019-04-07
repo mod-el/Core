@@ -136,7 +136,7 @@ class ReflectionModule
 		foreach ($ff as $f) {
 			if (is_dir($f)) {
 				$f_name = substr($f, strlen($folder));
-				if (in_array($f_name, ['data', '.git', '.gitignore', 'tests'])) continue;
+				if (in_array($f_name, ['data', '.git', '.gitignore', 'README.md', 'tests'])) continue;
 				$sub_files = $this->getFiles($f . DIRECTORY_SEPARATOR);
 				foreach ($sub_files as $sf) {
 					$sf['path'] = $f_name . DIRECTORY_SEPARATOR . $sf['path'];
