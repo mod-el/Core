@@ -308,9 +308,11 @@ class Updater
 
 				$configClass = $module->getConfigClass();
 				if ($configClass) {
-					$postUpdate = $configClass->postUpdate($old_version, $new_version);
-					if (!$postUpdate)
-						return false;
+					if ($old_version !== '0.0.0') {
+						$postUpdate = $configClass->postUpdate($old_version, $new_version);
+						if (!$postUpdate)
+							return false;
+					}
 					$configClass->makeCache();
 				}
 			}
