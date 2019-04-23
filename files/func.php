@@ -30,7 +30,7 @@ function textCutOff(string $text, int $limit, array $options = []): string
 	$options = array_merge([
 		'other' => false,
 		'safe' => true,
-		'dots' => true
+		'dots' => true,
 	], $options);
 
 	$text = trim($text);
@@ -39,7 +39,7 @@ function textCutOff(string $text, int $limit, array $options = []): string
 		if ($options['other']) return '';
 		else return $text;
 	}
-	$breaks = array('.', ':', "\n", '!', '?', ' ');
+	$breaks = ['.', ':', "\n", '!', '?', ' '];
 	$lastBreak = false;
 	if ($options['safe']) for ($p = 0; $p < $limit; $p++) {
 		$c = $text{$p};
@@ -81,10 +81,11 @@ function makePrice(float $p, array $options = []): string
 	$options = array_merge([
 		'show_currency' => true,
 		'decimal_separator' => ',',
-		'thousands_separator' => '.'
+		'thousands_separator' => '.',
+		'decimals' => 2,
 	], $options);
 
-	$return = number_format($p, 2, $options['decimal_separator'], $options['thousands_separator']);
+	$return = number_format($p, $options['decimals'], $options['decimal_separator'], $options['thousands_separator']);
 	if ($options['show_currency']) $return .= '&euro;';
 	return $return;
 }
@@ -118,11 +119,11 @@ function rewriteUrlWords(array $names, bool $lower = true): string
 		if ($lower)
 			$name = mb_strtolower($name);
 		$name = str_replace('à', 'a', $name);
-		$name = str_replace(array('è', 'é'), 'e', $name);
+		$name = str_replace(['è', 'é'], 'e', $name);
 		$name = str_replace('ì', 'i', $name);
 		$name = str_replace('ò', 'o', $name);
 		$name = str_replace('ù', 'u', $name);
-		$name = str_replace(array("'", '.', ','), ' ', $name);
+		$name = str_replace(["'", '.', ','], ' ', $name);
 		$name = trim($name);
 		$name = preg_replace('/  */u', '-', $name);
 		$name = preg_replace('/[^a-zа-я0-9\p{Han}-]+/iu', '-', $name);
@@ -141,12 +142,13 @@ function rewriteUrlWords(array $names, bool $lower = true): string
  * @param mixed $v
  * @param bool $use_json
  * @param bool $return
- * @return bool|string
+ * @return void|string
  */
 function zkdump($v, bool $use_json = false, bool $return = false)
 {
 	if (!DEBUG_MODE and !$return)
-		return false;
+		return;
+
 	if ($return) ob_start();
 	echo '<pre>';
 	if ($use_json)
@@ -159,7 +161,7 @@ function zkdump($v, bool $use_json = false, bool $return = false)
 
 /**
  * @param bool $return
- * @return array
+ * @return void|array
  */
 function zkBacktrace(bool $return = false)
 {
