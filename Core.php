@@ -630,7 +630,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			$this->end();
 		} catch (\Exception $e) {
 			if ($e->getMessage() != 'cli-redirect') { // Special case, throws an Exception to get out of the main cycle and end this froncontroller, to handle fake-redirects in CLI
-				echo getErr($e);
+				echo getErr($e) . "\n\n\n";
 				if (DEBUG_MODE)
 					zkdump($e->getTrace(), true);
 			}
