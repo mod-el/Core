@@ -765,6 +765,65 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
+	 * @param string $k
+	 * @param string|null $type
+	 * @param array $options
+	 */
+	public function validateInput(string $k, ?string $type = null, array $options = [])
+	{
+		$options = array_merge([
+			'min' => null,
+			'max' => null,
+			'mandatory' => false,
+		], $options);
+
+		$v = $this->getInput($k);
+		if ($v === null) {
+			if ($options['mandatory'])
+				throw new \Exception('Invalid input "' . $k . '"');
+		} elseif ($type !== null) {
+			// Checking type
+			switch ($type) {
+				case 'string':
+					// Whatever value is ok
+					break;
+				case 'int':
+					if (!is_numeric($v))
+						throw new \Exception('Invalid input "' . $k . '"');
+					if (!filter_var($v, FILTER_VALIDATE_INT))
+						throw new \Exception('Invalid input "' . $k . '"');
+					break;
+				case 'float':
+				case 'numeric':
+					if (!is_numeric($v))
+						throw new \Exception('Invalid input "' . $k . '"');
+					break;
+				default:
+					throw new \Exception('Unknown input type "' . $type . '"');
+					break;
+			}
+
+			// Checking range or length
+			switch ($type) {
+				case 'string':
+					if ($options['min'] !== null and strlen($v) < $options['min'])
+						throw new \Exception('Invalid input length for "' . $k . '"');
+					if ($options['max'] !== null and strlen($v) > $options['max'])
+						throw new \Exception('Invalid input length for "' . $k . '"');
+					break;
+				case 'int':
+				case 'float':
+				case 'numeric':
+					if ($options['min'] !== null and $v < $options['min'])
+						throw new \Exception('Invalid input range for "' . $k . '"');
+					if ($options['max'] !== null and $v > $options['max'])
+						throw new \Exception('Invalid input range for "' . $k . '"');
+					break;
+			}
+		}
+	}
+
+	/**
 	 * Returns one or all the input variables.
 	 * ModEl framework can be called either via HTTP request (eg. via browser) or via CLI.
 	 * If $i is given, it returns that variable.
