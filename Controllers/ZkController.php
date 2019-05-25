@@ -18,6 +18,8 @@ class ZkController extends Controller
 
 	public function init()
 	{
+		$this->model->viewOptions['cache'] = false;
+
 		$this->model->viewOptions['template-module'] = 'Core';
 		$this->updater = new Updater($this->model);
 		if ($this->model->isLoaded('Log'))
@@ -29,8 +31,6 @@ class ZkController extends Controller
 		$qry_string = http_build_query($this->model->getInput(null, 'get'));
 		if ($qry_string)
 			$qry_string = '?' . $qry_string;
-
-		$this->model->viewOptions['cache'] = false;
 
 		switch ($this->model->getRequest(1)) {
 			case 'modules':
