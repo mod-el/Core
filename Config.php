@@ -373,6 +373,10 @@ $config = ' . var_export($config, true) . ';
 				'label' => 'License Key',
 				'default' => isset($config['license']) ? $config['license'] : '',
 			],
+			'404-controller' => [
+				'label' => 'Controller per 404',
+				'default' => 'Err404',
+			],
 		];
 	}
 }

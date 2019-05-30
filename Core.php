@@ -465,6 +465,10 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	private function exec()
 	{
+		// Retrieve config
+		$config = $this->retrieveConfig();
+		$notFoundController = $config['404-controller'] ?? 'Err404';
+
 		// Get the request
 		$request = $this->getRequest();
 
@@ -488,7 +492,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 			if ($match === null) {
 				$module = 'Core';
-				$controllerName = 'Err404';
+				$controllerName = $notFoundController;
 				$this->viewOptions['404-reason'] = 'No rule matched the request.';
 				break;
 			} else {
@@ -521,7 +525,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			if (!is_array($controllerData)) {
 				$this->viewOptions['404-reason'] = 'Module ' . $module . ' can\'t return a controller name.';
 				$module = 'Core';
-				$controllerName = 'Err404';
+				$controllerName = $notFoundController;
 				break;
 			}
 
@@ -542,7 +546,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			} else {
 				$this->viewOptions['404-reason'] = 'Module ' . $module . ' has not returned a controller name.';
 				$module = 'Core';
-				$controllerName = 'Err404';
+				$controllerName = $notFoundController;
 				break;
 			}
 
@@ -562,9 +566,11 @@ class Core implements \JsonSerializable, ModuleInterface
 		$controllerClassName = Autoloader::searchFile('Controller', $controllerName . 'Controller');
 
 		if (!$controllerClassName or !class_exists($controllerClassName)) {
+			if ($controllerName !== $notFoundController)
+				$this->viewOptions['404-reason'] = 'Controller class not found.';
+
 			$controllerName = 'Err404';
 			$controllerClassName = 'Model\\Core\\Controllers\\Err404Controller';
-			$this->viewOptions['404-reason'] = 'Controller class not found.';
 		}
 
 		$this->controllerName = $controllerName;
