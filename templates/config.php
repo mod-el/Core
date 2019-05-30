@@ -12,13 +12,16 @@
 </style>
 
 <form action="?" method="post">
-	<table style="width: 50%">
+	<table style="width: 100%">
 		<tr>
-			<td style="width: 50%">
+			<td style="width: 34%">
 				Repository<br/> <input type="text" name="repository" value="<?= entities($config['repository']) ?>"/>
 			</td>
-			<td style="width: 50%">
+			<td style="width: 33%">
 				License Key<br/> <input type="text" name="license" value="<?= entities($config['license']) ?>"/>
+			</td>
+			<td style="width: 33%">
+				404 controller<br/> <input type="text" name="404-controller" value="<?= entities($config['404-controller'] ?? 'Err404') ?>"/>
 			</td>
 		</tr>
 	</table>
