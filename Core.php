@@ -121,6 +121,17 @@ class Core implements \JsonSerializable, ModuleInterface
 		define('SESSION_ID', md5(PATH)); // TODO: here for backward compatibility, to be removed
 
 		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
+
+		if (!defined('HTTPS')) {
+			if ((!empty($_SERVER['HTTPS']) and $_SERVER['HTTPS'] !== 'off') or $_SERVER['SERVER_PORT'] == 443) {
+				define('HTTPS', 1);
+			} else {
+				define('HTTPS', 0);
+			}
+		}
+
+		if (!defined('BASE_HOST'))
+			define('BASE_HOST', (HTTPS ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']);
 	}
 
 	/**
