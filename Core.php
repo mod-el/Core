@@ -502,7 +502,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 			$moduleData = $this->moduleExists($module);
 			if (!$moduleData)
-				$this->model->error('Module ' . $module . ' does not exist');
+				$this->error('Module ' . $module . ' does not exist');
 
 			$this->leadingModule = $module;
 			$this->trigger('Core', 'leadingModuleFound', ['module' => $module]);
