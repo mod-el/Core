@@ -206,6 +206,9 @@ class ZkController extends Controller
 							$this->updater->updateModuleCache($mName);
 						}
 					}
+
+					// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
+					$this->updater->updateModuleCache('Core');
 				} catch (Exception $e) {
 					die(getErr($e));
 				}
