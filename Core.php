@@ -642,7 +642,8 @@ class Core implements \JsonSerializable, ModuleInterface
 	{
 		try {
 			$this->preInit();
-			$this->init();
+			if ($this->getRequest(0) !== 'zk')
+				$this->init();
 			$this->exec();
 			$this->end();
 		} catch (\Exception $e) {
