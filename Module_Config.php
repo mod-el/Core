@@ -310,4 +310,20 @@ $config = ' . var_export($data, true) . ';
 			}
 		}
 	}
+
+	/**
+	 * @param string $file
+	 * @param string $default
+	 */
+	protected function checkFile(string $file, string $default)
+	{
+		if (file_exists(INCLUDE_PATH . $file))
+			return;
+
+		$dir = pathinfo(INCLUDE_PATH . $file, PATHINFO_DIRNAME);
+		if (!is_dir($dir))
+			mkdir($dir, 0777, true);
+
+		file_put_contents(INCLUDE_PATH . $file, $default);
+	}
 }
