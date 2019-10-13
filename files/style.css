@@ -114,6 +114,12 @@ input:not([type=checkbox]):not([type=radio]), select {
 	float: right;
 }
 
+@media screen and (max-width: 1300px) {
+	#header-right {
+		margin-right: 105px;
+	}
+}
+
 .module-cont {
 	display: inline-block;
 	box-sizing: border-box;
@@ -230,3 +236,4 @@ input:not([type=checkbox]):not([type=radio]), select {
 .module-files > div > div:last-child {
 	padding: 10px;
 }
+
