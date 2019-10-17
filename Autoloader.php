@@ -91,10 +91,10 @@ class Autoloader
 	/**
 	 * @param string $type
 	 * @param string $name
-	 * @param string $module
-	 * @return string
+	 * @param string|null $module
+	 * @return string|null
 	 */
-	public static function searchFile(string $type, string $name, string $module = null)
+	public static function searchFile(string $type, string $name, ?string $module = null): ?string
 	{
 		if (isset(self::$fileTypes[$type])) {
 			if ($module !== null) {
@@ -105,6 +105,22 @@ class Autoloader
 					if (isset($files[$name]))
 						return $files[$name];
 				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @param string $type
+	 * @param string $name
+	 * @return string|null
+	 */
+	public static function getModuleForFile(string $type, string $name): ?string
+	{
+		if (isset(self::$fileTypes[$type])) {
+			foreach (self::$fileTypes[$type]['files'] as $module => $files) {
+				if (isset($files[$name]))
+					return $module;
 			}
 		}
 		return null;
