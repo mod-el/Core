@@ -310,19 +310,22 @@ class Core implements \JsonSerializable, ModuleInterface
 			$this->modules[$name][$idx] = null;
 		}
 
-		$head = $module['assets-position'] === 'head' ? true : false;
+		if ($this->moduleExists('Output')) {
+			$head = $module['assets-position'] === 'head' ? true : false;
 
-		foreach ($module['js'] as $js) {
-			$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : 'model/' . $name . '/' . $js . '?v=' . $module['version'], [
-				'custom' => false,
-				'head' => $head,
-			]);
-		}
-		foreach ($module['css'] as $css) {
-			$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : 'model/' . $name . '/' . $css . '?v=' . $module['version'], [
-				'custom' => false,
-				'head' => $head,
-			]);
+			foreach ($module['js'] as $js) {
+				$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : $js . '?v=' . $module['version'], [
+					'custom' => false,
+					'head' => $head,
+				]);
+			}
+
+			foreach ($module['css'] as $css) {
+				$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : $css . '?v=' . $module['version'], [
+					'custom' => false,
+					'head' => $head,
+				]);
+			}
 		}
 
 		return $this->modules[$name][$idx];
@@ -583,6 +586,9 @@ class Core implements \JsonSerializable, ModuleInterface
 			$controllerName = 'Err404';
 			$controllerClassName = 'Model\\Core\\Controllers\\Err404Controller';
 		}
+
+		$controllerModule = Autoloader::getModuleForFile('Controller', $controllerName . 'Controller');
+		$this->load($controllerModule);
 
 		$this->controllerName = $controllerName;
 		$this->controller = new $controllerClassName($this);

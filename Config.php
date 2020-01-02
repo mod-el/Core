@@ -104,10 +104,14 @@ class Config extends Module_Config
 					$modules[$d_info['filename']]['load'] = false;
 				if (isset($moduleData['version']))
 					$modules[$d_info['filename']]['version'] = $moduleData['version'];
-				if (isset($moduleData['js']))
-					$modules[$d_info['filename']]['js'] = $moduleData['js'];
-				if (isset($moduleData['css']))
-					$modules[$d_info['filename']]['css'] = $moduleData['css'];
+				if (isset($moduleData['js'])) {
+					foreach ($moduleData['js'] as $js)
+						$modules[$d_info['filename']]['js'][] = strtolower(substr($js, 0, 4)) == 'http' ? $js : 'model/' . $d_info['filename'] . '/' . $js;
+				}
+				if (isset($moduleData['css'])) {
+					foreach ($moduleData['css'] as $css)
+						$modules[$d_info['filename']]['css'][] = strtolower(substr($css, 0, 4)) == 'http' ? $css : 'model/' . $d_info['filename'] . '/' . $css;
+				}
 				if (isset($moduleData['assets-position']))
 					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
 				if (isset($moduleData['dependencies']) and is_array($moduleData['dependencies']))
@@ -140,6 +144,18 @@ class Config extends Module_Config
 						$classes = array_merge($classes, $this->buildClassesPathFromAutoload($namespace, $d . DIRECTORY_SEPARATOR . $path));
 					}
 				}
+			}
+
+			if (is_dir($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css')) {
+				$cssFiles = glob($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . '*');
+				foreach ($cssFiles as $css)
+					$modules[$d_info['filename']]['css'][] = substr($css, strlen(INCLUDE_PATH));
+			}
+
+			if (is_dir($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js')) {
+				$jsFiles = glob($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . '*');
+				foreach ($jsFiles as $js)
+					$modules[$d_info['filename']]['js'][] = substr($js, strlen(INCLUDE_PATH));
 			}
 
 			$vars_file = $d . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
