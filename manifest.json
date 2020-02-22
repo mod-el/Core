@@ -1,13 +1,18 @@
 {
 	"name": "Core",
 	"description": "ModEl Framework",
-	"version": "2.9.0",
+	"version": "2.9.1",
 	"dependencies": {},
 	"file-types": {
 		"Controller": {
 			"folder": "Controllers",
 			"class": true,
-			"suffix": "Controller"
+			"params": {
+				"name": {
+					"suffix": "Controller",
+					"notes": "\"Controller\" suffix will be added automatically"
+				}
+			}
 		}
 	}
 }
