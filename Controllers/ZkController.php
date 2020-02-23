@@ -178,9 +178,56 @@ class ZkController extends Controller
 					$this->model->viewOptions['template'] = 'local-module';
 					$this->injected['module'] = $modules[$this->model->getRequest(2)];
 
-					if ($this->model->getRequest(3) === 'make' and $this->model->getRequest(4)) {
-						$this->model->viewOptions['template'] = 'make-file';
-						$this->model->viewOptions['showLayout'] = false;
+					switch ($this->model->getRequest(3)) {
+						case 'make':
+							if (!$this->model->getRequest(4))
+								die('Missing data');
+							$this->model->viewOptions['template'] = 'make-file';
+							$this->model->viewOptions['showLayout'] = false;
+							break;
+						case 'action':
+							if (!$this->model->getRequest(4) or !$this->model->getRequest(5) or !$this->model->getRequest(6))
+								die('Missing data');
+
+							$type = $this->model->getRequest(4);
+							$fileName = $this->model->getRequest(5);
+							$actionName = $this->model->getRequest(6);
+
+							$maker = new \Model\Core\Maker($this->model);
+							$fileTypeData = $maker->getFileTypeData($type);
+
+							if (!isset($fileTypeData['actions'][$actionName]))
+								die('Action does not exist');
+
+							$action = $fileTypeData['actions'][$actionName];
+
+							$this->injected['type'] = $type;
+							$this->injected['fileName'] = $fileName;
+							$this->injected['actionName'] = $actionName;
+							$this->injected['action'] = $action;
+
+							if (count($action['params'] ?? []) > 0 and count($_POST) < count($action['params'])) {
+								$this->model->viewOptions['template'] = 'action-on-file-form';
+								$this->model->viewOptions['showLayout'] = false;
+							} else {
+								$params = [];
+								foreach (($action['params'] ?? []) as $paramName => $paramOptions) {
+									if (!isset($_POST[$paramName]))
+										die('Missing data');
+									$params[$paramName] = $_POST[$paramName];
+								}
+
+								$reflectionModule = new ReflectionModule('Db', $this->model);
+								$moduleConfig = $reflectionModule->getConfigClass();
+								$obj = $moduleConfig->getFileInstance($type, $fileName);
+
+								$results = $obj->{$action['method']}($params);
+
+								$this->injected['results'] = $results;
+								$this->model->viewOptions['template'] = 'action-on-file';
+								$this->model->viewOptions['showLayout'] = false;
+							}
+							break;
 					}
 				} else {
 					$this->model->viewOptions['template'] = 'local-modules';

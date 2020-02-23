@@ -132,7 +132,7 @@ class Maker
 	 * @param string $type
 	 * @return array
 	 */
-	private function getFileTypeData(string $type): array
+	public function getFileTypeData(string $type): array
 	{
 		if (!isset(Autoloader::$fileTypes[$type]))
 			$this->model->error('File type ' . $type . ' does not exist');

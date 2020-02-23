@@ -9,8 +9,9 @@
 		var PATH = '<?=$this->model->prefix()?>';
 		var REQUEST = <?=json_encode($this->model->getRequest())?>;
 	</script>
-	<link rel="stylesheet" href="<?= PATH ?>model/Core/files/style.css" type="text/css"/>
-	<script src="<?= PATH ?>model/Core/files/js.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="<?= PATH ?>model/Core/files/style.css?v=1" type="text/css"/>
+	<script src="<?= PATH ?>model/Core/files/js.js?v=1" type="text/javascript"></script>
+	<script src="https://kit.fontawesome.com/b635b5b4c3.js" defer crossorigin="anonymous"></script>
 </head>
 
 <body>
