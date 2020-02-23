@@ -4,6 +4,8 @@
 	<?php
 	$filesTot = $module->getFilesByType();
 	foreach ($filesTot as $type => $files) {
+		$maker = new \Model\Core\Maker($this->model);
+		$fileTypeData = $maker->getFileTypeData($type);
 		?>
 		<div class="module-files">
 			<div>
@@ -12,7 +14,14 @@
 					<?php
 					foreach ($files as $f) {
 						?>
-						<div><?= entities($f) ?></div>
+						<div>
+							<?php
+							echo entities($f);
+							foreach (($fileTypeData['actions'] ?? []) as $actionName => $actionOptions) {
+								echo ' <a href="#" onclick="performActionOnFile(\'' . entities($this->model->getRequest(2)) . '\', \'' . entities($type) . '\', \'' . entities($f) . '\', \'' . $actionName . '\'); return false" title="' . entities($actionName) . '"><i class="' . $actionOptions['fa-icon'] . '"></i></a>';
+							}
+							?>
+						</div>
 						<?php
 					}
 					?>

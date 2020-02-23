@@ -19,7 +19,7 @@ $maker = new \Model\Core\Maker($this->model);
 					<tr>
 						<td style="padding-right: 10px"><?= entities($pOptions['label']) ?></td>
 						<td><input type="text" name="<?= $p ?>"/></td>
-						<td><i><?= entities($pOptions['notes']) ?></i></td>
+						<td><i><?= entities($pOptions['notes'] ?? '') ?></i></td>
 					</tr>
 					<?php
 				}

@@ -449,3 +449,13 @@ function installSelectedModules() {
 function makeNewFile(module, type) {
 	return lightbox('').loading().ajax(PATH + 'zk/local-modules/' + module + '/make/' + type);
 }
+
+function performActionOnFile(module, type, file, action, form = null, params = null) {
+	let post = {};
+	if (form && params) {
+		params.forEach(p => {
+			post[p] = form[p].value;
+		});
+	}
+	return lightbox('').loading().ajax(PATH + 'zk/local-modules/' + module + '/action/' + type + '/' + file + '/' + action, {}, post);
+}

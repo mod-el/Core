@@ -326,4 +326,14 @@ $config = ' . var_export($data, true) . ';
 
 		file_put_contents(INCLUDE_PATH . $file, $default);
 	}
+
+	/**
+	 * @param string $type
+	 * @param string $file
+	 * @return object|null
+	 */
+	public function getFileInstance(string $type, string $file): ?object
+	{
+		return null;
+	}
 }
