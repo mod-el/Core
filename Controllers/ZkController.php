@@ -349,15 +349,18 @@ class ZkController extends Controller
 							die();
 							break;
 						case 'finalize-update':
-							$modules = $this->model->getInput('modules');
-							if (!$modules)
-								die('Missing data');
-
-							$modules = explode(',', $modules);
-							if ($this->updater->finalizeUpdate($modules, $_SESSION['delete-files']))
-								echo 'ok';
-							else
-								echo 'Error while finalizing the update, you might need to update manually.';
+							try {
+								$modules = $this->model->getInput('modules');
+								if (!$modules)
+									die('Missing data');
+								$modules = explode(',', $modules);
+								if ($this->updater->finalizeUpdate($modules, $_SESSION['delete-files']))
+									echo 'ok';
+								else
+									echo 'Generic error while finalizing';
+							} catch (\Exception $e) {
+								echo "Error while finalizing the update, you might need to update manually.\n" . getErr($e);
+							}
 							die();
 							break;
 						case 'delete':
