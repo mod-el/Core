@@ -93,7 +93,7 @@ class Module_Config
 	 */
 	public function getTemplate(string $type): ?string
 	{
-		return null;
+		return $type;
 	}
 
 	/**
