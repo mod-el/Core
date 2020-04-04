@@ -60,7 +60,7 @@ class ZkController extends Controller
 							$this->model->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest(2));
 
 							if ($this->model->viewOptions['template'] === null)
-								die('Can\'t find init template for the module');
+								die('Can\'t find ' . $this->model->getRequest(2) . ' template for the module');
 
 							$config = $configClass->retrieveConfig();
 							$this->injected['configClass'] = $configClass;
