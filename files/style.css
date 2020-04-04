@@ -18,6 +18,15 @@ body {
 	font-weight: bold;
 }
 
+.orange-message {
+	padding: 10px;
+	background: #ffdb5b;
+	border: solid #88611b 1px;
+	color: #000;
+	margin: 15px auto;
+	font-weight: bold;
+}
+
 .green-message {
 	padding: 10px;
 	background: #9F9;
