@@ -157,6 +157,10 @@ class ZkController extends Controller
 							}
 						}
 
+						$priorities = [];
+						foreach ($modules as $moduleName => $m)
+							$priorities[$moduleName] = count($priorities);
+
 						uasort($modules, function ($a, $b) {
 							return $a->folder_name <=> $b->folder_name;
 						});
