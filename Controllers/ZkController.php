@@ -85,10 +85,7 @@ class ZkController extends Controller
 					case null:
 						$modules = $this->updater->getModules(true);
 
-						$priorities = $this->updater->getModulesPriority($modules);
-						uasort($modules, function ($a, $b) use ($priorities) {
-							return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
-						});
+						$modules = $this->updater->topSortModules($modules);
 
 						// Check that all dependencies are satisfied, and check if some module still has to be initialized
 						$toBeInitialized = [];
@@ -238,20 +235,11 @@ class ZkController extends Controller
 				try {
 					$modules = $this->updater->getModules();
 
-					$priorities = $this->updater->getModulesPriority($modules);
-
-					uasort($modules, function ($a, $b) use ($priorities) {
-						return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
-					});
-
-					$this->updater->updateModuleCache('Core');
+					$modules = $this->updater->topSortModules($modules);
 
 					foreach ($modules as $mName => $m) {
-						if ($mName === 'Core')
-							continue;
-						if ($m->hasConfigClass()) {
+						if ($m->hasConfigClass())
 							$this->updater->updateModuleCache($mName);
-						}
 					}
 
 					// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
