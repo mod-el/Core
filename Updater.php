@@ -1,5 +1,7 @@
 <?php namespace Model\Core;
 
+use MJS\TopSort\Implementations\StringSort;
+
 class Updater
 {
 	/** @var Core */
@@ -412,10 +414,7 @@ class Updater
 		if (count($modules) === 0)
 			return;
 
-		$priorities = $this->getModulesPriority($modules);
-		usort($modules, function ($a, $b) use ($priorities) {
-			return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
-		});
+		$modules = $this->topSortModules($modules);
 
 		$modulesNames = array_map(function ($module) {
 			return $module->folder_name;
@@ -634,41 +633,27 @@ class Updater
 
 	/**
 	 * @param ReflectionModule[] $modules
-	 * @return array
+	 * @return ReflectionModule[]
 	 */
-	public function getModulesPriority(array $modules): array
+	public function topSortModules(array $modules): array
 	{
-		$priorities = [
-			'Core' => 0,
-		];
-		$c = 0;
-		while (count($priorities) < count($modules)) {
-			foreach ($modules as $m) {
-				if (isset($priorities[$m->folder_name]))
-					continue;
+		$sorter = new StringSort;
 
-				$allSet = true;
-				$score = 0;
+		foreach ($modules as $module) {
+			$dependencies = array_keys($module->dependencies);
+			if ($module->folder_name !== 'Core' and !in_array('Core', $dependencies)) // Every module depends upon the Core
+				$dependencies[] = 'Core';
 
-				foreach ($m->dependencies as $dep => $version) {
-					if (isset($priorities[$dep])) {
-						$score = max($score, $priorities[$dep]);
-					} elseif (isset($modules[$dep])) {
-						$allSet = false;
-						break;
-					}
-				}
-
-				if ($allSet)
-					$priorities[$m->folder_name] = $score + 1;
-			}
-
-			$c++;
-			if ($c === 1000)
-				$this->model->error('Infinite loop, maybe one of the modules has broken dependencies.');
+			$sorter->add($module->folder_name, $dependencies);
 		}
 
-		return $priorities;
+		$sorted = $sorter->sort();
+
+		$sortedModules = [];
+		foreach ($sorted as $moduleName)
+			$sortedModules[$moduleName] = $modules[$moduleName];
+
+		return $sortedModules;
 	}
 
 	/**
