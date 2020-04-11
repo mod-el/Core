@@ -310,7 +310,7 @@ class Updater
 
 				$configClass = $module->getConfigClass();
 				if ($configClass) {
-					if ($old_version !== '0.0.0') {
+					if ($old_version and $old_version !== '0.0.0') {
 						$postUpdate = $configClass->postUpdate($old_version, $new_version);
 						if (!$postUpdate)
 							return false;
