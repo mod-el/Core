@@ -603,11 +603,11 @@ class Updater
 	 */
 	private function internalUpdateCache(string $module): array
 	{
-		if (in_array($module, $this->updating)) {
+		if (in_array($module, $this->updating))
 			$this->model->error('Cache update loop');
-		} else {
-			$this->updating[] = $module;
-		}
+
+		$this->updating[] = $module;
+
 		$updated = [];
 		$configClass = $this->getConfigClassFor($module);
 		if ($configClass) {
@@ -618,8 +618,6 @@ class Updater
 				// This is because the modules will be updated by the next function call in the controller anyway, so there's no need to stop the whole process
 				try {
 					$sub_updated = $this->internalUpdateCache($dep);
-					if (!is_array($sub_updated))
-						return null;
 					$updated = array_merge($updated, $sub_updated);
 				} catch (Exception $e) {
 				}
