@@ -644,6 +644,10 @@ class Updater
 			if ($module->folder_name !== 'Core' and !in_array('Core', $dependencies)) // Every module depends upon the Core
 				$dependencies[] = 'Core';
 
+			$dependencies = array_filter($dependencies, function ($module) {
+				return $this->model->moduleExists($module);
+			});
+
 			$sorter->add($module->folder_name, $dependencies);
 		}
 
