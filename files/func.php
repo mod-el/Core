@@ -41,15 +41,17 @@ function textCutOff(string $text, int $limit, array $options = []): string
 	}
 	$breaks = ['.', ':', "\n", '!', '?', ' '];
 	$lastBreak = false;
-	if ($options['safe']) for ($p = 0; $p < $limit; $p++) {
-		$c = $text{$p};
-		if (in_array($c, $breaks)) $lastBreak = $p;
+	if ($options['safe']) {
+		for ($p = 0; $p < $limit; $p++) {
+			$c = $text[$p];
+			if (in_array($c, $breaks)) $lastBreak = $p;
+		}
 	}
 	if ($options['safe'] and !$lastBreak) {
 		$p = $limit;
 		$c = true;
 		while (!$lastBreak and $c) {
-			if (strlen($text) > $p) $c = $text{$p};
+			if (strlen($text) > $p) $c = $text[$p];
 			else $c = false;
 			if (in_array($c, $breaks)) $lastBreak = $p;
 			$p++;
