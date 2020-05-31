@@ -17,7 +17,7 @@
 <body>
 <div id="tools">
 	<p><b>Tools</b></p>
-	<div id="cmd-make-cache"><a href="#" onclick="makeCache(); return false">Update cache</a>
+	<div><a href="#" onclick="makeCache(); return false">Update cache</a>
 	</div>
 	<div id="cmd-empty-session">
 		<a href="#" onclick="cmd('empty-session').then(r => alert(r)); return false">Empty session</a></div>

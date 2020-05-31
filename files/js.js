@@ -333,7 +333,7 @@ function removeModules() {
 	ajax(PATH + 'zk/modules/delete', {}, {'modules': selectedModules.join(',')}).then(r => {
 		document.body.style.cursor = 'auto';
 		if (r === 'ok') {
-			cmd('make-cache').then(() => document.location.reload());
+			makeCache().then(() => document.location.reload());
 		} else {
 			alert(r);
 		}
@@ -367,7 +367,7 @@ function updateNextFile() {
 			'c_id': c_id
 		}).then(r => {
 			if (r === 'ok') {
-				cmd('make-cache').then(() => document.location.reload());
+				makeCache().then(() => document.location.reload());
 			} else {
 				alert(r);
 				document.location.reload();
@@ -461,24 +461,33 @@ function performActionOnFile(module, type, file, action, form = null, params = n
 }
 
 function makeCache() {
-	return lightbox('').loading().ajax(PATH + 'zk/make-cache').then(nextCache);
+	return new Promise((resolve, reject) => {
+		lightbox('').loading().ajax(PATH + 'zk/make-cache').then(() => {
+			return nextCache(resolve, reject);
+		}).catch(error => {
+			reject(error);
+		});
+	}).catch(error => {
+		alert(error);
+	});
 }
 
-function nextCache() {
+function nextCache(resolve, reject) {
 	let div = document.querySelector('[data-cachemodule][data-executed="0"]');
 	if (div) {
 		div.loading();
-		ajax(PATH + 'zk/make-cache/' + div.dataset.cachemodule).then(result => {
+		return ajax(PATH + 'zk/make-cache/' + div.dataset.cachemodule).then(result => {
 			if (result === 'ok') {
 				div.innerHTML = '<span style="color: #0C0">OK</span>';
 				div.dataset.executed = '1';
-				nextCache();
+				nextCache(resolve, reject);
 			} else {
 				div.innerHTML = '';
-				alert(result);
+				reject(result);
 			}
 		});
 	} else {
 		closeLightbox();
+		resolve();
 	}
 }
