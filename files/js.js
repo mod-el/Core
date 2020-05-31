@@ -459,3 +459,26 @@ function performActionOnFile(module, type, file, action, form = null, params = n
 	}
 	return lightbox('').loading().ajax(PATH + 'zk/local-modules/' + module + '/action/' + type + '/' + file + '/' + action, {}, post);
 }
+
+function makeCache() {
+	return lightbox('').loading().ajax(PATH + 'zk/make-cache').then(nextCache);
+}
+
+function nextCache() {
+	let div = document.querySelector('[data-cachemodule][data-executed="0"]');
+	if (div) {
+		div.loading();
+		ajax(PATH + 'zk/make-cache/' + div.dataset.cachemodule).then(result => {
+			if (result === 'ok') {
+				div.innerHTML = '<span style="color: #0C0">OK</span>';
+				div.dataset.executed = '1';
+				nextCache();
+			} else {
+				div.innerHTML = '';
+				alert(result);
+			}
+		});
+	} else {
+		closeLightbox();
+	}
+}

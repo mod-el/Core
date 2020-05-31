@@ -236,23 +236,30 @@ class ZkController extends Controller
 				}
 				break;
 			case 'make-cache':
-				try {
-					$modules = $this->updater->getModules();
-
-					$modules = $this->updater->topSortModules($modules);
-
-					foreach ($modules as $mName => $m) {
-						if ($m->hasConfigClass())
-							$this->updater->updateModuleCache($mName);
+				if ($this->model->getRequest(2)) {
+					try {
+						$this->updater->updateModuleCache($this->model->getRequest(2));
+						echo 'ok';
+					} catch (Exception $e) {
+						echo getErr($e);
 					}
+					die();
+				} else {
+					$modules = $this->updater->getModules();
+					$modules = $this->updater->topSortModules($modules);
+					foreach ($modules as $mName => $m) {
+						if (!$m->hasConfigClass())
+							unset($modules[$mName]);
+					}
+					$modules = array_keys($modules);
 
 					// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
-					$this->updater->updateModuleCache('Core');
-				} catch (Exception $e) {
-					die(getErr($e));
-				}
+					$modules[] = 'Core';
 
-				die("Cache succesfully updated.\n");
+					$this->model->viewOptions['showLayout'] = false;
+					$this->model->viewOptions['template'] = 'make-cache';
+					$this->injected['modules'] = $modules;
+				}
 				break;
 			case 'empty-session':
 				$_SESSION = [];
