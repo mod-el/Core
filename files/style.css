@@ -77,14 +77,14 @@ input:not([type=checkbox]):not([type=radio]), select {
 }
 
 #main {
-	width: 1160px;
-	margin: auto;
-	margin-top: 15px;
+	width: 100%;
+	max-width: 1160px;
+	margin: 15px auto auto;
 	background: rgba(255, 255, 255, 0.95);
 	border: solid #CCC 1px;
 	border-radius: 15px;
 	padding: 20px;
-	overflow: hidden;
+	overflow: auto;
 }
 
 .boxino {

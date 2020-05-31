@@ -145,7 +145,7 @@ $config = ' . var_export($data, true) . ';
 
 		if (file_exists(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $classname . DIRECTORY_SEPARATOR . 'config.php')) {
 			require(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $classname . DIRECTORY_SEPARATOR . 'config.php');
-			return $config;
+			return $config ?? [];
 		} else {
 			return [];
 		}
