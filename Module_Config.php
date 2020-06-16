@@ -93,7 +93,7 @@ class Module_Config
 	 */
 	public function getTemplate(string $type): ?string
 	{
-		return null;
+		return $type;
 	}
 
 	/**
@@ -145,7 +145,7 @@ $config = ' . var_export($data, true) . ';
 
 		if (file_exists(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $classname . DIRECTORY_SEPARATOR . 'config.php')) {
 			require(INCLUDE_PATH . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $classname . DIRECTORY_SEPARATOR . 'config.php');
-			return $config;
+			return $config ?? [];
 		} else {
 			return [];
 		}
@@ -325,5 +325,15 @@ $config = ' . var_export($data, true) . ';
 			mkdir($dir, 0777, true);
 
 		file_put_contents(INCLUDE_PATH . $file, $default);
+	}
+
+	/**
+	 * @param string $type
+	 * @param string $file
+	 * @return object|null
+	 */
+	public function getFileInstance(string $type, string $file): ?object
+	{
+		return null;
 	}
 }

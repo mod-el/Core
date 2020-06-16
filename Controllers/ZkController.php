@@ -60,7 +60,7 @@ class ZkController extends Controller
 							$this->model->viewOptions['template'] = $configClass->getTemplate($this->model->getRequest(2));
 
 							if ($this->model->viewOptions['template'] === null)
-								die('Can\'t find init template for the module');
+								die('Can\'t find ' . $this->model->getRequest(2) . ' template for the module');
 
 							$config = $configClass->retrieveConfig();
 							$this->injected['configClass'] = $configClass;
@@ -85,10 +85,7 @@ class ZkController extends Controller
 					case null:
 						$modules = $this->updater->getModules(true);
 
-						$priorities = $this->updater->getModulesPriority($modules);
-						uasort($modules, function ($a, $b) use ($priorities) {
-							return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
-						});
+						$modules = $this->updater->topSortModules($modules);
 
 						// Check that all dependencies are satisfied, and check if some module still has to be initialized
 						$toBeInitialized = [];
@@ -160,6 +157,10 @@ class ZkController extends Controller
 							}
 						}
 
+						$priorities = [];
+						foreach ($modules as $moduleName => $m)
+							$priorities[$moduleName] = count($priorities);
+
 						uasort($modules, function ($a, $b) {
 							return $a->folder_name <=> $b->folder_name;
 						});
@@ -178,9 +179,56 @@ class ZkController extends Controller
 					$this->model->viewOptions['template'] = 'local-module';
 					$this->injected['module'] = $modules[$this->model->getRequest(2)];
 
-					if ($this->model->getRequest(3) === 'make' and $this->model->getRequest(4)) {
-						$this->model->viewOptions['template'] = 'make-file';
-						$this->model->viewOptions['showLayout'] = false;
+					switch ($this->model->getRequest(3)) {
+						case 'make':
+							if (!$this->model->getRequest(4))
+								die('Missing data');
+							$this->model->viewOptions['template'] = 'make-file';
+							$this->model->viewOptions['showLayout'] = false;
+							break;
+						case 'action':
+							if (!$this->model->getRequest(4) or !$this->model->getRequest(5) or !$this->model->getRequest(6))
+								die('Missing data');
+
+							$type = $this->model->getRequest(4);
+							$fileName = $this->model->getRequest(5);
+							$actionName = $this->model->getRequest(6);
+
+							$maker = new \Model\Core\Maker($this->model);
+							$fileTypeData = $maker->getFileTypeData($type);
+
+							if (!isset($fileTypeData['actions'][$actionName]))
+								die('Action does not exist');
+
+							$action = $fileTypeData['actions'][$actionName];
+
+							$this->injected['type'] = $type;
+							$this->injected['fileName'] = $fileName;
+							$this->injected['actionName'] = $actionName;
+							$this->injected['action'] = $action;
+
+							if (count($action['params'] ?? []) > 0 and count($_POST) < count($action['params'])) {
+								$this->model->viewOptions['template'] = 'action-on-file-form';
+								$this->model->viewOptions['showLayout'] = false;
+							} else {
+								$params = [];
+								foreach (($action['params'] ?? []) as $paramName => $paramOptions) {
+									if (!isset($_POST[$paramName]))
+										die('Missing data');
+									$params[$paramName] = $_POST[$paramName];
+								}
+
+								$reflectionModule = new ReflectionModule('Db', $this->model);
+								$moduleConfig = $reflectionModule->getConfigClass();
+								$obj = $moduleConfig->getFileInstance($type, $fileName);
+
+								$results = $obj->{$action['method']}($params);
+
+								$this->injected['results'] = $results;
+								$this->model->viewOptions['template'] = 'action-on-file';
+								$this->model->viewOptions['showLayout'] = false;
+							}
+							break;
 					}
 				} else {
 					$this->model->viewOptions['template'] = 'local-modules';
@@ -188,32 +236,30 @@ class ZkController extends Controller
 				}
 				break;
 			case 'make-cache':
-				try {
-					$modules = $this->updater->getModules();
-
-					$priorities = $this->updater->getModulesPriority($modules);
-
-					uasort($modules, function ($a, $b) use ($priorities) {
-						return $priorities[$a->folder_name] <=> $priorities[$b->folder_name];
-					});
-
-					$this->updater->updateModuleCache('Core');
-
-					foreach ($modules as $mName => $m) {
-						if ($mName === 'Core')
-							continue;
-						if ($m->hasConfigClass()) {
-							$this->updater->updateModuleCache($mName);
-						}
+				if ($this->model->getRequest(2)) {
+					try {
+						$this->updater->updateModuleCache($this->model->getRequest(2));
+						echo 'ok';
+					} catch (Exception $e) {
+						echo getErr($e);
 					}
+					die();
+				} else {
+					$modules = $this->updater->getModules();
+					$modules = $this->updater->topSortModules($modules);
+					foreach ($modules as $mName => $m) {
+						if (!$m->hasConfigClass())
+							unset($modules[$mName]);
+					}
+					$modules = array_keys($modules);
 
 					// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
-					$this->updater->updateModuleCache('Core');
-				} catch (Exception $e) {
-					die(getErr($e));
-				}
+					$modules[] = 'Core';
 
-				die("Cache succesfully updated.\n");
+					$this->model->viewOptions['showLayout'] = false;
+					$this->model->viewOptions['template'] = 'make-cache';
+					$this->injected['modules'] = $modules;
+				}
 				break;
 			case 'empty-session':
 				$_SESSION = [];
@@ -302,15 +348,18 @@ class ZkController extends Controller
 							die();
 							break;
 						case 'finalize-update':
-							$modules = $this->model->getInput('modules');
-							if (!$modules)
-								die('Missing data');
-
-							$modules = explode(',', $modules);
-							if ($this->updater->finalizeUpdate($modules, $_SESSION['delete-files']))
-								echo 'ok';
-							else
-								echo 'Error while finalizing the update, you might need to update manually.';
+							try {
+								$modules = $this->model->getInput('modules');
+								if (!$modules)
+									die('Missing data');
+								$modules = explode(',', $modules);
+								if ($this->updater->finalizeUpdate($modules, $_SESSION['delete-files']))
+									echo 'ok';
+								else
+									echo 'Generic error while finalizing';
+							} catch (\Exception $e) {
+								echo "Error while finalizing the update, you might need to update manually.\n" . getErr($e);
+							}
 							die();
 							break;
 						case 'delete':

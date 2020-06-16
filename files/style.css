@@ -18,6 +18,15 @@ body {
 	font-weight: bold;
 }
 
+.orange-message {
+	padding: 10px;
+	background: #ffdb5b;
+	border: solid #88611b 1px;
+	color: #000;
+	margin: 15px auto;
+	font-weight: bold;
+}
+
 .green-message {
 	padding: 10px;
 	background: #9F9;
@@ -68,14 +77,14 @@ input:not([type=checkbox]):not([type=radio]), select {
 }
 
 #main {
-	width: 1160px;
-	margin: auto;
-	margin-top: 15px;
+	width: 100%;
+	max-width: 1160px;
+	margin: 15px auto auto;
 	background: rgba(255, 255, 255, 0.95);
 	border: solid #CCC 1px;
 	border-radius: 15px;
 	padding: 20px;
-	overflow: hidden;
+	overflow: auto;
 }
 
 .boxino {

@@ -19,17 +19,29 @@ class Maker
 	 */
 	public function getParamsList(string $type): array
 	{
+		$fileTypeData = $this->getFileTypeData($type);
+
 		$raw = $this->getFileTemplate($type);
 		preg_match_all('/\{([a-zA-Z0-9_-]+)\}/', $raw, $matches);
 
-		$params = [];
-		foreach ($matches[1] as $m) {
-			if ($m !== 'namespace')
-				$params[] = $m;
-		}
+		$params = $matches[1];
 		if (!in_array('name', $params))
 			array_unshift($params, 'name');
-		return $params;
+
+		$fullParamsData = [];
+		foreach ($params as $param) {
+			$fullParamsData[$param] = [
+				'label' => ucwords(str_replace(['-', '_'], ' ', $param)),
+				'notes' => '',
+			];
+
+			if (isset($fileTypeData['params'][$param]['label']))
+				$fullParamsData[$param]['label'] = $fileTypeData['params'][$param]['label'];
+			if (isset($fileTypeData['params'][$param]['notes']))
+				$fullParamsData[$param]['notes'] = $fileTypeData['params'][$param]['notes'];
+		}
+
+		return $fullParamsData;
 	}
 
 	/**
@@ -45,15 +57,23 @@ class Maker
 		$params = $this->getParamsList($type);
 		$raw = $this->getFileTemplate($type);
 
-		$params[] = 'namespace';
 		$data['namespace'] = 'Model\\' . $module . '\\' . $fileTypeData['folder'];
 
 		if (!isset($data['name']))
-			$this->model->error('Parameter is mandatory');
-		if (isset($fileTypeData['suffix']))
-			$data['name'] .= $fileTypeData['suffix'];
+			$this->model->error('"name" parameter is mandatory');
 
-		foreach ($params as $p) {
+		// Params can be customized in runtime while creating them (with suffix and/or prefix), those settings are defined in manifest.json of the appropriate module
+		foreach (($fileTypeData['params'] ?? []) as $param => $paramOptions) {
+			if (!isset($data[$param]))
+				continue;
+
+			if (isset($paramOptions['prefix']))
+				$data[$param] = $this->parsePattern($paramOptions['prefix']) . $data[$param];
+			if (isset($paramOptions['suffix']))
+				$data[$param] .= $this->parsePattern($paramOptions['suffix']);
+		}
+
+		foreach ($params as $p => $pOptions) {
 			if (!isset($data[$p]))
 				$this->model->error('Missing parameter ' . $p);
 
@@ -75,6 +95,25 @@ class Maker
 	}
 
 	/**
+	 * @param string $pattern
+	 * @return string
+	 */
+	private function parsePattern(string $pattern): string
+	{
+		preg_match_all('/(\{[a-zA-Z0-9_-]+\})/', $pattern, $matches);
+
+		foreach ($matches[1] as $m) {
+			switch ($m) {
+				case '{datetime}':
+					$pattern = str_replace($m, date('YmdHis'), $pattern);
+					break;
+			}
+		}
+
+		return $pattern;
+	}
+
+	/**
 	 * @param string $type
 	 * @return string
 	 */
@@ -93,7 +132,7 @@ class Maker
 	 * @param string $type
 	 * @return array
 	 */
-	private function getFileTypeData(string $type): array
+	public function getFileTypeData(string $type): array
 	{
 		if (!isset(Autoloader::$fileTypes[$type]))
 			$this->model->error('File type ' . $type . ' does not exist');

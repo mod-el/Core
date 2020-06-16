@@ -12,11 +12,14 @@ $maker = new \Model\Core\Maker($this->model);
 			<input type="hidden" name="makeNewFile" value="<?= entities($fileType) ?>"/>
 			<table>
 				<?php
-				foreach ($params as $p) {
+				foreach ($params as $p => $pOptions) {
+					if ($p === 'namespace')
+						continue;
 					?>
 					<tr>
-						<td><?= entities($p) ?></td>
+						<td style="padding-right: 10px"><?= entities($pOptions['label']) ?></td>
 						<td><input type="text" name="<?= $p ?>"/></td>
+						<td><i><?= entities($pOptions['notes'] ?? '') ?></i></td>
 					</tr>
 					<?php
 				}
