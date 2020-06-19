@@ -123,7 +123,7 @@ class Core implements \JsonSerializable, ModuleInterface
 		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
 
 		if (!defined('HTTPS')) {
-			if ((!empty($_SERVER['HTTPS']) and $_SERVER['HTTPS'] !== 'off') or $_SERVER['SERVER_PORT'] == 443) {
+			if ((!empty($_SERVER['HTTPS']) and $_SERVER['HTTPS'] !== 'off') or ($_SERVER['SERVER_PORT'] ?? null) == 443) {
 				define('HTTPS', 1);
 			} else {
 				define('HTTPS', 0);
@@ -131,7 +131,7 @@ class Core implements \JsonSerializable, ModuleInterface
 		}
 
 		if (!defined('BASE_HOST'))
-			define('BASE_HOST', (HTTPS ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST']);
+			define('BASE_HOST', (HTTPS ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? ''));
 	}
 
 	/**
