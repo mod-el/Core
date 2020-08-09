@@ -702,12 +702,12 @@ class Core implements \JsonSerializable, ModuleInterface
 			if ($r['rule'] === null) {
 				$matchedRules[$rIdx] = 0.5;
 			} else {
-				$rArr = explode('/', $r['rule']);
+				$rArr = preg_split('|(?<!\\?)/|', $r['rule']);
 				$score = 0;
 				foreach ($rArr as $i => $sr) {
 					if (!isset($request[$i]))
 						continue 2;
-					if (!preg_match('/^' . preg_quote($sr, '/') . '$/iu', $request[$i]))
+					if (!preg_match('/^' . str_replace('/', '\\/', $sr) . '$/iu', $request[$i]))
 						continue 2;
 
 					$score = $i * 2;
