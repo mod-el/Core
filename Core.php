@@ -707,7 +707,7 @@ class Core implements \JsonSerializable, ModuleInterface
 				foreach ($rArr as $i => $sr) {
 					if (!isset($request[$i]))
 						continue 2;
-					if (!preg_match('/^' . $sr . '$/iu', $request[$i]))
+					if (!preg_match('/^' . preg_quote($sr, '/') . '$/iu', $request[$i]))
 						continue 2;
 
 					$score = $i * 2;
