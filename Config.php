@@ -148,14 +148,20 @@ class Config extends Module_Config
 
 			if (is_dir($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css')) {
 				$cssFiles = glob($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . '*');
-				foreach ($cssFiles as $css)
+				foreach ($cssFiles as $css) {
+					if (strtolower(pathinfo($css, PATHINFO_EXTENSION)) !== 'css')
+						continue;
 					$modules[$d_info['filename']]['css'][] = substr($css, strlen(INCLUDE_PATH));
+				}
 			}
 
 			if (is_dir($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js')) {
 				$jsFiles = glob($d . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . '*');
-				foreach ($jsFiles as $js)
+				foreach ($jsFiles as $js) {
+					if (strtolower(pathinfo($js, PATHINFO_EXTENSION)) !== 'js')
+						continue;
 					$modules[$d_info['filename']]['js'][] = substr($js, strlen(INCLUDE_PATH));
+				}
 			}
 
 			$vars_file = $d . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
