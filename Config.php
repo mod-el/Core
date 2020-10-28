@@ -89,6 +89,9 @@ class Config extends Module_Config
 				'css' => [],
 				'dependencies' => [],
 				'assets-position' => 'head',
+				'defer-js' => false,
+				'async-js' => false,
+				'defer-css' => false,
 				'version' => '0.0.0',
 				'initialized' => in_array($d, $customDirs) ? true : false,
 			];
@@ -114,6 +117,13 @@ class Config extends Module_Config
 				}
 				if (isset($moduleData['assets-position']))
 					$modules[$d_info['filename']]['assets-position'] = $moduleData['assets-position'];
+				if (isset($moduleData['defer-js']))
+					$modules[$d_info['filename']]['defer-js'] = $moduleData['defer-js'];
+				if (isset($moduleData['async-js']))
+					$modules[$d_info['filename']]['async-js'] = $moduleData['async-js'];
+				if (isset($moduleData['defer-css']))
+					$modules[$d_info['filename']]['defer-css'] = $moduleData['defer-css'];
+
 				if (isset($moduleData['dependencies']) and is_array($moduleData['dependencies']))
 					$modules[$d_info['filename']]['dependencies'] = array_keys($moduleData['dependencies']);
 

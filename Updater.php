@@ -673,6 +673,9 @@ class Updater
 			'css' => [],
 			'dependencies' => [],
 			'assets-position' => 'head',
+			'defer-js' => false,
+			'async-js' => false,
+			'defer-css' => false,
 			'version' => '0.0.0',
 			'initialized' => false,
 		];
