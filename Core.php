@@ -317,6 +317,8 @@ class Core implements \JsonSerializable, ModuleInterface
 				$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : $js . '?v=' . $module['version'], [
 					'custom' => false,
 					'head' => $head,
+					'defer' => $module['defer-js'] ?? false,
+					'async' => $module['async-js'] ?? false,
 				]);
 			}
 
@@ -324,6 +326,7 @@ class Core implements \JsonSerializable, ModuleInterface
 				$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : $css . '?v=' . $module['version'], [
 					'custom' => false,
 					'head' => $head,
+					'defer' => $module['defer-css'] ?? false,
 				]);
 			}
 		}
