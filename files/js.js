@@ -447,7 +447,11 @@ function installSelectedModules() {
 }
 
 function makeNewFile(module, type) {
-	return lightbox('').loading().ajax(PATH + 'zk/local-modules/' + module + '/make/' + type);
+	return lightbox('').loading().ajax(PATH + 'zk/local-modules/' + module + '/make/' + type).then(() => {
+		let firstInput = document.querySelector('#lightbox input:not([type="hidden"])');
+		if (firstInput)
+			firstInput.focus();
+	});
 }
 
 function performActionOnFile(module, type, file, action, form = null, params = null) {
