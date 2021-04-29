@@ -27,22 +27,11 @@ class Controller
 	}
 
 	/**
-	 * This is executed after init()
-	 */
-	public function modelInit()
-	{
-
-	}
-
-	/**
 	 * Business logic of the application
 	 * You can use either this for generic response, or the various methods below
-	 *
-	 * @return mixed
 	 */
 	public function index()
 	{
-		return;
 	}
 
 	/**

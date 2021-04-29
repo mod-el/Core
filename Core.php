@@ -478,6 +478,14 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
+	 * It may be expanded in the FrontController.
+	 * It is called before the execution of the controller, but after its initialization
+	 */
+	protected function postInit()
+	{
+	}
+
+	/**
 	 * Main execution of the ModEl framework
 	 */
 	private function exec()
@@ -605,7 +613,8 @@ class Core implements \JsonSerializable, ModuleInterface
 		$this->trigger('Core', 'controllerInit');
 
 		$this->controller->init();
-		$this->controller->modelInit();
+
+		$this->postInit();
 
 		if ($this->isCLI()) {
 			$this->trigger('Core', 'controllerExecution', ['method' => 'cli']);
