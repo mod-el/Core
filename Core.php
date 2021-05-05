@@ -1304,4 +1304,20 @@ class Core implements \JsonSerializable, ModuleInterface
 			return (bool)$this->_Db->update('main_settings', ['k' => $k], ['v' => $v]);
 		}
 	}
+
+	/**
+	 * @return array
+	 */
+	public function getInputPayload(): array
+	{
+		$payload = file_get_contents('php://input');
+		if (empty($payload))
+			$payload = '{}';
+
+		$payload = json_decode($payload, true);
+		if ($payload === null)
+			throw new \Exception('JSON error: ' . json_last_error(), 400);
+
+		return $payload;
+	}
 }
