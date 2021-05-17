@@ -123,11 +123,10 @@ class Core implements \JsonSerializable, ModuleInterface
 		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
 
 		if (!defined('HTTPS')) {
-			if ((!empty($_SERVER['HTTPS']) and $_SERVER['HTTPS'] !== 'off') or ($_SERVER['SERVER_PORT'] ?? null) == 443) {
+			if ((!empty($_SERVER['HTTPS']) and $_SERVER['HTTPS'] !== 'off') or ($_SERVER['SERVER_PORT'] ?? null) == 443)
 				define('HTTPS', 1);
-			} else {
+			else
 				define('HTTPS', 0);
-			}
 		}
 
 		if (!defined('BASE_HOST'))
@@ -478,6 +477,14 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
+	 * It may be expanded in the FrontController.
+	 * It is called before the execution of the controller, but after its initialization
+	 */
+	protected function postInit()
+	{
+	}
+
+	/**
 	 * Main execution of the ModEl framework
 	 */
 	private function exec()
@@ -605,7 +612,8 @@ class Core implements \JsonSerializable, ModuleInterface
 		$this->trigger('Core', 'controllerInit');
 
 		$this->controller->init();
-		$this->controller->modelInit();
+
+		$this->postInit();
 
 		if ($this->isCLI()) {
 			$this->trigger('Core', 'controllerExecution', ['method' => 'cli']);
@@ -1295,5 +1303,21 @@ class Core implements \JsonSerializable, ModuleInterface
 		} else {
 			return (bool)$this->_Db->update('main_settings', ['k' => $k], ['v' => $v]);
 		}
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getInputPayload(): array
+	{
+		$payload = file_get_contents('php://input');
+		if (empty($payload))
+			$payload = '{}';
+
+		$payload = json_decode($payload, true);
+		if ($payload === null)
+			throw new \Exception('JSON error: ' . json_last_error(), 400);
+
+		return $payload;
 	}
 }
