@@ -343,11 +343,27 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function isLoaded(string $name, ?string $idx = null): bool
 	{
-		if ($idx === null) {
+		if ($idx === null)
 			return isset($this->modules[$name]);
-		} else {
+		else
 			return isset($this->modules[$name][$idx]);
-		}
+	}
+
+	/**
+	 * Deletes a module from loaded modules
+	 *
+	 * @param string $name
+	 * @param string $idx
+	 */
+	public function unload(string $name, string $idx = '0')
+	{
+		if (isset($this->modules[$name][$idx]))
+			unset($this->modules[$name][$idx]);
+
+		$this->trigger('Core', 'unloadModule', [
+			'module' => $name,
+			'idx' => $idx,
+		]);
 	}
 
 	/**
