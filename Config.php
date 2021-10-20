@@ -236,10 +236,10 @@ class Config extends Module_Config
 						} else {
 							$fullName = $fPath;
 						}
-						$filename = str_replace(DIRECTORY_SEPARATOR, '/', $d_info['filename']);
-						if (!isset($fileTypes[$type]['files'][$filename]))
-							$fileTypes[$type]['files'][$filename] = [];
-						$fileTypes[$type]['files'][$filename][$f] = $fullName;
+						$f = str_replace(DIRECTORY_SEPARATOR, '/', $f);
+						if (!isset($fileTypes[$type]['files'][$d_info['filename']]))
+							$fileTypes[$type]['files'][$d_info['filename']] = [];
+						$fileTypes[$type]['files'][$d_info['filename']][$f] = $fullName;
 					}
 				}
 			}
