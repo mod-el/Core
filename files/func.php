@@ -30,45 +30,46 @@ function textCutOff(string $text, int $limit, array $options = []): string
 	$options = array_merge([
 		'other' => false,
 		'safe' => true,
-		'dots' => true,
+		'dots' => '...',
 	], $options);
 
 	$text = trim($text);
 	$len = strlen($text);
-	if ($limit >= $len) {
-		if ($options['other']) return '';
-		else return $text;
-	}
+	if ($limit >= $len)
+		return $options['other'] ? '' : $text;
+
+	$textArray = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY);
+
 	$breaks = ['.', ':', "\n", '!', '?', ' '];
 	$lastBreak = false;
 	if ($options['safe']) {
 		for ($p = 0; $p < $limit; $p++) {
-			$c = $text[$p];
-			if (in_array($c, $breaks)) $lastBreak = $p;
+			$c = $textArray[$p];
+			if (in_array($c, $breaks))
+				$lastBreak = $p;
 		}
 	}
+
 	if ($options['safe'] and !$lastBreak) {
 		$p = $limit;
 		$c = true;
 		while (!$lastBreak and $c) {
-			if (strlen($text) > $p) $c = $text[$p];
-			else $c = false;
-			if (in_array($c, $breaks)) $lastBreak = $p;
+			$c = count($textArray) > $p ? $textArray[$p] : false;
+			if (in_array($c, $breaks))
+				$lastBreak = $p;
 			$p++;
 		}
 	}
-	if ($lastBreak) {
-		$lastBreak++;
-		if ($options['other']) $tor = trim(mb_substr($text, $lastBreak));
-		else $tor = trim(mb_substr($text, 0, $lastBreak));
-	} else {
-		if ($options['other']) $tor = trim(mb_substr($text, $limit));
-		else $tor = trim(mb_substr($text, 0, $limit));
-	}
-	if ($options['dots'] and strlen($tor) < strlen($text)) {
-		if ($lastBreak) return $tor . ' [...]';
-		else return $tor . '[...]';
-	} else return $tor;
+
+	if ($lastBreak)
+		$tor = trim($options['other'] ? mb_substr($text, $lastBreak) : mb_substr($text, 0, $lastBreak));
+	else
+		$tor = trim($options['other'] ? mb_substr($text, $limit) : mb_substr($text, 0, $limit));
+
+	if ($options['dots'] and mb_strlen($tor) < mb_strlen($text))
+		return $tor . ($lastBreak ? ' ' : '') . $options['dots'];
+	else
+		return $tor;
 }
 
 /**
