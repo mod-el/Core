@@ -44,6 +44,8 @@ function textCutOff(string $text, int $limit, array $options = []): string
 	$lastBreak = false;
 	if ($options['safe']) {
 		for ($p = 0; $p < $limit; $p++) {
+			if (!isset($textArray[$p]))
+				break;
 			$c = $textArray[$p];
 			if (in_array($c, $breaks))
 				$lastBreak = $p;
