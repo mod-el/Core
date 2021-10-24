@@ -3,13 +3,13 @@
 class Autoloader
 {
 	/** @var string[] */
-	public static $classes = [];
+	public static array $classes = [];
 	/** @var string[] */
-	public static $aliases = [];
+	public static array $aliases = [];
 	/** @var array */
-	public static $fileTypes = [];
+	public static array $fileTypes = [];
 	/** @var string[] */
-	public static $namespaces = [];
+	public static array $namespaces = [];
 
 	/**
 	 * @param string $ns

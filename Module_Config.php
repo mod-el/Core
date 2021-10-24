@@ -3,13 +3,13 @@
 class Module_Config
 {
 	/** @var Core */
-	protected $model;
+	protected Core $model;
 	/** @var bool */
 	public $configurable = false;
 	/** @var bool */
 	public $hasCleanUp = false;
 	/** @var array */
-	private $assets = [];
+	private array $assets = [];
 
 	/**
 	 * Module_Config constructor.

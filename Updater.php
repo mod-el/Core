@@ -4,12 +4,9 @@ use MJS\TopSort\Implementations\StringSort;
 
 class Updater
 {
-	/** @var Core */
-	private $model;
-	/** @var array */
-	private $updating = [];
-	/** @var array */
-	private $moduleVarsCache = [];
+	private Core $model;
+	private array $updating = [];
+	private array $moduleVarsCache = [];
 
 	/**
 	 * @param Core $model

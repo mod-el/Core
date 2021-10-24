@@ -3,7 +3,7 @@
 class Maker
 {
 	/** @var Core */
-	private $model;
+	private Core $model;
 
 	/**
 	 * @param Core $model

@@ -2,10 +2,10 @@
 
 class Exception extends \Exception
 {
-	public $_mex = '';
-	public $_details = [];
+	public string $_mex = '';
+	public array $_details = [];
 
-	function show()
+	public function show()
 	{
 		$message = parent::getMessage();
 		if (DEBUG_MODE) return ($this->getCode() ? $this->getCode() . ' - ' : '') . $message . ($this->_mex ? '<br />' . $this->_mex : '');

@@ -3,11 +3,11 @@
 class Module implements ModuleInterface
 {
 	/** @var Core */
-	public $model;
+	public Core $model;
 	/** @var mixed */
 	public $module_id;
-	/** @var mixed */
-	public $configCache = null;
+	/** @var array|null */
+	public ?array $configCache = null;
 
 	/**
 	 * Module constructor.

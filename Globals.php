@@ -2,5 +2,5 @@
 
 class Globals
 {
-	public static $data = [];
+	public static array $data = [];
 }

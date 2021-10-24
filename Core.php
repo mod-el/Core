@@ -3,31 +3,31 @@
 class Core implements \JsonSerializable, ModuleInterface
 {
 	/** @var array[] */
-	public $modules = [];
+	public array $modules = [];
 	/** @var array[] */
-	protected $boundMethods = [];
+	protected array $boundMethods = [];
 	/** @var array[] */
-	protected $boundProperties = [];
+	protected array $boundProperties = [];
 	/** @var array[] */
-	protected $availableModules = [];
+	protected array $availableModules = [];
 	/** @var array[] */
-	protected $rules = [];
+	protected array $rules = [];
 	/** @var array[] */
-	protected $controllers = [];
+	protected array $controllers = [];
 	/** @var string */
-	public $leadingModule;
+	public string $leadingModule;
 	/** @var string */
-	public $controllerName;
-	/** @var array|bool */
-	private $request = false;
-	/** @var string */
-	private $requestPrefix = '';
+	public string $controllerName;
 	/** @var array */
-	private $prefixMakers = [];
+	private array $request;
+	/** @var string */
+	private string $requestPrefix = '';
+	/** @var array */
+	private array $prefixMakers = [];
 	/** @var Controller */
-	public $controller;
+	public Controller $controller;
 	/** @var array */
-	public $viewOptions = [
+	public array $viewOptions = [
 		'header' => [
 			'layoutHeader',
 		],
@@ -39,16 +39,16 @@ class Core implements \JsonSerializable, ModuleInterface
 		'warnings' => [],
 		'messages' => [],
 	];
-	/** @var bool|array */
-	private $inputVarsCache = false;
 	/** @var array */
-	private $registeredListeners = [];
+	private array $inputVarsCache;
 	/** @var array */
-	private $eventsHistory = [];
+	private array $registeredListeners = [];
+	/** @var array */
+	private array $eventsHistory = [];
 	/** @var bool */
-	private $eventsOn = true;
+	private bool $eventsOn = true;
 	/** @var array */
-	private $modulesWithCleanUp = [];
+	private array $modulesWithCleanUp = [];
 
 	/**
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
@@ -792,27 +792,25 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function getRequest(?int $i = null)
 	{
-		if ($this->request === false) {
+		if (!isset($this->request)) {
 			if ($this->isCLI()) {
 				global $argv;
 				if (!is_array($argv))
 					return $i === null ? [] : null;
 
-				if (array_key_exists(1, $argv)) {
+				if (array_key_exists(1, $argv))
 					$this->request = explode('/', $argv[1]);
-				} else {
+				else
 					$this->request = [];
-				}
 			} else {
 				$this->request = isset($_GET['url']) ? explode('/', trim($_GET['url'], '/')) : array();
 			}
 		}
 
-		if ($i === null) {
+		if ($i === null)
 			return $this->request;
-		} else {
+		else
 			return array_key_exists($i, $this->request) ? $this->request[$i] : null;
-		}
 	}
 
 	/**
@@ -887,7 +885,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	public function getInput(string $i = null, string $type = 'request')
 	{
 		if ($this->isCLI()) {
-			if ($this->inputVarsCache === false) {
+			if (!isset($this->inputVarsCache)) {
 				$this->inputVarsCache = [];
 
 				global $argv;
@@ -895,7 +893,7 @@ class Core implements \JsonSerializable, ModuleInterface
 				if (is_array($argv) and count($argv) > 2) {
 					$arr = $argv;
 					unset($arr[0]); // Script name
-					unset($arr[1]); // Main request (accesible via getRequest method)
+					unset($arr[1]); // Main request (accessible via getRequest method)
 
 					foreach ($arr as $input) {
 						$input = explode('=', $input);

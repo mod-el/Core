@@ -2,45 +2,26 @@
 
 class ReflectionModule
 {
-	/** @var string */
-	protected $base_dir = '';
-	/** @var string */
-	protected $path;
-	/** @var bool */
-	public $exists = false;
-	/** @var Core */
-	protected $model;
-	/** @var string|bool */
-	public $name = false;
-	/** @var string|bool */
-	public $folder_name = false;
-	/** @var string|bool */
-	public $description = false;
-	/** @var array */
-	public $dependencies = [];
-	/** @var bool */
-	public $installed = false;
-	/** @var string|bool */
-	public $version = false;
-	/** @var array */
-	public $files = [];
-	/** @var string|bool */
-	public $md5 = false;
-	/** @var string|null */
-	public $version_md5 = null;
-	/** @var bool */
-	public $official = null;
-	/** @var Module_Config */
-	private $configClass = null;
-	/** @var bool */
-	public $configClassCompatible = true;
+	protected string $base_dir = '';
+	protected string $path;
+	public bool $exists = false;
+	protected Core $model;
+	public string $name;
+	public string $folder_name;
+	public string $description;
+	public array $dependencies = [];
+	public bool $installed = false;
+	public string $version;
+	public array $files = [];
+	public ?string $md5 = null;
+	public ?string $version_md5 = null;
+	public ?bool $official = null;
+	private ?Module_Config $configClass = null;
+	public bool $configClassCompatible = true;
 
-	/** @var bool */
-	public $new_version = false;
-	/** @var bool */
-	public $expected_md5 = false;
-	/** @var bool */
-	public $corrupted = false;
+	public bool $new_version = false;
+	public bool $expected_md5 = false;
+	public bool $corrupted = false;
 
 	/**
 	 * @param string $name

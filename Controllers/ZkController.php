@@ -7,14 +7,10 @@ use Model\Core\Updater;
 
 class ZkController extends Controller
 {
-	/** @var Updater */
-	private $updater;
-	/** @var array */
-	protected $options = [];
-	/** @var array */
-	private $injected = [];
-	/** @var string */
-	private $lastBreakingChange = '2.8.1';
+	private Updater $updater;
+	protected array $options = [];
+	private array $injected = [];
+	private string $lastBreakingChange = '2.8.1';
 
 	public function init()
 	{

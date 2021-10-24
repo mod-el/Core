@@ -3,9 +3,9 @@
 class Controller
 {
 	/** @var \FrontController */
-	protected $model;
+	protected \FrontController $model;
 	/** @var array */
-	public $viewOptions = array(
+	public array $viewOptions = array(
 		'header' => [], // Deprecated, use model->viewOptions
 		'footer' => [], // Deprecated, use model->viewOptions
 		'template-folder' => [], // Deprecated, use model->viewOptions
