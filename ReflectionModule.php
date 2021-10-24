@@ -19,8 +19,8 @@ class ReflectionModule
 	private ?Module_Config $configClass = null;
 	public bool $configClassCompatible = true;
 
+	public string $expected_md5;
 	public bool $new_version = false;
-	public bool $expected_md5 = false;
 	public bool $corrupted = false;
 
 	/**
@@ -169,11 +169,11 @@ class ReflectionModule
 				$this->configClass = new $configClass($this->model);
 				return true;
 			} else {
-				$this->configClass = false;
+				$this->configClass = null;
 				return false;
 			}
 		} else {
-			$this->configClass = false;
+			$this->configClass = null;
 			return false;
 		}
 	}
