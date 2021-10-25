@@ -5,9 +5,13 @@
 		<div class="module-cont">
 			<div class="module">
 				<div class="clickable" onclick="document.location.href='<?= PATH ?>zk/local-modules/<?= entities($m->folder_name) ?>'">
-					<div class="module-version"><?= entities($m->version) ?></div>
+					<div class="module-version"><?= entities($m->version ?? '') ?></div>
 					<b><?= entities($m->name) ?></b>
-					<?php if ($m->description) { ?><p><i><?= entities($m->description, true) ?></i></p><?php } ?>
+					<?php
+					if (isset($m->description)) {
+						?><p><i><?= entities($m->description, true) ?></i></p><?php
+					}
+					?>
 				</div>
 			</div>
 		</div>
