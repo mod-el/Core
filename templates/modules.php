@@ -15,7 +15,7 @@ foreach ($modules as $module) {
 	if ($toBeUpdated) {
 		?>
 		[<a href="#" onclick="updateSelectedModules(); return false"> update selected </a>]
-																						  [
+		                                                                                  [
 		<a href="#" onclick="updateAllModules(); return false"> update all </a>]
 		<?php
 	}
@@ -37,11 +37,11 @@ foreach ($modules as $module) {
 			<div class="module<?= (!$module->official) ? ' not-official' : '' ?>" data-module="<?= $module->folder_name ?>" data-priority="<?= $priorities[$module->folder_name] ?? 999 ?>"<?= $module->corrupted ? ' data-corrupted="1"' : '' ?><?= ($module->corrupted or $module->new_version) ? ' data-update="1"' : '' ?>>
 				<div<?= ($module->isConfigurable()) ? ' class="clickable" onclick="document.location.href=\'' . PATH . 'zk/modules/config/' . entities($module->folder_name) . '\'"' : '' ?>>
 					<div>
-						<div class="module-version"><?= entities($module->version) ?></div>
+						<div class="module-version"><?= entities($module->version ?? '-') ?></div>
 						<b><?= entities($module->name) ?></b>
 					</div>
 					<?php
-					if ($module->description) {
+					if (isset($module->description)) {
 						?>
 						<p><i><?= entities($module->description, true) ?></i></p>
 						<?php

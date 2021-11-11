@@ -119,7 +119,7 @@ class ZkController extends Controller
 								}
 							}
 
-							if ($m->version and $m->version !== '0.0.0' and !$m->installed) {
+							if (isset($m->version) and $m->version !== '0.0.0' and !$m->installed) {
 								if ($allDependenciesSatisfied)
 									$toBeInitialized[] = $m;
 							} else {

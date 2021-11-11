@@ -56,7 +56,7 @@ class Updater
 
 			$modules_arr = [];
 			foreach ($modules as $m)
-				$modules_arr[] = $m->folder_name . '|' . $m->version;
+				$modules_arr[] = $m->folder_name . '|' . ($m->version ?? '0.0.0');
 
 			$remote_str = file_get_contents($config['repository'] . '?act=get-modules&modules=' . urlencode(implode(',', $modules_arr)) . '&key=' . urlencode($config['license']));
 			$remote = json_decode($remote_str, true);
@@ -77,7 +77,7 @@ class Updater
 									$m->corrupted = true;
 							}
 						}
-						if ($remote[$name]['current_version'] and version_compare($remote[$name]['current_version'], $m->version, '>'))
+						if ($remote[$name]['current_version'] and version_compare($remote[$name]['current_version'], $m->version ?? '0.0.0', '>'))
 							$m->new_version = $remote[$name]['current_version'];
 					} else {
 						$m->official = false;
@@ -284,10 +284,8 @@ class Updater
 			unlink(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $f);
 
 		foreach ($modules as $name) {
-			$old_version = null;
-
 			$module = new ReflectionModule($name, $this->model);
-			$old_version = $module->version;
+			$old_version = $module->version ?? '0.0.0';
 
 			if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name, true))
 				return false;
