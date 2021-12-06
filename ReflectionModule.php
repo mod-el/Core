@@ -20,7 +20,7 @@ class ReflectionModule
 	public bool $configClassCompatible = true;
 
 	public string $expected_md5;
-	public bool $new_version = false;
+	public ?string $new_version = null;
 	public bool $corrupted = false;
 
 	/**

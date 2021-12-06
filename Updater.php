@@ -72,7 +72,7 @@ class Updater
 									$this->changeModuleInternalVar($name, 'md5', $m->md5);
 							} else {
 								if ($m->expected_md5 !== $m->version_md5)
-									$m->new_version = true;
+									$m->new_version = $m->version;
 								else
 									$m->corrupted = true;
 							}
