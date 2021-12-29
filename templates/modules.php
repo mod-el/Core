@@ -59,7 +59,7 @@ foreach ($modules as $module) {
 					<?php
 					if ($module->new_version) {
 						?>
-						<b style="color: #0C0">New version <?= $module->new_version !== $module->version ? ': ' . $module->new_version : '' ?></b>
+						<b style="color: #0C0">New version <?= (isset($module->version) and $module->new_version !== $module->version) ? ': ' . $module->new_version : '' ?></b>
 						<?php
 					} elseif ($module->corrupted) {
 						?>
