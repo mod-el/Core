@@ -107,7 +107,7 @@ class ZkController extends Controller
 										$compareToVersion = $depVersion;
 									}
 
-									if (!version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator)) {
+									if (isset($modules[$depModule]->version) and !version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator)) {
 										$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
 										$allDependenciesSatisfied = false;
 									}
