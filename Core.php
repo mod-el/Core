@@ -1179,10 +1179,8 @@ class Core implements \JsonSerializable, ModuleInterface
 	/* VARIOUS UTILITIES */
 	/**
 	 * Implementation of JsonSerializable, just to avoid huge useless prints while debugging with zkdump.
-	 *
-	 * @return string
 	 */
-	public function jsonSerialize()
+	public function jsonSerialize(): mixed
 	{
 		return 'MODEL/FRONT CONTROLLER';
 	}

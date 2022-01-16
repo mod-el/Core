@@ -1,7 +1,7 @@
 {
 	"name": "Core",
 	"description": "ModEl Framework",
-	"version": "2.10.3",
+	"version": "3.0.0",
 	"dependencies": {},
 	"file-types": {
 		"Controller": {
