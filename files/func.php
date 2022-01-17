@@ -121,6 +121,7 @@ function rewriteUrlWords(array $names, bool $lower = true): string
 		return '';
 
 	foreach ($names as $n => $name) {
+		$name = (string)$name;
 		if ($lower)
 			$name = mb_strtolower($name);
 		$name = str_replace('à', 'a', $name);
