@@ -6,14 +6,14 @@
  * @param bool $br
  * @return string
  */
-function entities($text, bool $br = false): string
+function entities(?string $text, bool $br = false): string
 {
-	if (is_object($text))
-		throw new Exception('entities function cannot accept objects!');
 	if ($text === null)
 		return '';
+
 	$text = htmlentities($text, ENT_QUOTES | ENT_IGNORE, 'UTF-8');
-	if ($br) $text = nl2br($text);
+	if ($br)
+		$text = nl2br($text);
 	return $text;
 }
 
@@ -91,7 +91,8 @@ function makePrice(float $p, array $options = []): string
 	], $options);
 
 	$return = number_format($p, $options['decimals'], $options['decimal_separator'], $options['thousands_separator']);
-	if ($options['show_currency']) $return .= '&euro;';
+	if ($options['show_currency'])
+		$return .= '&euro;';
 	return $return;
 }
 
@@ -99,13 +100,13 @@ function makePrice(float $p, array $options = []): string
  * Conversion of several number formats from string to number
  *
  * @param $n
- * @return bool|int|string
+ * @return float|null
  */
-function textToNumber($n)
+function textToNumber(string $n): ?float
 {
 	$n = str_replace(',', '.', $n);
 	$n = preg_replace('/\.(?=.*\.)/', '', $n);
-	return is_numeric($n) ? $n : false;
+	return is_numeric($n) ? (float)$n : null;
 }
 
 /**
@@ -150,7 +151,7 @@ function rewriteUrlWords(array $names, bool $lower = true): string
  * @param bool $return
  * @return void|string
  */
-function zkdump($v, bool $use_json = false, bool $return = false)
+function zkdump(mixed $v, bool $use_json = false, bool $return = false)
 {
 	if (!DEBUG_MODE and !$return)
 		return;
@@ -181,13 +182,12 @@ function zkBacktrace(bool $return = false)
 /**
  * Is a ModEl Exception?
  *
- * @param $el
+ * @param mixed $el
  * @return bool
  */
-function isErr($el): bool
+function isErr(mixed $el): bool
 {
-	if (is_object($el) and get_class($el) == 'Model\\Core\\Exception') return true;
-	else return false;
+	return (is_object($el) and get_class($el) == 'Model\\Core\\Exception');
 }
 
 /**
@@ -207,7 +207,7 @@ function getErr(\Exception $e): string
  * @param array $arr
  * @return bool
  */
-function isAssoc($arr): bool
+function isAssoc(array $arr): bool
 {
 	return array_keys($arr) !== range(0, count($arr) - 1);
 }
