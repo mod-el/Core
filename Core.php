@@ -1290,13 +1290,18 @@ class Core implements \JsonSerializable, ModuleInterface
 
 	/**
 	 * @param string $k
-	 * @return mixed
+	 * @return string|null
 	 */
-	public function getSetting(string $k)
+	public function getSetting(string $k): ?string
 	{
 		if (!$this->moduleExists('Db'))
 			return null;
-		return $this->_Db->select('main_settings', ['k' => $k], 'v');
+
+		$check = $this->_Db->select('main_settings', ['k' => $k], 'v');
+		if ($check === false)
+			return null;
+
+		return $check;
 	}
 
 	/**
@@ -1304,17 +1309,16 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * @param mixed $v
 	 * @return bool
 	 */
-	public function setSetting(string $k, $v): bool
+	public function setSetting(string $k, mixed $v): bool
 	{
 		if (!$this->moduleExists('Db'))
 			return false;
 
 		$current = $this->getSetting($k);
-		if ($current === false) {
+		if ($current === false)
 			return (bool)$this->_Db->insert('main_settings', ['k' => $k, 'v' => $v]);
-		} else {
+		else
 			return (bool)$this->_Db->update('main_settings', ['k' => $k], ['v' => $v]);
-		}
 	}
 
 	/**
