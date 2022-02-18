@@ -55,7 +55,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function preInit()
 	{
-		if (version_compare(phpversion(), '7.1.0', '<'))
+		if (version_compare(phpversion(), '8.0.0', '<'))
 			die('PHP version (' . phpversion() . ') is not enough for ModEl framework to run.');
 
 		$this->trigger('Core', 'start');
@@ -76,7 +76,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			header('Content-type: text/html; charset=utf-8');
 
 			if (!isset($_COOKIE['ZKID'])) {
-				$ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 0;
+				$ip = $_SERVER['REMOTE_ADDR'] ?? 0;
 				$zkid = sha1($ip . time());
 				setcookie('ZKID', $zkid, time() + 60 * 60 * 24 * 30, PATH);
 			}
@@ -123,8 +123,6 @@ class Core implements \JsonSerializable, ModuleInterface
 			define('DEBUG_MODE', 1);
 		else
 			define('DEBUG_MODE', MAIN_DEBUG_MODE);
-
-		define('SESSION_ID', md5(PATH)); // TODO: here for backward compatibility, to be removed
 
 		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
 
