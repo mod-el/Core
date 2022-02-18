@@ -1332,7 +1332,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 		$payload = json_decode($payload, true);
 		if ($payload === null)
-			throw new \Exception('JSON error: ' . json_last_error(), 400);
+			throw new \Exception('JSON error: ' . json_last_error_msg(), 400);
 
 		return $payload;
 	}
