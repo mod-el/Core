@@ -518,13 +518,17 @@ class Updater
 	public function cliConfig(string $module, string $type, bool $skipInput = false, bool $verbose = false): bool
 	{
 		$configClass = $this->getConfigClassFor($module);
-		if (!$configClass)
-			return true;
+		if ($configClass) {
+			$configData = $configClass->getConfigData();
+			if ($configData === null) {
+				echo "Module " . $module . " cannot be configured via CLI\n";
+				return false;
+			}
+		} else {
+			if ($type === 'config')
+				return true;
 
-		$configData = $configClass->getConfigData();
-		if ($configData === null) {
-			echo "Module " . $module . " cannot be configured via CLI\n";
-			return false;
+			$configData = [];
 		}
 
 		$data = [];

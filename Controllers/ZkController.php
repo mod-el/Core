@@ -241,7 +241,9 @@ class ZkController extends Controller
 					}
 					die();
 				} else {
-					$modules = $this->getSortedModules();
+					$modules = $this->getSortedModules(true);
+					// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
+					$modules[] = 'Core';
 
 					$this->model->viewOptions['showLayout'] = false;
 					$this->model->viewOptions['template'] = 'make-cache';
@@ -262,20 +264,18 @@ class ZkController extends Controller
 		}
 	}
 
-	private function getSortedModules(): array
+	private function getSortedModules(bool $onlyWithConfig = false): array
 	{
 		$modules = $this->updater->getModules();
 		$modules = $this->updater->topSortModules($modules);
-		foreach ($modules as $mName => $m) {
-			if (!$m->hasConfigClass())
-				unset($modules[$mName]);
+		if ($onlyWithConfig) {
+			foreach ($modules as $mName => $m) {
+				if (!$m->hasConfigClass())
+					unset($modules[$mName]);
+			}
 		}
-		$modules = array_keys($modules);
 
-		// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
-		$modules[] = 'Core';
-
-		return $modules;
+		return array_keys($modules);
 	}
 
 
@@ -501,26 +501,32 @@ class ZkController extends Controller
 				$modules = $this->getSortedModules();
 				echo "Inizializzo moduli...\n";
 				foreach ($modules as $module) {
-					echo "Configurazione modulo " . $module . "... ";
+					echo $module . "... ";
 					if ($this->updater->cliConfig($module, 'init', true, false)) {
 						echo "OK\n";
 					} else {
 						echo "ERRORE\n";
-						break;
+						exit(1);
 					}
 				}
 				break;
 			case 'make-cache':
-				$modules = $this->getSortedModules();
+				$modules = $this->getSortedModules(true);
+				// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
+				$modules[] = 'Core';
+
 				echo "Elaboro cache moduli...\n";
 				foreach ($modules as $module) {
-					echo "Cache modulo " . $module . "... ";
+					echo $module . "... ";
 					try {
 						$this->updater->updateModuleCache($module);
+						if ($module === 'Core')
+							$this->model->reloadCacheFile();
+
 						echo "OK\n";
 					} catch (Exception $e) {
 						echo getErr($e);
-						break;
+						exit(1);
 					}
 				}
 				break;
