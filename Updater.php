@@ -130,15 +130,12 @@ class Updater
 		$configClass = $this->getConfigClassFor($name);
 		if ($configClass) {
 			$configClass->checkAssets();
-			if ($configClass->init($data)) {
+			if ($configClass->init($data))
 				return $this->markAsInitialized($name, $configClass);
-			} elseif ($data === null) {
+			elseif ($data === null)
 				return false;
-			} else {
+			else
 				$this->model->error('Something is wrong, can\'t initialize module ' . $name);
-			}
-
-			return false;
 		} else {
 			return $this->markAsInitialized($name);
 		}
@@ -513,60 +510,68 @@ class Updater
 	 *
 	 * @param string $module
 	 * @param string $type ("init" or "config")
+	 * @param bool $skipInput
+	 * @param bool $verbose
 	 * @return bool
 	 * @throws \Exception
 	 */
-	public function cliConfig(string $module, string $type): bool
+	public function cliConfig(string $module, string $type, bool $skipInput = false, bool $verbose = false): bool
 	{
 		$configClass = $this->getConfigClassFor($module);
 		if (!$configClass)
 			return true;
 
 		$configData = $configClass->getConfigData();
-		if (!$configData) {
+		if ($configData === null) {
 			echo "Module " . $module . " cannot be configured via CLI\n";
 			return false;
 		}
 
 		$data = [];
-		if ($configData) {
-			echo "-------------------\nConfiguration of " . $this->model->getRequest(3) . "...\n";
-			if (!$this->model->getInput('skip-input'))
+
+		if ($verbose) {
+			echo "-------------------\nConfiguration of " . $module . "...\n";
+			if (!$skipInput)
 				echo "Leave data empty to keep defaults\n";
 			echo "\n";
-			if (!$this->model->getInput('skip-input'))
-				$handle = fopen("php://stdin", "r");
-			foreach ($configData as $k => $d) {
-				if ($this->model->getInput('skip-input')) {
-					$data[$k] = $d['default'];
-				} else {
-					echo $d['label'] . ($d['default'] !== null ? ' (default ' . $d['default'] . ')' : '') . ': ';
-					$line = trim(fgets($handle));
-					if ($line)
-						$data[$k] = $line;
-					else
-						$data[$k] = $d['default'];
-				}
-			}
-			if (!$this->model->getInput('skip-input'))
-				fclose($handle);
 		}
+
+		if (!$skipInput)
+			$handle = fopen("php://stdin", "r");
+		foreach ($configData as $k => $d) {
+			if ($skipInput) {
+				$data[$k] = $d['default'];
+			} else {
+				echo $d['label'] . ($d['default'] !== null ? ' (default ' . $d['default'] . ')' : '') . ': ';
+				$line = trim(fgets($handle));
+				if ($line)
+					$data[$k] = $line;
+				else
+					$data[$k] = $d['default'];
+			}
+		}
+		if (!$skipInput)
+			fclose($handle);
 
 		switch ($type) {
 			case 'config':
 				if ($configClass->saveConfig('config', $data)) {
-					echo "Configuration saved\n";
+					if ($verbose)
+						echo "Configuration saved\n";
 					return true;
 				}
 				break;
 			case 'init':
 				if ($this->initModule($module, $data)) {
-					echo "----------------------\n";
-					echo "Module " . $module . " initialized\n";
-					echo "----------------------\n";
+					if ($verbose) {
+						echo "----------------------\n";
+						echo "Module " . $module . " initialized\n";
+						echo "----------------------\n";
+					}
 					return true;
 				} else {
-					echo "Some error occurred while installing.\n";
+					if ($verbose)
+						echo "Some error occurred while installing.\n";
 				}
 				break;
 		}

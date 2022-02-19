@@ -241,16 +241,7 @@ class ZkController extends Controller
 					}
 					die();
 				} else {
-					$modules = $this->updater->getModules();
-					$modules = $this->updater->topSortModules($modules);
-					foreach ($modules as $mName => $m) {
-						if (!$m->hasConfigClass())
-							unset($modules[$mName]);
-					}
-					$modules = array_keys($modules);
-
-					// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
-					$modules[] = 'Core';
+					$modules = $this->getSortedModules();
 
 					$this->model->viewOptions['showLayout'] = false;
 					$this->model->viewOptions['template'] = 'make-cache';
@@ -270,6 +261,23 @@ class ZkController extends Controller
 				break;
 		}
 	}
+
+	private function getSortedModules(): array
+	{
+		$modules = $this->updater->getModules();
+		$modules = $this->updater->topSortModules($modules);
+		foreach ($modules as $mName => $m) {
+			if (!$m->hasConfigClass())
+				unset($modules[$mName]);
+		}
+		$modules = array_keys($modules);
+
+		// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
+		$modules[] = 'Core';
+
+		return $modules;
+	}
+
 
 	public function post()
 	{
@@ -458,7 +466,7 @@ class ZkController extends Controller
 					case 'init':
 					case 'config':
 						if ($this->model->getRequest(3)) {
-							if ($this->updater->cliConfig($this->model->getRequest(3), $this->model->getRequest(2)))
+							if ($this->updater->cliConfig($this->model->getRequest(3), $this->model->getRequest(2), (bool)$this->model->getInput('skip-input'), true))
 								echo "Module " . $this->model->getRequest(3) . " successful configured\n";
 							else
 								echo "Error while configuring module " . $this->model->getRequest(3) . "\n";
@@ -489,9 +497,32 @@ class ZkController extends Controller
 						break;
 				}
 				break;
+			case 'init':
+				$modules = $this->getSortedModules();
+				echo "Inizializzo moduli...\n";
+				foreach ($modules as $module) {
+					echo "Configurazione modulo " . $module . "... ";
+					if ($this->updater->cliConfig($module, 'init', true, false)) {
+						echo "OK\n";
+					} else {
+						echo "ERRORE\n";
+						break;
+					}
+				}
+				break;
 			case 'make-cache':
-			case 'empty-session':
-				$this->get();
+				$modules = $this->getSortedModules();
+				echo "Elaboro cache moduli...\n";
+				foreach ($modules as $module) {
+					echo "Cache modulo " . $module . "... ";
+					try {
+						$this->updater->updateModuleCache($module);
+						echo "OK\n";
+					} catch (Exception $e) {
+						echo getErr($e);
+						break;
+					}
+				}
 				break;
 			case 'inspect-session':
 				echo json_encode($_SESSION) . "\n";
@@ -499,6 +530,7 @@ class ZkController extends Controller
 			case null:
 				echo "Usage: zk/<command> [parameter1=value1] [parameter2=value2] ...\n\n"
 					. "Available commands:\n\n"
+					. "init                         Init modules\n"
 					. "make-cache                   Re-make the cache of all modules\n"
 					. "modules                      List all installed modules\n"
 					. "modules/install              List all installable modules\n"
