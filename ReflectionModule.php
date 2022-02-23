@@ -26,9 +26,10 @@ class ReflectionModule
 	/**
 	 * @param string $name
 	 * @param Core $model
+	 * @param bool $load_md5
 	 * @param string $base_dir
 	 */
-	function __construct(string $name, Core $model, string $base_dir = 'model')
+	function __construct(string $name, Core $model, bool $load_md5 = true, string $base_dir = 'model')
 	{
 		$this->folder_name = $name;
 		$this->model = $model;
@@ -51,8 +52,6 @@ class ReflectionModule
 			}
 		}
 
-		$this->files = $this->getFiles($this->path);
-
 		$vars_file = INCLUDE_PATH . $this->base_dir . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
 
 		$status_vars = [
@@ -63,9 +62,8 @@ class ReflectionModule
 		if (file_exists($vars_file)) {
 			require($vars_file);
 
-			if (isset($vars)) {
+			if (isset($vars))
 				$status_vars = array_merge($status_vars, $vars);
-			}
 
 			if (isset($installed))
 				$status_vars['installed'] = $installed;
@@ -74,11 +72,15 @@ class ReflectionModule
 		$this->installed = $status_vars['installed'];
 		$this->version_md5 = $status_vars['md5'];
 
-		$md5 = [];
-		foreach ($this->files as $f)
-			$md5[] = $f['md5'];
-		sort($md5);
-		$this->md5 = md5(implode('', $md5));
+		if ($load_md5) {
+			$this->files = $this->getFiles($this->path);
+
+			$md5 = [];
+			foreach ($this->files as $f)
+				$md5[] = $f['md5'];
+			sort($md5);
+			$this->md5 = md5(implode('', $md5));
+		}
 	}
 
 	/**
@@ -145,11 +147,10 @@ class ReflectionModule
 		if ($this->configClass === null)
 			$this->loadConfigClass();
 
-		if ($this->configClass) {
+		if ($this->configClass)
 			return $this->configClass->configurable;
-		} else {
+		else
 			return false;
-		}
 	}
 
 	/**
@@ -179,9 +180,9 @@ class ReflectionModule
 	}
 
 	/**
-	 * @return Module_Config
+	 * @return Module_Config|null
 	 */
-	public function getConfigClass()
+	public function getConfigClass(): ?Module_Config
 	{
 		$this->loadConfigClass();
 		return $this->configClass ?: null;
@@ -190,7 +191,7 @@ class ReflectionModule
 	/**
 	 * Does a config class file exist?
 	 */
-	public function hasConfigClass()
+	public function hasConfigClass(): bool
 	{
 		$configClassPath = $this->getConfigClassPath();
 		return file_exists($configClassPath);
@@ -207,9 +208,9 @@ class ReflectionModule
 	}
 
 	/**
-	 *
+	 * @return array
 	 */
-	public function getFilesByType()
+	public function getFilesByType(): array
 	{
 		$arr_files = [];
 		foreach (Autoloader::$fileTypes as $type => $data) {

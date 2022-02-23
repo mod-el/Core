@@ -39,6 +39,7 @@ class ZkController extends Controller
 						$modules = $this->updater->downloadableModules();
 						$this->injected['modules'] = $modules;
 						break;
+
 					case 'config':
 					case 'init':
 						if (!$this->model->getRequest(3))
@@ -66,6 +67,7 @@ class ZkController extends Controller
 							die('Can\'t find config class for the module');
 						}
 						break;
+
 					case 'files-list':
 						if (!$this->model->getInput('modules'))
 							die('Invalid data');
@@ -77,10 +79,9 @@ class ZkController extends Controller
 
 						$_SESSION['delete-files'] = $files['delete'];
 						return $files['update'];
-						break;
+
 					case null:
 						$modules = $this->updater->getModules(true);
-
 						$modules = $this->updater->topSortModules($modules);
 
 						// Check that all dependencies are satisfied, and check if some module still has to be initialized
@@ -164,13 +165,15 @@ class ZkController extends Controller
 						$this->injected['priorities'] = $priorities;
 						$this->injected['modules'] = $modules;
 						break;
+
 					default:
 						die('Unknwon action');
-						break;
 				}
 				break;
+
 			case 'local-modules':
-				$modules = $this->updater->getModules(false, 'app' . DIRECTORY_SEPARATOR . 'modules');
+				$modules = $this->updater->getModules(false, false, 'app' . DIRECTORY_SEPARATOR . 'modules');
+
 				if ($this->model->getRequest(2) and isset($modules[$this->model->getRequest(2)])) {
 					$this->model->viewOptions['template'] = 'local-module';
 					$this->injected['module'] = $modules[$this->model->getRequest(2)];
@@ -182,6 +185,7 @@ class ZkController extends Controller
 							$this->model->viewOptions['template'] = 'make-file';
 							$this->model->viewOptions['showLayout'] = false;
 							break;
+
 						case 'action':
 							if (!$this->model->getRequest(4) or !$this->model->getRequest(5) or !$this->model->getRequest(6))
 								die('Missing data');
@@ -231,6 +235,7 @@ class ZkController extends Controller
 					$this->injected['modules'] = $modules;
 				}
 				break;
+
 			case 'make-cache':
 				if ($this->model->getRequest(2)) {
 					try {
@@ -250,14 +255,15 @@ class ZkController extends Controller
 					$this->injected['modules'] = $modules;
 				}
 				break;
+
 			case 'empty-session':
 				$_SESSION = [];
 				die("Session cleared.\n");
-				break;
+
 			case 'inspect-session':
 				zkdump($_SESSION);
 				die();
-				break;
+
 			default:
 				$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 				break;
@@ -266,7 +272,7 @@ class ZkController extends Controller
 
 	private function getSortedModules(bool $onlyWithConfig = false): array
 	{
-		$modules = $this->updater->getModules();
+		$modules = $this->updater->getModules(false, false);
 		$modules = $this->updater->topSortModules($modules);
 		if ($onlyWithConfig) {
 			foreach ($modules as $mName => $m) {
@@ -313,7 +319,7 @@ class ZkController extends Controller
 								echo getErr($e);
 							}
 							die();
-							break;
+
 						case 'config':
 						case 'init':
 							$this->get();
@@ -341,6 +347,7 @@ class ZkController extends Controller
 
 							$this->get();
 							break;
+
 						case 'update-file':
 							if (!isset($_POST['file']))
 								die('Missing data');
@@ -350,7 +357,7 @@ class ZkController extends Controller
 							else
 								echo 'Error while updating file.';
 							die();
-							break;
+
 						case 'finalize-update':
 							try {
 								$modules = $this->model->getInput('modules');
@@ -365,7 +372,7 @@ class ZkController extends Controller
 								echo "Error while finalizing the update, you might need to update manually.\n" . getErr($e);
 							}
 							die();
-							break;
+
 						case 'delete':
 							$modules = $this->model->getInput('modules');
 							if (!$modules)
@@ -389,9 +396,8 @@ class ZkController extends Controller
 								echo getErr($e);
 							}
 							die();
-							break;
 					}
-					break;
+
 				case 'local-modules':
 					$this->get();
 
@@ -449,6 +455,7 @@ class ZkController extends Controller
 							}
 						}
 						break;
+
 					case 'update':
 						$modules = null;
 						if ($this->model->getInput('modules')) {
@@ -463,6 +470,7 @@ class ZkController extends Controller
 
 						$this->updater->cliUpdate($modules);
 						break;
+
 					case 'init':
 					case 'config':
 						if ($this->model->getRequest(3)) {
@@ -474,6 +482,7 @@ class ZkController extends Controller
 							echo "Usage: zk/modules/config/<module>\n";
 						}
 						break;
+
 					case null:
 						$this->get();
 
@@ -492,11 +501,13 @@ class ZkController extends Controller
 							echo "No module found\n";
 						}
 						break;
+
 					default:
 						echo $this->model->getRequest(2) . " is not a recognized command\n";
 						break;
 				}
 				break;
+
 			case 'init':
 				$modules = $this->getSortedModules();
 				echo "Inizializzo moduli...\n";
@@ -510,6 +521,7 @@ class ZkController extends Controller
 					}
 				}
 				break;
+
 			case 'make-cache':
 				$modules = $this->getSortedModules(true);
 				// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
@@ -530,9 +542,11 @@ class ZkController extends Controller
 					}
 				}
 				break;
+
 			case 'inspect-session':
 				echo json_encode($_SESSION) . "\n";
 				break;
+
 			case null:
 				echo "Usage: zk/<command> [parameter1=value1] [parameter2=value2] ...\n\n"
 					. "Available commands:\n\n"
@@ -548,6 +562,7 @@ class ZkController extends Controller
 					. "modules/config/<module>      Configure options for a module\n"
 					. "\n";
 				break;
+
 			default:
 				echo $this->model->getRequest(1) . " is not a recognized command\n";
 				break;

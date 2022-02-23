@@ -246,15 +246,12 @@ class Core implements \JsonSerializable, ModuleInterface
 	/**
 	 * List all modules in cache
 	 *
-	 * @param bool|null $custom
 	 * @return array
 	 */
-	public function listModules(bool $custom = null): array
+	public function listModules(): array
 	{
 		$modules = [];
 		foreach ($this->availableModules as $name => $module) {
-			if ($custom !== null and $module['custom'] !== $custom)
-				continue;
 			$modules[] = [
 				'name' => $name,
 				'custom' => $module['custom'],
@@ -262,9 +259,11 @@ class Core implements \JsonSerializable, ModuleInterface
 				'version' => $module['version'],
 			];
 		}
+
 		usort($modules, function ($a, $b) {
 			return $a['name'] <=> $b['name'];
 		});
+
 		return $modules;
 	}
 

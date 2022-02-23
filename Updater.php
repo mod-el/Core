@@ -21,22 +21,24 @@ class Updater
 	 * If $get_updates is true, check on the repository if a new version is available
 	 *
 	 * @param bool $get_updates
+	 * @param bool $load_md5
 	 * @param string|null $base_dir
-	 * @param bool|null $custom
 	 * @return ReflectionModule[]
 	 */
-	public function getModules(bool $get_updates = false, ?string $base_dir = null, ?bool $custom = false): array
+	public function getModules(bool $get_updates = false, bool $load_md5 = true, ?string $base_dir = null): array
 	{
 		$modules = [];
 
 		if ($base_dir === null) {
-			$cacheModules = $this->model->listModules($custom);
+			$cacheModules = $this->model->listModules();
 
 			foreach ($cacheModules as $m) {
+				if ($m['custom'])
+					continue;
 				if (!is_dir(INCLUDE_PATH . $m['path']))
 					mkdir(INCLUDE_PATH . $m['path'], 0777, true);
 
-				$modules[$m['name']] = new ReflectionModule($m['name'], $this->model, $custom ? 'app' . DIRECTORY_SEPARATOR . 'modules' : 'model');
+				$modules[$m['name']] = new ReflectionModule($m['name'], $this->model, $load_md5);
 			}
 		} else { // For Repository module
 			$dirs = glob(INCLUDE_PATH . $base_dir . DIRECTORY_SEPARATOR . '*');
@@ -45,7 +47,7 @@ class Updater
 					continue;
 				$name = explode(DIRECTORY_SEPARATOR, $f);
 				$name = end($name);
-				$module = new ReflectionModule($name, $this->model, $base_dir);
+				$module = new ReflectionModule($name, $this->model, $load_md5, $base_dir);
 				if ($module->exists)
 					$modules[$name] = $module;
 			}
@@ -470,7 +472,7 @@ class Updater
 	{
 		$config = $this->model->retrieveConfig();
 
-		$modules = $this->getModules();
+		$modules = $this->getModules(false, false);
 
 		$remote_str = file_get_contents($config['repository'] . '?act=get-modules&key=' . urlencode($config['license']));
 		$remote = json_decode($remote_str, true);
