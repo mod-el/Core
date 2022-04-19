@@ -74,13 +74,6 @@ class Core implements \JsonSerializable, ModuleInterface
 			}
 
 			header('Content-type: text/html; charset=utf-8');
-
-			if (!isset($_COOKIE['ZKID'])) {
-				$ip = $_SERVER['REMOTE_ADDR'] ?? 0;
-				$zkid = sha1($ip . time());
-				setcookie('ZKID', $zkid, time() + 60 * 60 * 24 * 30, PATH);
-			}
-
 			setcookie('ZK', PATH, time() + (60 * 60 * 24 * 365), PATH);
 		}
 
@@ -100,6 +93,14 @@ class Core implements \JsonSerializable, ModuleInterface
 		$this->reloadCacheFile();
 
 		$this->modules['Core'][0] = $this;
+
+		if (!isset($_COOKIE['ZKID'])) {
+			if (!$this->moduleExists('CookieLaw') or $this->_CookieLaw->isAccepted()) {
+				$ip = $_SERVER['REMOTE_ADDR'] ?? 0;
+				$zkid = sha1($ip . time());
+				setcookie('ZKID', $zkid, time() + 60 * 60 * 24 * 30, PATH);
+			}
+		}
 
 		$this->checkCleanUp();
 	}
