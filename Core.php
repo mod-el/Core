@@ -74,6 +74,7 @@ class Core implements \JsonSerializable, ModuleInterface
 				and !str_starts_with($_SERVER['HTTP_HOST'], 'www.')
 				and !str_starts_with($_SERVER['HTTP_HOST'], 'localhost')
 				and !str_starts_with($_SERVER['HTTP_HOST'], '127.0.0.1')
+				and !str_starts_with($_SERVER['HTTP_USER_AGENT'] ?? '', 'curl')
 			) {
 				header('Location: http' . (HTTPS ? 's' : '') . '://www.' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 				exit;
