@@ -68,7 +68,13 @@ class Core implements \JsonSerializable, ModuleInterface
 		mb_internal_encoding('utf-8');
 
 		if (!$this->isCLI()) {
-			if (defined('FORCE_WWW') and FORCE_WWW and !str_starts_with($_SERVER['HTTP_HOST'], 'www.')) {
+			if (
+				defined('FORCE_WWW')
+				and FORCE_WWW
+				and !str_starts_with($_SERVER['HTTP_HOST'], 'www.')
+				and !str_starts_with($_SERVER['HTTP_HOST'], 'localhost')
+				and !str_starts_with($_SERVER['HTTP_HOST'], '127.0.0.1')
+			) {
 				header('Location: http' . (HTTPS ? 's' : '') . '://www.' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 				exit;
 			}
