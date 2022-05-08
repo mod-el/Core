@@ -55,12 +55,11 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function preInit()
 	{
-		if (version_compare(phpversion(), '8.0.0', '<'))
-			die('PHP version (' . phpversion() . ') is not enough for ModEl framework to run.');
-
 		$this->trigger('Core', 'start');
 
 		$this->defineConstants();
+
+		Model::init();
 
 		error_reporting(E_ALL);
 		ini_set('display_errors', DEBUG_MODE);

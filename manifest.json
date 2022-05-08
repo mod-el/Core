@@ -1,6 +1,6 @@
 {
 	"name": "Core",
-	"description": "ModEl Framework",
+	"description": "ModEl Framework (requires model/core via Composer)",
 	"version": "3.0.0",
 	"dependencies": {},
 	"file-types": {
