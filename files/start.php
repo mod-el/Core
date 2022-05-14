@@ -1,4 +1,7 @@
 <?php
+if (!class_exists('\\Model\\Core\\Model'))
+	die('Please install model/core via composer and require vendor/autoload.php in index.php');
+
 session_start();
 
 $baseDirectory = realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..') . DIRECTORY_SEPARATOR;
