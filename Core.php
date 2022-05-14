@@ -57,7 +57,9 @@ class Core implements \JsonSerializable, ModuleInterface
 	{
 		$this->trigger('Core', 'start');
 
-		require(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php');
+		$oldConfigFile = realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php';
+		if (file_exists($oldConfigFile))
+			require($oldConfigFile);
 
 		Model::init();
 
