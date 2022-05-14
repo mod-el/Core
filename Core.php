@@ -57,7 +57,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	{
 		$this->trigger('Core', 'start');
 
-		$this->defineConstants();
+		require(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php');
 
 		Model::init();
 
@@ -109,39 +109,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		}
 
 		$this->checkCleanUp();
-	}
-
-	/**
-	 *
-	 */
-	private function defineConstants()
-	{
-		if (defined('START_TIME'))
-			return;
-
-		DEFINE('START_TIME', microtime(true));
-
-		include(realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php');
-
-		define('INCLUDE_PATH', realpath(dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..') . DIRECTORY_SEPARATOR);
-		define('PATHBASE', substr(INCLUDE_PATH, 0, -strlen(PATH)));
-
-		if (isset($_COOKIE['ZKADMIN']) and $_COOKIE['ZKADMIN'] == '69')
-			define('DEBUG_MODE', 1);
-		else
-			define('DEBUG_MODE', MAIN_DEBUG_MODE);
-
-		define('ZK_LOADING_ID', substr(md5(microtime()), 0, 16));
-
-		if (!defined('HTTPS')) {
-			if ((!empty($_SERVER['HTTPS']) and $_SERVER['HTTPS'] !== 'off') or ($_SERVER['SERVER_PORT'] ?? null) == 443)
-				define('HTTPS', 1);
-			else
-				define('HTTPS', 0);
-		}
-
-		if (!defined('BASE_HOST'))
-			define('BASE_HOST', (HTTPS ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? ''));
 	}
 
 	/**
