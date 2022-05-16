@@ -63,29 +63,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		if (file_exists($oldConfigFile))
 			require($oldConfigFile);
 
-		if (!$this->isCLI()) {
-			if (
-				defined('FORCE_WWW')
-				and FORCE_WWW
-				and !str_starts_with($_SERVER['HTTP_HOST'], 'www.')
-				and !str_starts_with($_SERVER['HTTP_HOST'], 'localhost')
-				and !str_starts_with($_SERVER['HTTP_HOST'], '127.0.0.1')
-				and !str_starts_with($_SERVER['HTTP_USER_AGENT'] ?? '', 'curl')
-			) {
-				header('Location: http' . (HTTPS ? 's' : '') . '://www.' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-				exit;
-			}
-
-			header('Content-type: text/html; charset=utf-8');
-			setcookie('ZK', PATH, time() + (60 * 60 * 24 * 365), PATH);
-		}
-
-		if (DEBUG_MODE and function_exists('opcache_reset'))
-			opcache_reset();
-
-		if (!isset($_SESSION))
-			$_SESSION = [];
-
 		$model = $this;
 		register_shutdown_function(function () use ($model) {
 			$model->terminate();
@@ -605,7 +582,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 		$this->postInit();
 
-		if ($this->isCLI()) {
+		if (Model::isCLI()) {
 			$this->trigger('Core', 'controllerExecution', ['method' => 'cli']);
 			$controllerReturn = $this->controller->cli();
 		} else {
@@ -624,7 +601,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			$this->trigger('Core', 'jsonResponse');
 			header('Content-Type: application/json');
 			echo json_encode($controllerReturn);
-		} elseif (!$this->isCLI()) {
+		} elseif (!Model::isCLI()) {
 			/*
 		 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
 		 * */
@@ -767,7 +744,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	public function getRequest(?int $i = null)
 	{
 		if (!isset($this->request)) {
-			if ($this->isCLI()) {
+			if (Model::isCLI()) {
 				global $argv;
 				if (!is_array($argv))
 					return $i === null ? [] : null;
@@ -858,7 +835,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function getInput(string $i = null, string $type = 'request')
 	{
-		if ($this->isCLI()) {
+		if (Model::isCLI()) {
 			if (!isset($this->inputVarsCache)) {
 				$this->inputVarsCache = [];
 
@@ -1160,13 +1137,13 @@ class Core implements \JsonSerializable, ModuleInterface
 	}
 
 	/**
-	 * Returns true if Model is executed via CLI, false otherwise
+	 * Backward compatibility
 	 *
 	 * @return bool
 	 */
 	public function isCLI(): bool
 	{
-		return (php_sapi_name() == "cli");
+		return Model::isCLI();
 	}
 
 	/**
@@ -1176,7 +1153,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	function redirect(string $path)
 	{
-		if ($this->isCLI()) {
+		if (Model::isCLI()) {
 			if (stripos($path, PATH) !== 0)
 				die('Can\t redirect to a non-local url in CLI.');
 
