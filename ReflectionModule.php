@@ -10,6 +10,7 @@ class ReflectionModule
 	public string $folder_name;
 	public string $description;
 	public array $dependencies = [];
+	public array $requires = [];
 	public bool $installed = false;
 	public string $version;
 	public array $files = [];
@@ -98,7 +99,8 @@ class ReflectionModule
 			$this->name = $moduleData['name'];
 			$this->description = $moduleData['description'];
 			$this->version = $moduleData['version'];
-			$this->dependencies = $moduleData['dependencies'];
+			$this->dependencies = $moduleData['dependencies'] ?? [];
+			$this->requires = $moduleData['requires'] ?? [];
 
 			return true;
 		} else {

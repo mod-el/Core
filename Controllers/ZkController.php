@@ -1,5 +1,6 @@
 <?php namespace Model\Core\Controllers;
 
+use Composer\InstalledVersions;
 use Model\Core\Controller;
 use Model\Core\Exception;
 use Model\Core\ReflectionModule;
@@ -89,6 +90,13 @@ class ZkController extends Controller
 						foreach ($modules as $m) {
 							$allDependenciesSatisfied = true;
 
+							foreach ($m->requires as $package) {
+								if (!InstalledVersions::isInstalled($package)) {
+									$this->model->viewOptions['errors'][] = 'Composer library "' . $package . '", dependency of "' . $m->name . '" is not installed!';
+									$allDependenciesSatisfied = false;
+								}
+							}
+
 							foreach ($m->dependencies as $depModule => $depVersion) {
 								if (!isset($modules[$depModule])) {
 									$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '" is not installed!';
@@ -97,10 +105,10 @@ class ZkController extends Controller
 									if ($depVersion === '*')
 										continue;
 
-									if (strpos($depVersion, '>=') === 0 or strpos($depVersion, '<=') === 0 or strpos($depVersion, '<>') === 0 or strpos($depVersion, '!=') === 0 or strpos($depVersion, '==') === 0) {
+									if (str_starts_with($depVersion, '>=') or str_starts_with($depVersion, '<=') or str_starts_with($depVersion, '<>') or str_starts_with($depVersion, '!=') or str_starts_with($depVersion, '==')) {
 										$compareOperator = substr($depVersion, 0, 2);
 										$compareToVersion = substr($depVersion, 2);
-									} elseif (strpos($depVersion, '>') === 0 or strpos($depVersion, '<') === 0 or strpos($depVersion, '=') === 0) {
+									} elseif (str_starts_with($depVersion, '>') or str_starts_with($depVersion, '<') or str_starts_with($depVersion, '=')) {
 										$compareOperator = substr($depVersion, 0, 1);
 										$compareToVersion = substr($depVersion, 1);
 									} else {
@@ -167,7 +175,7 @@ class ZkController extends Controller
 						break;
 
 					default:
-						die('Unknwon action');
+						die('Unknown action');
 				}
 				break;
 

@@ -90,6 +90,7 @@ class Config extends Module_Config
 				'js' => [],
 				'css' => [],
 				'dependencies' => [],
+				'requires' => [],
 				'assets-position' => 'head',
 				'defer-js' => false,
 				'async-js' => false,
@@ -128,6 +129,8 @@ class Config extends Module_Config
 
 				if (isset($moduleData['dependencies']) and is_array($moduleData['dependencies']))
 					$modules[$d_info['filename']]['dependencies'] = array_keys($moduleData['dependencies']);
+				if (isset($moduleData['requires']) and is_array($moduleData['requires']))
+					$modules[$d_info['filename']]['requires'] = $moduleData['requires'];
 
 				if (isset($moduleData['bind-methods']) and is_array($moduleData['bind-methods'])) {
 					foreach ($moduleData['bind-methods'] as $coreMethod => $moduleMethod) {
