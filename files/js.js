@@ -292,6 +292,9 @@ function updateSelectedModules() {
 		});
 	}
 
+	if (updateList.length === 0)
+		return;
+
 	if (corrupted && !confirm('Some modules are marked as edited. Are you sure you want to overwrite them as well?'))
 		return false;
 
