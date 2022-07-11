@@ -271,9 +271,12 @@ function updateAllModules() {
 
 function updateSelectedModules() {
 	let updateList = [], corrupted = false;
-	selectedModules.forEach(module => {
+	for (let module of selectedModules) {
 		let priority = 999;
 		let div = document.querySelector('[data-module="' + module + '"]');
+		if (!div)
+			continue;
+
 		if (div.getAttribute('data-corrupted'))
 			corrupted = true;
 
@@ -287,7 +290,7 @@ function updateSelectedModules() {
 			'name': module,
 			'priority': priority
 		});
-	});
+	}
 
 	if (corrupted && !confirm('Some modules are marked as edited. Are you sure you want to overwrite them as well?'))
 		return false;
