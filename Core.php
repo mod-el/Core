@@ -253,7 +253,8 @@ class Core implements \JsonSerializable, ModuleInterface
 		}
 
 		if ($module['load']) {
-			$className = '\\Model\\' . $name . '\\' . $name;
+			$finalClassName = $name === 'Db' ? 'DbOld' : $name; // Trick per coesistenza con nuova libreria model/db
+			$className = '\\Model\\' . $name . '\\' . $finalClassName;
 			$this->modules[$name][$idx] = new $className($this, $idx);
 			$this->modules[$name][$idx]->init($options);
 		} else {

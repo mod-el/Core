@@ -83,9 +83,10 @@ class Config extends Module_Config
 		// In the second loop, I look for everything else (I can now search through the folders for the custom file types, since I know them)
 		foreach ($dirs as $d) {
 			$d_info = pathinfo($d);
+			$mainClassName = $d_info['filename'] === 'Db' ? 'DbOld' : $d_info['filename']; // Trick per coesistenza con nuova libreria model/db
 			$modules[$d_info['filename']] = [
 				'path' => substr($d, strlen(INCLUDE_PATH)),
-				'load' => file_exists($d . DIRECTORY_SEPARATOR . $d_info['filename'] . '.php'),
+				'load' => file_exists($d . DIRECTORY_SEPARATOR . $mainClassName . '.php'),
 				'custom' => in_array($d, $customDirs),
 				'js' => [],
 				'css' => [],
