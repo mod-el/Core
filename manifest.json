@@ -3,6 +3,9 @@
 	"description": "ModEl Framework (requires model/core via Composer)",
 	"version": "3.0.0",
 	"dependencies": {},
+	"requires": [
+		"model/core"
+	],
 	"file-types": {
 		"Controller": {
 			"folder": "Controllers",
@@ -14,8 +17,5 @@
 				}
 			}
 		}
-	},
-	"autoload": {
-		"MJS\\TopSort": "vendor/marcj/topsort"
 	}
 }

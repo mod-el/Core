@@ -33,7 +33,7 @@ class Config extends Module_Config
 	 */
 	public function makeCache(): bool
 	{
-		Model::cleanUp();
+		Model::realign();
 
 		$classes = [];
 		$fileTypes = [];
