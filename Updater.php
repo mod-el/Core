@@ -55,6 +55,8 @@ class Updater
 
 		if ($get_updates) {
 			$config = $this->model->retrieveConfig();
+			if ($config['disable_updates'] ?? false)
+				return $modules;
 
 			$modules_arr = [];
 			foreach ($modules as $m)
