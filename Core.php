@@ -262,22 +262,26 @@ class Core implements \JsonSerializable, ModuleInterface
 		}
 
 		if ($this->moduleExists('Output')) {
-			$head = $module['assets-position'] === 'head' ? true : false;
-
 			foreach ($module['js'] as $js) {
-				$this->_Output->addJS(strtolower(substr($js, 0, 4)) == 'http' ? $js : $js . '?v=' . $module['version'], [
+				\Model\Assets\Assets::add($js, [
+					'type' => 'js',
 					'custom' => false,
-					'head' => $head,
 					'defer' => $module['defer-js'] ?? false,
 					'async' => $module['async-js'] ?? false,
+					'withTags' => [
+						'position-' . $module['assets-position'],
+					]
 				]);
 			}
 
 			foreach ($module['css'] as $css) {
-				$this->_Output->addCSS(strtolower(substr($css, 0, 4)) == 'http' ? $css : $css . '?v=' . $module['version'], [
+				\Model\Assets\Assets::add($css, [
+					'type' => 'css',
 					'custom' => false,
-					'head' => $head,
 					'defer' => $module['defer-css'] ?? false,
+					'withTags' => [
+						'position-' . $module['assets-position'],
+					]
 				]);
 			}
 		}
