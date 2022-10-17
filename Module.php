@@ -103,7 +103,7 @@ class Module implements ModuleInterface
 		$classname = get_class($this);
 		if ($pos = strrpos($classname, '\\')) // Get the non-namespaced class name
 			$classname = substr($classname, $pos + 1);
-		return $classname;
+		return $classname === 'DbOld' ? 'Db' : $classname; // Trick per coesistenza con nuova libreria model/db
 	}
 
 	/**
