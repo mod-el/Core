@@ -1253,11 +1253,11 @@ class Core implements \JsonSerializable, ModuleInterface
 		if (!$this->moduleExists('Db'))
 			return null;
 
-		$check = $this->_Db->select('main_settings', ['k' => $k], 'v');
-		if ($check === false)
+		$check = $this->_Db->select('main_settings', ['k' => $k]);
+		if (!$check)
 			return null;
 
-		return $check;
+		return $check['v'];
 	}
 
 	/**
