@@ -759,7 +759,8 @@ class Core implements \JsonSerializable, ModuleInterface
 				else
 					$this->request = [];
 			} else {
-				$this->request = isset($_GET['url']) ? explode('/', trim($_GET['url'], '/')) : array();
+				$url = trim($_GET['url'] ?? '', '/');
+				$this->request = $url ? explode('/', $url) : [];
 			}
 		}
 
