@@ -223,10 +223,10 @@ class Core implements \JsonSerializable, ModuleInterface
 	 *
 	 * @param string $name
 	 * @param array $options
-	 * @param mixed $idx
+	 * @param string $idx
 	 * @return Module|null
 	 */
-	public function load(string $name, array $options = [], $idx = 0): ?ModuleInterface
+	public function load(string $name, array $options = [], string $idx = '0'): ?ModuleInterface
 	{
 		if (isset($this->modules[$name][$idx]))
 			return $this->modules[$name][$idx];
@@ -252,7 +252,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			}
 		}
 
-		if ($module['load']) {
+		if ($module['load'] and ($options['load'] ?? true)) {
 			$finalClassName = $name === 'Db' ? 'DbOld' : $name; // Trick per coesistenza con nuova libreria model/db
 			$className = '\\Model\\' . $name . '\\' . $finalClassName;
 			$this->modules[$name][$idx] = new $className($this, $idx);
