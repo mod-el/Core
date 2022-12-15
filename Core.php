@@ -605,7 +605,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			 * */
 			$this->trigger('Core', 'jsonResponse');
 			header('Content-Type: application/json');
-			echo json_encode($controllerReturn);
+			echo json_encode($controllerReturn, JSON_INVALID_UTF8_SUBSTITUTE);
 		} elseif (!Model::isCLI()) {
 			/*
 		 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
