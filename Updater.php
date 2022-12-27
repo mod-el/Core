@@ -285,8 +285,6 @@ class Updater
 			unlink(INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $f);
 
 		foreach ($modules as $name) {
-			$module = new ReflectionModule($name, $this->model);
-
 			if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name, true))
 				return false;
 			if (!$this->recursiveCopy('model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . $name, 'model' . DIRECTORY_SEPARATOR . $name))
