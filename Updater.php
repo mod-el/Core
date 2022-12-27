@@ -286,7 +286,6 @@ class Updater
 
 		foreach ($modules as $name) {
 			$module = new ReflectionModule($name, $this->model);
-			$old_version = $module->version ?? '0.0.0';
 
 			if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . $name, true))
 				return false;
@@ -295,12 +294,16 @@ class Updater
 
 			if (isset($remote[$name]))
 				$this->changeModuleInternalVar($name, 'md5', $remote[$name]['md5']);
+		}
 
-			$coreConfig = new Config($this->model);
-			$coreConfig->makeCache();
+		$coreConfig = new Config($this->model);
+		$coreConfig->makeCache();
 
+		foreach ($modules as $name) {
 			$module = new ReflectionModule($name, $this->model);
+
 			if ($module->hasConfigClass()) {
+				$old_version = $module->version ?? '0.0.0';
 				$new_version = $module->version;
 
 				$configClass = $module->getConfigClass();
