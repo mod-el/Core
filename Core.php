@@ -726,15 +726,12 @@ class Core implements \JsonSerializable, ModuleInterface
 				return [
 					'controller' => 'Zk',
 				];
-				break;
+
 			default:
 				return [
 					'controller' => 'Err404',
 				];
-				break;
 		}
-
-		return null;
 	}
 
 	/**
@@ -743,7 +740,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * If $i is given, it returns that index of the request.
 	 * Otherwise, it returns the full array.
 	 *
-	 * @param int $i
+	 * @param int|null $i
 	 * @return array|string|null
 	 */
 	public function getRequest(?int $i = null)
@@ -835,11 +832,11 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * If $i is given, it returns that variable.
 	 * Otherwise, it returns the full array.
 	 *
-	 * @param string $i
+	 * @param string|null $i
 	 * @param string $type
 	 * @return array|string|null
 	 */
-	public function getInput(string $i = null, string $type = 'request')
+	public function getInput(?string $i = null, string $type = 'request')
 	{
 		if (Model::isCLI()) {
 			if (!isset($this->inputVarsCache)) {
