@@ -98,7 +98,7 @@ class Updater
 	 * Sets the internal status of a module as installed
 	 *
 	 * @param string $name
-	 * @param Module_Config $configClass
+	 * @param Module_Config|null $configClass
 	 * @return bool
 	 */
 	public function markAsInitialized(string $name, ?Module_Config $configClass = null): bool
@@ -117,9 +117,6 @@ class Updater
 			} catch (\Exception $e) {
 			}
 		}
-
-		$coreConfigClass = $this->getConfigClassFor('Core');
-		$coreConfigClass->makeCache();
 
 		return true;
 	}

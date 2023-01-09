@@ -160,6 +160,9 @@ class ZkController extends Controller
 								else
 									$this->model->redirect(PATH . 'zk/modules/init/' . $moduleToInit->folder_name);
 							}
+
+							$coreConfigClass = $this->updater->getConfigClassFor('Core');
+							$coreConfigClass->makeCache();
 						}
 
 						$priorities = [];
@@ -342,6 +345,9 @@ class ZkController extends Controller
 									case 'init':
 										try {
 											if ($this->updater->initModule($this->model->getRequest(3), $_POST)) {
+												$coreConfigClass = $this->updater->getConfigClassFor('Core');
+												$coreConfigClass->makeCache();
+
 												$this->model->redirect(PATH . 'zk/modules' . $qry_string);
 											} else {
 												$this->model->error('Some error occurred while installing.');
@@ -518,16 +524,21 @@ class ZkController extends Controller
 
 			case 'init':
 				$modules = $this->getSortedModules();
-				echo "Inizializzo moduli...\n";
+				echo "Modules init...\n";
 				foreach ($modules as $module) {
 					echo $module . "... ";
-					if ($this->updater->cliConfig($module, 'init', true, false)) {
+					if ($this->updater->cliConfig($module, 'init', true)) {
 						echo "OK\n";
 					} else {
-						echo "ERRORE\n";
+						echo "ERROR\n";
 						exit(1);
 					}
 				}
+
+				echo "Refreshing core cache...\n";
+				$coreConfigClass = $this->updater->getConfigClassFor('Core');
+				$coreConfigClass->makeCache();
+				echo "Done\n";
 				break;
 
 			case 'make-cache':
