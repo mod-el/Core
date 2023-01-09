@@ -625,8 +625,11 @@ class Updater
 				// Eventual recursive loops between dependency modules (e.g. between Core, Router and ORM) will be ignored thanks to the try-catch block
 				// This is because the modules will be updated by the next function call in the controller anyway, so there's no need to stop the whole process
 				try {
-					$sub_updated = $this->internalUpdateCache($dep);
-					$updated = array_merge($updated, $sub_updated);
+					if ($dep !== 'Core') {
+						// The core cache is updated separately
+						$sub_updated = $this->internalUpdateCache($dep);
+						$updated = array_merge($updated, $sub_updated);
+					}
 				} catch (Exception $e) {
 				}
 			}
