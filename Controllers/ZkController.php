@@ -546,6 +546,10 @@ class ZkController extends Controller
 				// I update the Core cache twice, because other things could have changed since last update (i.e. router rules)
 				$modules[] = 'Core';
 
+				// Si può richiedere di aggiornare il core una volta sola alla fine
+				if ($this->model->getInput('core_once'))
+					array_shift($modules);
+
 				echo "Elaboro cache moduli...\n";
 				foreach ($modules as $module) {
 					echo $module . "... ";
