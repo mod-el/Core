@@ -193,10 +193,10 @@ function isErr(mixed $el): bool
 /**
  * Gets the string from an Exception, depending if it's a simple Exception or a ModEl Exception
  *
- * @param Exception $e
+ * @param Throwable $e
  * @return string
  */
-function getErr(\Exception $e): string
+function getErr(\Throwable $e): string
 {
 	return isErr($e) ? $e->show() : $e->getMessage();
 }
