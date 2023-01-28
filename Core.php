@@ -68,8 +68,6 @@ class Core implements \JsonSerializable, ModuleInterface
 			$model->terminate();
 		});
 
-		set_error_handler([$this, 'errorHandler']);
-
 		$this->reloadCacheFile();
 
 		$this->modules['Core'][0] = $this;
@@ -981,12 +979,12 @@ class Core implements \JsonSerializable, ModuleInterface
 	/* ERRORS MANAGEMENT */
 
 	/**
-	 * This will raise a Exception and it attempts to log it (via errorHandler method).
+	 * This will raise a Exception and attempts to log it
 	 *
 	 * @param string $gen
 	 * @param string|array $options
 	 */
-	public function error(string $gen, $options = '')
+	public function error(string $gen, string|array $options = '')
 	{
 		if (!is_array($options))
 			$options = ['mex' => $options];
@@ -999,44 +997,14 @@ class Core implements \JsonSerializable, ModuleInterface
 
 		$b = debug_backtrace();
 
-		$this->errorHandler('ModEl', $gen . ' - ' . $options['mex'], $b[0]['file'], $b[0]['line']); // Log
+		if (class_exists('\\Model\\Logger\\Logger'))
+			\Model\Events\Events::dispatch(new \Model\Logger\Events\Error(0, $gen . ' - ' . $options['mex'], $b[0]['file'], $b[0]['line']));
 
 		$e = new Exception($gen, $options['code']);
 		$e->_mex = $options['mex'];
 		$e->_details = $options['details'];
 
 		throw $e;
-	}
-
-	/**
-	 * This will attempt to log an error in the error log table in the database.
-	 *
-	 * @param $errno
-	 * @param $errstr
-	 * @param $errfile
-	 * @param $errline
-	 * @param $errcontext
-	 * @return bool
-	 */
-	public function errorHandler($errno, $errstr, $errfile, $errline, $errcontext = false)
-	{
-		if (error_reporting() === 0)
-			return true;
-
-		$backtrace = zkBacktrace(true);
-		array_shift($backtrace);
-
-		$errors = [E_ERROR => 'E_ERROR', E_WARNING => 'E_WARNING', E_PARSE => 'E_PARSE', E_NOTICE => 'E_NOTICE', E_CORE_ERROR => 'E_CORE_ERROR', E_CORE_WARNING => 'E_CORE_WARNING', E_COMPILE_ERROR => 'E_COMPILE_ERROR', E_COMPILE_WARNING => 'E_COMPILE_WARNING', E_USER_ERROR => 'E_USER_ERROR', E_USER_WARNING => 'E_USER_WARNING', E_USER_NOTICE => 'E_USER_NOTICE', E_STRICT => 'E_STRICT', E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR', E_DEPRECATED => 'E_DEPRECATED', E_USER_DEPRECATED => 'E_USER_DEPRECATED', E_ALL => 'E_ALL'];
-		$this->trigger('Core', 'error', [
-			'no' => $errno,
-			'code' => $errors[$errno] ?? $errno,
-			'str' => $errstr,
-			'file' => $errfile,
-			'line' => $errline,
-			'backtrace' => $backtrace,
-		]);
-
-		return false;
 	}
 
 	/* EVENTS */
