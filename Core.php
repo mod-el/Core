@@ -44,10 +44,6 @@ class Core implements \JsonSerializable, ModuleInterface
 	/** @var array */
 	private array $registeredListeners = [];
 	/** @var array */
-	private array $eventsHistory = [];
-	/** @var bool */
-	private bool $eventsOn = true;
-	/** @var array */
 	private array $modulesWithCleanUp = [];
 
 	/**
@@ -1023,14 +1019,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		if (!isset($this->registeredListeners[$event]))
 			$this->registeredListeners[$event] = [];
 		$this->registeredListeners[$event][] = $callback;
-
-		if ($retroactive) {
-			foreach ($this->eventsHistory as $e) {
-				if ($e['module'] . '_' . $e['event'] === $event or $e['event'] === $event) {
-					call_user_func($callback, $e['data']);
-				}
-			}
-		}
 	}
 
 	/**
@@ -1055,47 +1043,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			}
 		}
 
-		if (!$this->eventsOn)
-			return true;
-
-		$this->eventsHistory[] = [
-			'module' => $module,
-			'event' => $event,
-			'data' => $data,
-			'time' => microtime(true),
-		];
-
 		return true;
-	}
-
-	/**
-	 * Getter for events history
-	 *
-	 * @return array
-	 */
-	public function getEventsHistory(): array
-	{
-		return $this->eventsHistory;
-	}
-
-	/**
-	 * Turns off or on events logging
-	 *
-	 * @param bool $set
-	 */
-	public function switchEvents(bool $set)
-	{
-		$this->eventsOn = $set;
-	}
-
-	/**
-	 * Is events logging on?
-	 *
-	 * @return bool
-	 */
-	public function getEventsFlag(): bool
-	{
-		return $this->eventsOn;
 	}
 
 	/* VARIOUS UTILITIES */
