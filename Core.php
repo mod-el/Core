@@ -68,7 +68,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			$model->terminate();
 		});
 
-		set_error_handler(array($this, 'errorHandler'));
+		set_error_handler([$this, 'errorHandler']);
 
 		$this->reloadCacheFile();
 
@@ -366,7 +366,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	public function allModules(?string $name = null): array
 	{
 		if ($name === null) {
-			$return = array();
+			$return = [];
 			foreach ($this->modules as $name => $arr) {
 				if (count($arr) == 1 and key($arr) === 0) {
 					$return[$name] = $arr[0];
@@ -377,7 +377,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			}
 			return $return;
 		} else {
-			return isset($this->modules[$name]) ? $this->modules[$name] : array();
+			return $this->modules[$name] ?? [];
 		}
 	}
 
@@ -1026,10 +1026,10 @@ class Core implements \JsonSerializable, ModuleInterface
 		$backtrace = zkBacktrace(true);
 		array_shift($backtrace);
 
-		$errors = array(E_ERROR => 'E_ERROR', E_WARNING => 'E_WARNING', E_PARSE => 'E_PARSE', E_NOTICE => 'E_NOTICE', E_CORE_ERROR => 'E_CORE_ERROR', E_CORE_WARNING => 'E_CORE_WARNING', E_COMPILE_ERROR => 'E_COMPILE_ERROR', E_COMPILE_WARNING => 'E_COMPILE_WARNING', E_USER_ERROR => 'E_USER_ERROR', E_USER_WARNING => 'E_USER_WARNING', E_USER_NOTICE => 'E_USER_NOTICE', E_STRICT => 'E_STRICT', E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR', E_DEPRECATED => 'E_DEPRECATED', E_USER_DEPRECATED => 'E_USER_DEPRECATED', E_ALL => 'E_ALL');
+		$errors = [E_ERROR => 'E_ERROR', E_WARNING => 'E_WARNING', E_PARSE => 'E_PARSE', E_NOTICE => 'E_NOTICE', E_CORE_ERROR => 'E_CORE_ERROR', E_CORE_WARNING => 'E_CORE_WARNING', E_COMPILE_ERROR => 'E_COMPILE_ERROR', E_COMPILE_WARNING => 'E_COMPILE_WARNING', E_USER_ERROR => 'E_USER_ERROR', E_USER_WARNING => 'E_USER_WARNING', E_USER_NOTICE => 'E_USER_NOTICE', E_STRICT => 'E_STRICT', E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR', E_DEPRECATED => 'E_DEPRECATED', E_USER_DEPRECATED => 'E_USER_DEPRECATED', E_ALL => 'E_ALL'];
 		$this->trigger('Core', 'error', [
 			'no' => $errno,
-			'code' => isset($errors[$errno]) ? $errors[$errno] : $errno,
+			'code' => $errors[$errno] ?? $errno,
 			'str' => $errstr,
 			'file' => $errfile,
 			'line' => $errline,
@@ -1199,15 +1199,15 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function getDebugData(): array
 	{
-		$debug = array(
+		$debug = [
 			'prefix' => $this->prefix([], ['path' => false]),
 			'request' => implode('/', $this->getRequest()),
 			'execution_time' => microtime(true) - START_TIME,
 			'module' => $this->leadingModule,
 			'controller' => $this->controllerName,
 			'modules' => array_keys($this->allModules()),
-			'zk_loading_id' => ZK_LOADING_ID,
-		);
+			'loading_id' => MODEL_LOADING_ID,
+		];
 
 		if ($this->isLoaded('Db')) {
 			$debug['n_query'] = $this->_Db->n_query;
