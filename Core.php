@@ -1,6 +1,7 @@
 <?php namespace Model\Core;
 
 use Model\Core\Events\Error;
+use Model\Events\Events;
 
 class Core implements \JsonSerializable, ModuleInterface
 {
@@ -31,6 +32,8 @@ class Core implements \JsonSerializable, ModuleInterface
 	private array $inputVarsCache;
 	private array $registeredListeners = [];
 	private array $modulesWithCleanUp = [];
+	public int $debug_info_n_query = 0;
+	public array $debug_info_tables = [];
 
 	/**
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
@@ -61,6 +64,19 @@ class Core implements \JsonSerializable, ModuleInterface
 		}
 
 		$this->checkCleanUp();
+
+		if (class_exists('\\Model\\Db\\Db')) {
+			Events::subscribeTo(\Model\Db\Events\Query::class, function (\Model\Db\Events\Query $event) {
+				$this->debug_info_n_query++;
+
+				if ($event->table) {
+					if (!isset($this->debug_info_tables[$event->table]))
+						$this->debug_info_tables[$event->table] = 0;
+
+					$this->debug_info_tables[$event->table]++;
+				}
+			});
+		}
 	}
 
 	/**
@@ -410,7 +426,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 	/**
 	 * It may be expanded in the FrontController.
-	 * It is called before the actual execution of the page begins, and here will be loaded all the main generic modules (such as Db, ORM, etc)
+	 * It is called before the actual execution of the page begins, and here will be loaded all the main generic modules (such as ORM, etc)
 	 */
 	protected function init()
 	{
@@ -1058,13 +1074,9 @@ class Core implements \JsonSerializable, ModuleInterface
 			'controller' => $this->controllerName,
 			'modules' => array_keys($this->allModules()),
 			'loading_id' => MODEL_LOADING_ID,
+			'query' => $this->debug_info_n_query,
+			'query_per_table' => $this->debug_info_tables,
 		];
-
-		if ($this->isLoaded('Db')) {
-			$debug['n_query'] = $this->_Db->n_query;
-			$debug['n_prepared'] = $this->_Db->n_prepared;
-			$debug['query_per_table'] = $this->_Db->n_tables;
-		}
 
 		if ($this->isLoaded('Router')) {
 			$pageId = $this->_Router->pageId;
@@ -1099,10 +1111,10 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function getSetting(string $k): ?string
 	{
-		if (!$this->moduleExists('Db'))
+		if (!class_exists('\\Model\\Db\\Db'))
 			return null;
 
-		$check = $this->_Db->select('main_settings', ['k' => $k]);
+		$check = \Model\Db\Db::getConnection()->select('main_settings', ['k' => $k]);
 		if (!$check)
 			return null;
 
@@ -1112,18 +1124,19 @@ class Core implements \JsonSerializable, ModuleInterface
 	/**
 	 * @param string $k
 	 * @param mixed $v
-	 * @return bool
+	 * @return void
 	 */
-	public function setSetting(string $k, mixed $v): bool
+	public function setSetting(string $k, mixed $v): void
 	{
-		if (!$this->moduleExists('Db'))
-			return false;
+		if (!class_exists('\\Model\\Db\\Db'))
+			return;
 
+		$db = \Model\Db\Db::getConnection();
 		$current = $this->getSetting($k);
-		if ($current === false)
-			return (bool)$this->_Db->insert('main_settings', ['k' => $k, 'v' => $v]);
+		if ($current === null)
+			$db->insert('main_settings', ['k' => $k, 'v' => $v]);
 		else
-			return (bool)$this->_Db->update('main_settings', ['k' => $k], ['v' => $v]);
+			$db->update('main_settings', ['k' => $k], ['v' => $v]);
 	}
 
 	/**
