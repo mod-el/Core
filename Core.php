@@ -1,32 +1,21 @@
 <?php namespace Model\Core;
 
+use Model\Core\Events\Error;
+
 class Core implements \JsonSerializable, ModuleInterface
 {
-	/** @var array[] */
 	public array $modules = [];
-	/** @var array[] */
 	protected array $boundMethods = [];
-	/** @var array[] */
 	protected array $boundProperties = [];
-	/** @var array[] */
 	protected array $availableModules = [];
-	/** @var array[] */
 	protected array $rules = [];
-	/** @var array[] */
 	protected array $controllers = [];
-	/** @var string */
 	public string $leadingModule;
-	/** @var string */
 	public string $controllerName;
-	/** @var array */
 	private array $request;
-	/** @var string */
 	private string $requestPrefix = '';
-	/** @var array */
 	private array $prefixMakers = [];
-	/** @var Controller */
 	public Controller $controller;
-	/** @var array */
 	public array $viewOptions = [
 		'header' => [
 			'layoutHeader',
@@ -39,11 +28,8 @@ class Core implements \JsonSerializable, ModuleInterface
 		'warnings' => [],
 		'messages' => [],
 	];
-	/** @var array */
 	private array $inputVarsCache;
-	/** @var array */
 	private array $registeredListeners = [];
-	/** @var array */
 	private array $modulesWithCleanUp = [];
 
 	/**
@@ -374,7 +360,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 	/**
 	 * Getter.
-	 * If called with an underscore, like _Db, it attempts to retrieve a module (recomended way of retrieving modules).
+	 * If called with an underscore, like _Admin, it attempts to retrieve a module (recomended way of retrieving modules).
 	 * The modules can be retrieved (and this is the official way) with ->_ModuleName or ->_ModuleName_Idx
 	 * It raises an exception if the module is not found.
 	 *
@@ -968,8 +954,7 @@ class Core implements \JsonSerializable, ModuleInterface
 
 		$b = debug_backtrace();
 
-		if (class_exists('\\Model\\Logger\\Logger'))
-			\Model\Events\Events::dispatch(new \Model\Logger\Events\Error(0, $gen . ' - ' . $options['mex'], $b[0]['file'], $b[0]['line']));
+		\Model\Events\Events::dispatch(new Error(0, $gen . ' - ' . $options['mex'], $b[0]['file'], $b[0]['line']));
 
 		$e = new Exception($gen, $options['code']);
 		$e->_mex = $options['mex'];
