@@ -51,8 +51,6 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function preInit()
 	{
-		$this->trigger('Core', 'start');
-
 		Model::init();
 
 		$oldConfigFile = realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php';
@@ -225,11 +223,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		if (isset($this->modules[$name][$idx]))
 			return $this->modules[$name][$idx];
 
-		$this->trigger('Core', 'loadModule', [
-			'module' => $name,
-			'idx' => $idx,
-		]);
-
 		$module = $this->moduleExists($name);
 		if (!$module)
 			$this->error('Module "' . entities($name) . '" not found.');
@@ -309,11 +302,6 @@ class Core implements \JsonSerializable, ModuleInterface
 	{
 		if (isset($this->modules[$name][$idx]))
 			unset($this->modules[$name][$idx]);
-
-		$this->trigger('Core', 'unloadModule', [
-			'module' => $name,
-			'idx' => $idx,
-		]);
 	}
 
 	/**
@@ -495,7 +483,6 @@ class Core implements \JsonSerializable, ModuleInterface
 				$this->error('Module ' . $module . ' does not exist');
 
 			$this->leadingModule = $module;
-			$this->trigger('Core', 'leadingModuleFound', ['module' => $module]);
 
 			if ($moduleData['load']) {
 				$controllerData = $this->getModule($module)->getController($request, $ruleFound);
@@ -540,15 +527,11 @@ class Core implements \JsonSerializable, ModuleInterface
 				break;
 			}
 
-			if ($controllerName) {
-				$this->trigger('Core', 'controllerFound', ['controller' => $controllerName]);
+			if ($controllerName)
 				break;
-			}
 
-			if ($preventInfiniteLoop) {
+			if ($preventInfiniteLoop)
 				$this->error('Infinite loop while trying to find the controller.');
-				break;
-			}
 		}
 
 		$this->leadingModule = $module; // Let me set the leading module again, as it may have changed in the previous lines
@@ -575,21 +558,17 @@ class Core implements \JsonSerializable, ModuleInterface
 		 * And at last, the index (or post) method which should contain the actual execution of the actions
 		 * */
 
-		$this->trigger('Core', 'controllerInit');
-
 		$this->controller->init();
 
 		$this->postInit();
 
 		if (Model::isCLI()) {
-			$this->trigger('Core', 'controllerExecution', ['method' => 'cli']);
 			$controllerReturn = $this->controller->cli();
 		} else {
 			$httpMethod = strtolower($_SERVER['REQUEST_METHOD'] ?? 'GET');
 			if (!in_array($httpMethod, ['get', 'post', 'put', 'delete', 'patch']))
 				$httpMethod = 'get';
 
-			$this->trigger('Core', 'controllerExecution', ['method' => $httpMethod]);
 			$controllerReturn = $this->controller->{$httpMethod}();
 		}
 
@@ -597,14 +576,12 @@ class Core implements \JsonSerializable, ModuleInterface
 			/*
 			 * If I have a returning value from the controller, I send it to the output stream as a json string
 			 * */
-			$this->trigger('Core', 'jsonResponse');
 			header('Content-Type: application/json');
 			echo json_encode($controllerReturn, JSON_INVALID_UTF8_SUBSTITUTE);
 		} elseif (!Model::isCLI()) {
 			/*
-		 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
-		 * */
-			$this->trigger('Core', 'outputStart');
+			 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
+			 * */
 			$this->controller->output($this->viewOptions);
 		}
 	}
@@ -643,8 +620,6 @@ class Core implements \JsonSerializable, ModuleInterface
 	 */
 	public function terminate()
 	{
-		$this->trigger('Core', 'end');
-
 		foreach ($this->modules as $name => $modules) {
 			if ($name == 'Core')
 				continue;
@@ -1019,31 +994,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		if (!isset($this->registeredListeners[$event]))
 			$this->registeredListeners[$event] = [];
 		$this->registeredListeners[$event][] = $callback;
-	}
-
-	/**
-	 * Triggers a particular event. If any callback is registered, it gets executed.
-	 *
-	 * @param string $module
-	 * @param string $event
-	 * @param array $data
-	 * @return bool
-	 */
-	public function trigger(string $module, string $event, array $data = []): bool
-	{
-		if (isset($this->registeredListeners[$event])) {
-			foreach ($this->registeredListeners[$event] as $callback) {
-				call_user_func($callback, $data);
-			}
-		}
-
-		if (isset($this->registeredListeners[$module . '_' . $event])) {
-			foreach ($this->registeredListeners[$module . '_' . $event] as $callback) {
-				call_user_func($callback, $data);
-			}
-		}
-
-		return true;
 	}
 
 	/* VARIOUS UTILITIES */

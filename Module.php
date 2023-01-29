@@ -81,19 +81,6 @@ class Module implements ModuleInterface
 	}
 
 	/**
-	 * This will trigger a new event in the Core, coming from this module.
-	 * Each event has its own name (param $event) and eventually carries a bunch of data in the form of an array (param $data)
-	 *
-	 * @param string $event
-	 * @param array $data
-	 * @return bool
-	 */
-	public function trigger(string $event, array $data = []): bool
-	{
-		return $this->model->trigger($this->getClass(), $event, $data);
-	}
-
-	/**
 	 * Returns the non-namespaced class name of this module.
 	 *
 	 * @return string
