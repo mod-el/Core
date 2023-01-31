@@ -4,7 +4,8 @@
 	"version": "3.0.0",
 	"dependencies": {},
 	"requires": [
-		"model/core"
+		"model/core",
+		"model/settings"
 	],
 	"file-types": {
 		"Controller": {

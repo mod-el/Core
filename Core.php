@@ -2,6 +2,7 @@
 
 use Model\Core\Events\Error;
 use Model\Events\Events;
+use Model\Settings\Settings;
 
 class Core implements \JsonSerializable, ModuleInterface
 {
@@ -133,32 +134,32 @@ class Core implements \JsonSerializable, ModuleInterface
 		$dice = mt_rand(1, 100);
 		if ($dice === 1) {
 			try {
-				$lastModule = $this->getSetting('cleanup-last-module');
+				$lastModule = Settings::get('cleanup-last-module');
 				$lastModuleK = array_search($lastModule, $this->modulesWithCleanUp);
 				if ($lastModuleK === false or $lastModuleK === (count($this->modulesWithCleanUp) - 1))
 					$nextModule = $this->modulesWithCleanUp[0];
 				else
 					$nextModule = $this->modulesWithCleanUp[$lastModuleK + 1];
 
-				$lastCleanup = $this->getSetting('last-cleanup');
+				$lastCleanup = Settings::get('last-cleanup');
 				$lastCleanup = $lastCleanup ? date_create($lastCleanup) : false;
 				$today = date_create();
 				if ($lastCleanup) {
 					$interval = $today->getTimestamp() - $lastCleanup->getTimestamp();
 
-					$totalInterval = (int)$this->getSetting('cleanup-total-interval');
-					$numberOfIntervals = (int)$this->getSetting('cleanup-intervals');
+					$totalInterval = (int)Settings::get('cleanup-total-interval');
+					$numberOfIntervals = (int)Settings::get('cleanup-intervals');
 
 					$totalInterval += $interval;
 					$numberOfIntervals++;
 
-					$this->setSetting('cleanup-total-interval', $totalInterval);
-					$this->setSetting('cleanup-intervals', $numberOfIntervals);
-					$this->setSetting('cleanups-average', round($totalInterval / $numberOfIntervals));
+					Settings::set('cleanup-total-interval', $totalInterval);
+					Settings::set('cleanup-intervals', $numberOfIntervals);
+					Settings::set('cleanups-average', round($totalInterval / $numberOfIntervals));
 				}
 
-				$this->setSetting('cleanup-last-module', $nextModule);
-				$this->setSetting('last-cleanup', date('Y-m-d H:i:s'));
+				Settings::set('cleanup-last-module', $nextModule);
+				Settings::set('last-cleanup', date('Y-m-d H:i:s'));
 
 				$configClassName = '\\Model\\' . $nextModule . '\\Config';
 				$configClass = new $configClassName($this);
@@ -1107,36 +1108,23 @@ class Core implements \JsonSerializable, ModuleInterface
 
 	/**
 	 * @param string $k
-	 * @return string|null
+	 * @return mixed
+	 * @deprecated Use model/settings package
 	 */
-	public function getSetting(string $k): ?string
+	public function getSetting(string $k): mixed
 	{
-		if (!class_exists('\\Model\\Db\\Db'))
-			return null;
-
-		$check = \Model\Db\Db::getConnection()->select('main_settings', ['k' => $k]);
-		if (!$check)
-			return null;
-
-		return $check['v'];
+		return Settings::get($k);
 	}
 
 	/**
 	 * @param string $k
 	 * @param mixed $v
 	 * @return void
+	 * @deprecated Use model/settings package
 	 */
 	public function setSetting(string $k, mixed $v): void
 	{
-		if (!class_exists('\\Model\\Db\\Db'))
-			return;
-
-		$db = \Model\Db\Db::getConnection();
-		$current = $this->getSetting($k);
-		if ($current === null)
-			$db->insert('main_settings', ['k' => $k, 'v' => $v]);
-		else
-			$db->update('main_settings', ['k' => $k], ['v' => $v]);
+		Settings::set($k, $v);
 	}
 
 	/**
