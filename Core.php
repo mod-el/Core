@@ -580,7 +580,7 @@ class Core implements \JsonSerializable, ModuleInterface
 			 * If I have a returning value from the controller, I send it to the output stream as a json string
 			 * */
 			header('Content-Type: application/json');
-			echo json_encode($controllerReturn, JSON_INVALID_UTF8_SUBSTITUTE);
+			echo json_encode($controllerReturn, JSON_INVALID_UTF8_IGNORE | JSON_THROW_ON_ERROR | JSON_PARTIAL_OUTPUT_ON_ERROR);
 		} elseif (!Model::isCLI()) {
 			/*
 			 * Otherwise, I render the standard output content (default method in the controller use the Output module to handle this, but this behaviour can be customized).
