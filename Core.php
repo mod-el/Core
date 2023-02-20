@@ -78,6 +78,9 @@ class Core implements \JsonSerializable, ModuleInterface
 				}
 			});
 		}
+
+		if ($this->moduleExists('Output')) // Precarico il modulo Output per attivare la subscription agli eventi
+			$this->load('Output');
 	}
 
 	/**
@@ -390,14 +393,12 @@ class Core implements \JsonSerializable, ModuleInterface
 	{
 		if (preg_match('/^_[a-z0-9]+(_[a-z0-9]+)?$/i', $i)) {
 			$name = explode('_', substr($i, 1));
-			if (count($name) == 1) {
+			if (count($name) === 1)
 				return $this->getModule($name[0]);
-			} elseif (count($name) == 2) {
+			elseif (count($name) === 2)
 				return $this->getModule($name[0], $name[1]);
-			} else {
+			else
 				$this->error('Unknown module ' . entities($i) . '.');
-				return false;
-			}
 		} elseif (isset($this->boundProperties[$i])) {
 			$module = $this->getModule($this->boundProperties[$i]['module']);
 			return $module->{$this->boundProperties[$i]['property']};
