@@ -10,7 +10,7 @@
 		var REQUEST = <?=json_encode($this->model->getRequest())?>;
 	</script>
 	<link rel="stylesheet" href="<?= PATH ?>model/Core/files/style.css?v=1" type="text/css"/>
-	<script src="<?= PATH ?>model/Core/files/js.js?v=2" type="text/javascript"></script>
+	<script src="<?= PATH ?>model/Core/files/js.js?v=2"></script>
 	<script src="https://kit.fontawesome.com/b635b5b4c3.js" defer crossorigin="anonymous"></script>
 </head>
 
