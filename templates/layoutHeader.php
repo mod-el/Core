@@ -4,7 +4,7 @@
 
 <head>
 	<title>Model Framework Control Panel - <?= APP_NAME ?></title>
-	<script type="text/javascript">
+	<script>
 		var PATHBASE = '<?=PATH?>';
 		var PATH = '<?=$this->model->prefix()?>';
 		var REQUEST = <?=json_encode($this->model->getRequest())?>;
