@@ -4,7 +4,7 @@ class Config extends Module_Config
 {
 	public bool $configurable = true;
 
-	protected function assetsList()
+	protected function assetsList(): void
 	{
 		$this->addAsset('data', 'cache.php', function () {
 			$arr = [
