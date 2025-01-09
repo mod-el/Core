@@ -5,9 +5,9 @@ class Module_Config
 	/** @var Core */
 	protected Core $model;
 	/** @var bool */
-	public $configurable = false;
+	public bool $configurable = false;
 	/** @var bool */
-	public $hasCleanUp = false;
+	public bool $hasCleanUp = false;
 	/** @var array */
 	private array $assets = [];
 
@@ -101,7 +101,7 @@ class Module_Config
 	 * Has to return true in case of success, or false if more data are needed (the user will be redirected to the init page)
 	 * Has to throw an exception in case of failure
 	 *
-	 * @param array $data
+	 * @param array|null $data
 	 * @return bool
 	 */
 	public function init(?array $data = null): bool
@@ -236,14 +236,14 @@ $config = ' . var_export($data, true) . ';
 	/**
 	 * Meant to be extended by the modules, it can be used to perform periodic cleanups (deletes old logs, etc)
 	 */
-	public function cleanUp()
+	public function cleanUp(): void
 	{
 	}
 
 	/**
 	 * Meant to be extended by the modules, it will consist in a series of "addAsset" calls, telling the framework what files this module needs
 	 */
-	protected function assetsList()
+	protected function assetsList(): void
 	{
 	}
 
@@ -252,12 +252,12 @@ $config = ' . var_export($data, true) . ';
 	 * If the file is null, only the main folder will be created (useful for the main config dir)
 	 *
 	 * @param string $type
-	 * @param string $file
+	 * @param string|null $file
 	 * @param callable|null $defaultContent
 	 * @return bool
 	 * @throws Exception
 	 */
-	protected function addAsset(string $type, string $file = null, callable $defaultContent = null): bool
+	protected function addAsset(string $type, ?string $file = null, ?callable $defaultContent = null): bool
 	{
 		if (!in_array($type, ['data', 'config', 'app-data']))
 			$this->model->error('Unknown asset type in module definition');
@@ -276,7 +276,7 @@ $config = ' . var_export($data, true) . ';
 	 *
 	 * @throws \Exception
 	 */
-	public function checkAssets()
+	public function checkAssets(): void
 	{
 		foreach ($this->assets as $asset) {
 			switch ($asset['type']) {
@@ -315,7 +315,7 @@ $config = ' . var_export($data, true) . ';
 	 * @param string $file
 	 * @param string $default
 	 */
-	protected function checkFile(string $file, string $default)
+	protected function checkFile(string $file, string $default): void
 	{
 		if (file_exists(INCLUDE_PATH . $file))
 			return;
