@@ -236,6 +236,8 @@ class Config extends Module_Config
 				if (is_dir($d . DIRECTORY_SEPARATOR . $typeData['folder'])) {
 					$files = $this->getModuleFiles($d . DIRECTORY_SEPARATOR . $typeData['folder'], $typeData['class']);
 					foreach ($files as $f => $fPath) {
+						if ($type === 'Migration' and is_numeric(substr($f, 0, 14))) // Migrations di Phinx
+							continue;
 						if ($typeData['class']) {
 							$fullName = 'Model\\' . $d_info['filename'] . '\\' . $typeData['folder'] . '\\' . $f;
 							$classes[$fullName] = $fPath;
