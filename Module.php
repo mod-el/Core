@@ -30,13 +30,6 @@ class Module implements ModuleInterface
 	}
 
 	/**
-	 * This method is called by the "terminate" method of the Core, at the end of each execution.
-	 */
-	public function terminate()
-	{
-	}
-
-	/**
 	 * Utility method, returns the path of this module.
 	 *
 	 * @return string

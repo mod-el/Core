@@ -47,11 +47,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		if (file_exists($oldConfigFile))
 			require($oldConfigFile);
 
-		$model = $this;
-		register_shutdown_function(function () use ($model) {
-			$model->terminate();
-		});
-
 		$this->reloadCacheFile();
 
 		$this->modules['Core'][0] = $this;
@@ -619,21 +614,6 @@ class Core implements \JsonSerializable, ModuleInterface
 		}
 	}
 
-	/**
-	 * It is executed at the end of each execution (both correct ones and with errors) and it calls the "terminate" method of each loaded module, to do possible clean ups.
-	 */
-	public function terminate()
-	{
-		foreach ($this->modules as $name => $modules) {
-			if ($name == 'Core')
-				continue;
-			foreach ($modules as $m) {
-				if (is_object($m))
-					$m->terminate();
-			}
-		}
-	}
-
 	/* REQUEST AND INPUT MANAGEMENT */
 
 	/**
@@ -1030,7 +1010,7 @@ class Core implements \JsonSerializable, ModuleInterface
 				die('Can\t redirect to a non-local url in CLI.');
 
 			$this->end();
-			$this->terminate();
+			Model::terminate();
 
 			$real_path = substr($path, strlen(PATH));
 			global $argv;
