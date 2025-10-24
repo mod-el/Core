@@ -4,7 +4,7 @@ use Model\Core\Events\Error;
 use Model\Events\Events;
 use Model\Settings\Settings;
 
-class Core implements \JsonSerializable, ModuleInterface
+class Core implements \JsonSerializable
 {
 	public array $modules = [];
 	protected array $boundMethods = [];
@@ -12,10 +12,8 @@ class Core implements \JsonSerializable, ModuleInterface
 	protected array $availableModules = [];
 	protected array $rules = [];
 	protected array $controllers = [];
-	public string $leadingModule;
 	public string $controllerName;
 	private array $request;
-	private string $requestPrefix = '';
 	private array $prefixMakers = [];
 	public Controller $controller;
 	public array $viewOptions = [
@@ -39,7 +37,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	/**
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
-	public function preInit()
+	public function preInit(): void
 	{
 		Model::init();
 
@@ -81,7 +79,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	/**
 	 * Reloads the internal cache file
 	 */
-	public function reloadCacheFile()
+	public function reloadCacheFile(): void
 	{
 		$cacheFile = $this->retrieveCacheFile();
 		Autoloader::$classes = $cacheFile['classes'];
@@ -124,7 +122,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * Every time the dice is rolled, it won't be rolled again for an hour
 	 * This ensures a nice load distribution over the users and over time
 	 */
-	private function checkCleanUp()
+	private function checkCleanUp(): void
 	{
 		if (count($this->modulesWithCleanUp) === 0)
 			return;
@@ -217,9 +215,9 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * @param string $name
 	 * @param array $options
 	 * @param string $idx
-	 * @return Module|null
+	 * @return Module|Core|null
 	 */
-	public function load(string $name, array $options = [], string $idx = '0'): ?ModuleInterface
+	public function load(string $name, array $options = [], string $idx = '0'): Module|Core|null
 	{
 		if (isset($this->modules[$name][$idx]))
 			return $this->modules[$name][$idx];
@@ -257,7 +255,7 @@ class Core implements \JsonSerializable, ModuleInterface
 					'defer' => $module['defer-js'] ?? false,
 					'async' => $module['async-js'] ?? false,
 					'withTags' => [
-						'position-' . $module['assets-position'],
+						'position' => $module['assets-position'],
 					]
 				]);
 			}
@@ -268,7 +266,7 @@ class Core implements \JsonSerializable, ModuleInterface
 					'custom' => false,
 					'defer' => $module['defer-css'] ?? false,
 					'withTags' => [
-						'position-' . $module['assets-position'],
+						'position' => $module['assets-position'],
 					]
 				]);
 			}
@@ -299,7 +297,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * @param string $name
 	 * @param string $idx
 	 */
-	public function unload(string $name, string $idx = '0')
+	public function unload(string $name, string $idx = '0'): void
 	{
 		if (isset($this->modules[$name][$idx]))
 			unset($this->modules[$name][$idx]);
@@ -313,9 +311,9 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * @param string $name
 	 * @param mixed $idx
 	 * @param bool $autoload
-	 * @return ModuleInterface|null
+	 * @return Module|null
 	 */
-	public function getModule(string $name, $idx = null, bool $autoload = true): ?ModuleInterface
+	public function getModule(string $name, $idx = null, bool $autoload = true): ?Module
 	{
 		if ($idx === null) {
 			if (isset($this->modules[$name])) {
@@ -367,7 +365,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	/**
 	 * @param string $name
 	 */
-	public function markModuleAsInitialized(string $name)
+	public function markModuleAsInitialized(string $name): void
 	{
 		if (isset($this->availableModules[$name]))
 			$this->availableModules[$name]['initialized'] = true;
@@ -425,7 +423,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * It may be expanded in the FrontController.
 	 * It is called before the actual execution of the page begins, and here will be loaded all the main generic modules (such as ORM, etc)
 	 */
-	protected function init()
+	protected function init(): void
 	{
 	}
 
@@ -433,14 +431,14 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * It may be expanded in the FrontController.
 	 * It is called before the execution of the controller, but after its initialization
 	 */
-	protected function postInit()
+	protected function postInit(): void
 	{
 	}
 
 	/**
 	 * Main execution of the ModEl framework
 	 */
-	private function exec()
+	private function exec(): void
 	{
 		// Retrieve config
 		$config = $this->retrieveConfig();
@@ -449,91 +447,22 @@ class Core implements \JsonSerializable, ModuleInterface
 		// Get the request
 		$request = $this->getRequest();
 
-		/*
-		 * I look in the registered rules for the ones matching with current request.
-		 * If there is no rule matching, I redirect to a 404 Not Found error.
-		 * So I'll found the module in charge to handle the current request.
-		 * Next step, I ask the module in charge which controller should I load
-		 * The module can also return a prefix to keep in mind for building future requests (defaults to PATH)
-		 * A "redirect" to another request can also be returned, and this will repeat the process for the new request
-		 * Then, I check if it really exists and I load it. I pass the default View Options to it as well
-		 * */
+		// Match the request against the routing rules
+		$match = $this->getRouter()->match('/' . implode('/', $request));
+		if ($match) {
+			$controllerName = $match['controller'];
 
-		$this->requestPrefix = PATH;
-
-		$preventInfiniteLoop = 0;
-		while (true) {
-			$preventInfiniteLoop++;
-
-			$match = $this->matchRule($request);
-
-			if ($match === null) {
-				$module = 'Core';
-				$controllerName = $notFoundController;
-				$this->viewOptions['404-reason'] = 'No rule matched the request.';
-				break;
-			} else {
-				$module = $match['module'];
-				$ruleFound = $match['idx'];
-			}
-
-			$moduleData = $this->moduleExists($module);
-			if (!$moduleData)
-				$this->error('Module ' . $module . ' does not exist');
-
-			$this->leadingModule = $module;
-
-			if ($moduleData['load']) {
-				$controllerData = $this->getModule($module)->getController($request, $ruleFound);
-			} else {
-				// If this is not an auto-loading module, I just return the first controller I find
-				$controllerData = null;
-				foreach ($this->controllers as $c) {
-					if ($c['module'] === $module) {
-						$controllerData = [
-							'controller' => $c['controller'],
-						];
-						break;
-					}
+			if ($match['id'] and $match['model']) {
+				$mainElement = $this->getModule('ORM')->loadMainElement($match['model'], $match['id']);
+				if (!$mainElement) {
+					$controllerName = $notFoundController;
+					$this->viewOptions['404-reason'] = 'Element not found.';
 				}
 			}
-
-			if (!is_array($controllerData)) {
-				$this->viewOptions['404-reason'] = 'Module ' . $module . ' can\'t return a controller name.';
-				$module = 'Core';
-				$controllerName = $notFoundController;
-				break;
-			}
-
-			if (isset($controllerData['prefix']) and $controllerData['prefix'])
-				$this->requestPrefix .= $controllerData['prefix'] . '/';
-
-			if (isset($controllerData['redirect'])) {
-				if ($controllerData['redirect'] === $request)
-					$this->error('Recursion error: module ' . $module . ' is trying to redirect to the same request.');
-
-				$request = $controllerData['redirect'];
-				$this->request = $controllerData['redirect'];
-				continue;
-			}
-
-			if (isset($controllerData['controller']) and $controllerData['controller']) {
-				$controllerName = $controllerData['controller'];
-			} else {
-				$this->viewOptions['404-reason'] = 'Module ' . $module . ' has not returned a controller name.';
-				$module = 'Core';
-				$controllerName = $notFoundController;
-				break;
-			}
-
-			if ($controllerName)
-				break;
-
-			if ($preventInfiniteLoop)
-				$this->error('Infinite loop while trying to find the controller.');
+		} else {
+			$controllerName = $notFoundController;
+			$this->viewOptions['404-reason'] = 'No rule matched the request.';
 		}
-
-		$this->leadingModule = $module; // Let me set the leading module again, as it may have changed in the previous lines
 
 		$controllerClassName = Autoloader::searchFile('Controller', $controllerName . 'Controller');
 
@@ -589,7 +518,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * It may be expanded in the FrontController.
 	 * It is called at the end of each correct execution.
 	 */
-	protected function end()
+	protected function end(): void
 	{
 	}
 
@@ -597,7 +526,7 @@ class Core implements \JsonSerializable, ModuleInterface
 	 * Wrapper to execute the main methods in the correct order and catch potential uncaught exceptions.
 	 * This is the one to call from the outside.
 	 */
-	public function run()
+	public function run(): void
 	{
 		try {
 			$this->preInit();
@@ -616,75 +545,17 @@ class Core implements \JsonSerializable, ModuleInterface
 
 	/* REQUEST AND INPUT MANAGEMENT */
 
-	/**
-	 * Checks if a request matches one (or more) of the rules
-	 * If more than one rule is matching, I assign a score to each one (the more specific is the rule, the higher is the score) and pick the highest one.
-	 *
-	 * @param array $request
-	 * @return array|null
-	 */
-	private function matchRule(array $request): ?array
+	private \Model\Router\Router $routerCache;
+
+	public function getRouter(): \Model\Router\Router
 	{
-		$matchedRules = [];
+		if (!class_exists('\\Model\\Router\\Router'))
+			throw new \Exception('Please install model/router via Composer');
 
-		foreach ($this->rules as $rIdx => $r) {
-			if ($r['rule'] === '') {
-				if ($request === [])
-					$matchedRules[$rIdx] = 0;
-				else
-					continue;
-			}
+		if (!isset($this->routerCache))
+			$this->routerCache = new \Model\Router\Router(new \Model\Router\ModElResolver());
 
-			if ($r['rule'] === null) {
-				$matchedRules[$rIdx] = 0.5;
-			} else {
-				$rArr = preg_split('|(?<!\\?)/|', $r['rule']);
-				$score = 0;
-				foreach ($rArr as $i => $sr) {
-					if (!isset($request[$i]))
-						continue 2;
-					if (!preg_match('/^' . str_replace('/', '\\/', $sr) . '$/iu', $request[$i]))
-						continue 2;
-
-					$score = $i * 2;
-					if (strpos($sr, '[') === false)
-						$score += 1;
-				}
-
-				$matchedRules[$rIdx] = $score;
-			}
-		}
-
-		if (count($matchedRules) == 0) {
-			return null;
-		} else {
-			if (count($matchedRules) > 1)
-				arsort($matchedRules);
-
-			return $this->rules[key($matchedRules)];
-		}
-	}
-
-	/**
-	 * Returns the controller needed for the rules for which the Core module is in charge (currently only "zk" for the management panel)
-	 *
-	 * @param array $request
-	 * @param string $rule
-	 * @return array
-	 */
-	public function getController(array $request, string $rule): ?array
-	{
-		switch ($rule) {
-			case 'zk':
-				return [
-					'controller' => 'Zk',
-				];
-
-			default:
-				return [
-					'controller' => 'Err404',
-				];
-		}
+		return $this->routerCache;
 	}
 
 	/**
@@ -857,10 +728,9 @@ class Core implements \JsonSerializable, ModuleInterface
 					$prefix .= $partial . '/';
 			}
 		} else {
-			$prefix = $this->requestPrefix;
-			if (!$opt['path']) {
+			$prefix = PATH;
+			if (!$opt['path'])
 				$prefix = substr($prefix, strlen(PATH));
-			}
 		}
 		return $prefix;
 	}
@@ -892,43 +762,7 @@ class Core implements \JsonSerializable, ModuleInterface
 		if ($controller === null)
 			$controller = $this->controllerName;
 
-		$opt = array_merge([
-			'prefix' => true,
-			'path' => true,
-		], $opt);
-
-		if (!is_array($tags))
-			$tags = ['lang' => $tags];
-
-		if ($opt['prefix']) {
-			$prefix = $this->prefix($tags, $opt);
-		} else {
-			if ($opt['path'])
-				$prefix = PATH;
-			else
-				$prefix = '';
-		}
-
-		if ($controller == 'Zk')
-			return $prefix . 'zk';
-
-		$modules = [];
-		foreach ($this->controllers as $controllerModulePair) {
-			if ($controllerModulePair['controller'] == $controller)
-				$modules[] = $controllerModulePair['module'];
-		}
-
-		if (count($modules) > 0) {
-			if (in_array($this->leadingModule, $modules))
-				$module = $this->leadingModule;
-			else
-				$module = reset($modules);
-		} else {
-			return null;
-		}
-
-		$url = $this->getModule($module)->getUrl($controller, $id, $tags, $opt);
-		return $url !== false ? $prefix . $url : null;
+		return $this->getRouter()->generate($controller, $id, $tags);
 	}
 
 	/* ERRORS MANAGEMENT */
@@ -1052,7 +886,6 @@ class Core implements \JsonSerializable, ModuleInterface
 			'prefix' => $this->prefix([], ['path' => false]),
 			'request' => implode('/', $this->getRequest()),
 			'execution_time' => microtime(true) - START_TIME,
-			'module' => $this->leadingModule,
 			'controller' => $this->controllerName,
 			'modules' => array_keys($this->allModules()),
 			'loading_id' => MODEL_LOADING_ID,

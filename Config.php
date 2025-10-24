@@ -206,25 +206,6 @@ class Config extends Module_Config
 
 				if ($configClass->hasCleanUp)
 					$cleanups[] = $d_info['filename'];
-
-				$moduleRules = $configClass->getRules();
-				if (!is_array($moduleRules) or !isset($moduleRules['rules'], $moduleRules['controllers']))
-					throw new \Exception('The module ' . $d_info['filename'] . ' returned an invalid format for rules.');
-
-				foreach ($moduleRules['rules'] as $rIdx => $r) {
-					$rules[] = [
-						'rule' => $r,
-						'module' => $d_info['filename'],
-						'idx' => $rIdx,
-					];
-				}
-
-				foreach ($moduleRules['controllers'] as $c) {
-					$controllers[] = [
-						'controller' => $c,
-						'module' => $d_info['filename'],
-					];
-				}
 			}
 
 			if (isset($moduleData['zk-pages'])) {
@@ -332,23 +313,6 @@ $cache = ' . var_export($cache, true) . ';
 		}
 
 		return $return;
-	}
-
-	/**
-	 * The Core module needs a "zk" rule to manage the basics of the framework
-	 *
-	 * @return array
-	 */
-	public function getRules(): array
-	{
-		return [
-			'rules' => [
-				'zk' => 'zk',
-			],
-			'controllers' => [
-				'Zk',
-			],
-		];
 	}
 
 	/**

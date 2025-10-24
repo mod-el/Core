@@ -2,8 +2,6 @@
 
 class Module_Config
 {
-	/** @var Core */
-	protected Core $model;
 	/** @var bool */
 	public bool $configurable = false;
 	/** @var bool */
@@ -13,11 +11,10 @@ class Module_Config
 
 	/**
 	 * Module_Config constructor.
-	 * @param Core $model
+	 * @param Core|null $model
 	 */
-	public function __construct(Core $model)
+	public function __construct(protected ?Core $model = null)
 	{
-		$this->model = $model;
 		$this->assetsList();
 	}
 
@@ -64,25 +61,6 @@ class Module_Config
 	public function cacheDependencies(): array
 	{
 		return [];
-	}
-
-	/**
-	 * If this module needs to register rules, this is the method that should return them.
-	 * The syntax is: [
-	 *        'rules'=>[
-	 *            'idx'=>'rule',
-	 *        ],
-	 *        'controllers'=>[
-	 *            'Controller1',
-	 *            'Controller2',
-	 *        ],
-	 * ]
-	 *
-	 * @return array
-	 */
-	public function getRules(): array
-	{
-		return ['rules' => [], 'controllers' => []];
 	}
 
 	/**
@@ -260,7 +238,7 @@ $config = ' . var_export($data, true) . ';
 	protected function addAsset(string $type, ?string $file = null, ?callable $defaultContent = null): bool
 	{
 		if (!in_array($type, ['data', 'config', 'app-data']))
-			$this->model->error('Unknown asset type in module definition');
+			throw new \Exception('Unknown asset type in module definition');
 
 		$this->assets[] = [
 			'type' => $type,
@@ -290,8 +268,7 @@ $config = ' . var_export($data, true) . ';
 					$base_dir = INCLUDE_PATH . DIRECTORY_SEPARATOR . 'app-data' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . $this->getName();
 					break;
 				default:
-					$this->model->error('Unknown asset type encountered while checking assets');
-					break;
+					throw new \Exception('Unknown asset type encountered while checking assets');
 			}
 
 			$file = $base_dir . ($asset['file'] ? (DIRECTORY_SEPARATOR . $asset['file']) : '');

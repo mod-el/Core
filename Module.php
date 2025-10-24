@@ -1,6 +1,6 @@
 <?php namespace Model\Core;
 
-class Module implements ModuleInterface
+class Module
 {
 	/** @var Core */
 	public Core $model;
@@ -91,18 +91,6 @@ class Module implements ModuleInterface
 	 */
 	public function headings()
 	{
-	}
-
-	/**
-	 * Meant to be extended if needed
-	 *
-	 * @param array $request
-	 * @param string $rule
-	 * @return array|null
-	 */
-	public function getController(array $request, string $rule): ?array
-	{
-		return null;
 	}
 
 	/**

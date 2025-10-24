@@ -1,10 +1,11 @@
 {
 	"name": "Core",
 	"description": "ModEl Framework (requires model/core via Composer)",
-	"version": "3.0.0",
+	"version": "4.0.0",
 	"dependencies": {},
 	"requires": [
 		"model/core",
+		"model/router",
 		"model/settings"
 	],
 	"file-types": {
