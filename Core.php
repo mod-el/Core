@@ -553,7 +553,7 @@ class Core implements \JsonSerializable
 			throw new \Exception('Please install model/router via Composer');
 
 		if (!isset($this->routerCache))
-			$this->routerCache = new \Model\Router\Router(new \Model\Router\ModElResolver());
+			$this->routerCache = new \Model\Router\Router(new \Model\Router\ModElResolver(), ['base_path' => PATH]);
 
 		return $this->routerCache;
 	}
