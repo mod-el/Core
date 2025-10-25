@@ -34,12 +34,15 @@ class Core implements \JsonSerializable
 	public int $debug_info_n_query = 0;
 	public array $debug_info_tables = [];
 
+	public static Core $instance;
+
 	/**
 	 * Sets all the basic operations for the ModEl framework to operate, and loads the cache file.
 	 */
 	public function preInit(): void
 	{
 		Model::init();
+		self::$instance = $this;
 
 		$oldConfigFile = realpath(dirname(__FILE__)) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'config.php';
 		if (file_exists($oldConfigFile))
