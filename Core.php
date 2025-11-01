@@ -451,7 +451,7 @@ class Core implements \JsonSerializable
 		$request = $this->getRequest();
 
 		// Match the request against the routing rules
-		$match = $this->getRouter()->match('/' . implode('/', $request));
+		$match = $this->getRouter()->match('/' . implode('/', $request), true);
 		if ($match) {
 			$controllerName = $match['controller'];
 
