@@ -14,7 +14,6 @@ class Core implements \JsonSerializable
 	protected array $controllers = [];
 	public string $controllerName;
 	private array $request;
-	private array $prefixMakers = [];
 	public Controller $controller;
 	public array $viewOptions = [
 		'header' => [
@@ -725,30 +724,13 @@ class Core implements \JsonSerializable
 
 		if ($tags) { // If no tag is given, returns the current prefix, otherwise it generates a new prefix dynamically
 			$prefix = $opt['path'] ? PATH : '';
-			foreach ($this->prefixMakers as $m) {
-				$partial = $this->getModule($m)->getPrefix($tags, $opt);
-				if ($partial)
-					$prefix .= $partial . '/';
-			}
 		} else {
 			$prefix = PATH;
 			if (!$opt['path'])
 				$prefix = substr($prefix, strlen(PATH));
 		}
-		return $prefix;
-	}
 
-	/**
-	 * Some modules can prepend something to generated urls/requests, if that's the case, they need to call this method to let the Core know
-	 *
-	 * @param string $module
-	 * @return bool
-	 */
-	public function addPrefixMaker(string $module): bool
-	{
-		if (!in_array($module, $this->prefixMakers))
-			$this->prefixMakers[] = $module;
-		return true;
+		return $prefix;
 	}
 
 	/**
@@ -886,7 +868,6 @@ class Core implements \JsonSerializable
 	public function getDebugData(): array
 	{
 		$debug = [
-			'prefix' => $this->prefix([], ['path' => false]),
 			'request' => implode('/', $this->getRequest()),
 			'execution_time' => microtime(true) - START_TIME,
 			'controller' => $this->controllerName,

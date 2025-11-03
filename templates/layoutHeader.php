@@ -6,7 +6,7 @@
 	<title>Model Framework Control Panel - <?= APP_NAME ?></title>
 	<script>
 		var PATHBASE = '<?=PATH?>';
-		var PATH = '<?=$this->model->prefix()?>';
+		var PATH = '<?=PATH?>';
 		var REQUEST = <?=json_encode($this->model->getRequest())?>;
 	</script>
 	<link rel="stylesheet" href="<?= PATH ?>model/Core/files/style.css?v=1" type="text/css"/>
