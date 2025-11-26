@@ -89,7 +89,7 @@ class Module
 	/**
 	 * A loaded module can, optionally, put content in the "head" section of the page
 	 */
-	public function headings()
+	public function headings(): void
 	{
 	}
 
