@@ -452,6 +452,8 @@ class Core implements \JsonSerializable
 		// Match the request against the routing rules
 		$match = $this->getRouter()->match('/' . implode('/', $request), true);
 		if ($match) {
+			$this->setRequest(explode('/', $match['url']));
+
 			$controllerName = $match['controller'];
 
 			if ($match['id'] and $match['entity'] and !empty($match['entity']['element'])) {
@@ -549,6 +551,10 @@ class Core implements \JsonSerializable
 
 	private \Model\Router\Router $routerCache;
 
+	/**
+	 * @return \Model\Router\Router
+	 * @throws \Exception
+	 */
 	public function getRouter(): \Model\Router\Router
 	{
 		if (!class_exists('\\Model\\Router\\Router'))
@@ -569,7 +575,7 @@ class Core implements \JsonSerializable
 	 * @param int|null $i
 	 * @return array|string|null
 	 */
-	public function getRequest(?int $i = null)
+	public function getRequest(?int $i = null): array|string|null
 	{
 		if (!isset($this->request)) {
 			if (Model::isCLI()) {
@@ -591,6 +597,15 @@ class Core implements \JsonSerializable
 			return $this->request;
 		else
 			return array_key_exists($i, $this->request) ? $this->request[$i] : null;
+	}
+
+	/**
+	 * @param array $request
+	 * @return void
+	 */
+	private function setRequest(array $request): void
+	{
+		$this->request = $request;
 	}
 
 	/**
