@@ -762,7 +762,7 @@ class Core implements \JsonSerializable
 		if ($controller === null)
 			$controller = $this->controllerName;
 
-		return $this->getRouter()->generate($controller, $id, $tags);
+		return $this->getRouter()->generate($controller, $id, $tags, $opt);
 	}
 
 	/* ERRORS MANAGEMENT */
