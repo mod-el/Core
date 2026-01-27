@@ -456,7 +456,7 @@ class Core implements \JsonSerializable
 
 			$controllerName = $match['controller'];
 
-			if ($match['id'] and $match['entity'] and !empty($match['entity']['element'])) {
+			if (!empty($match['id']) and !empty($match['entity']) and !empty($match['entity']['element'])) {
 				$mainElement = $this->getModule('ORM')->loadMainElement($match['entity']['element'], $match['id']);
 				if (!$mainElement) {
 					$controllerName = $notFoundController;
