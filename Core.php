@@ -761,7 +761,7 @@ class Core implements \JsonSerializable
 	{
 		if ($controller === null)
 			$controller = $this->controllerName;
-		if ($id === null and $this->getModule('ORM') and $this->getModule('ORM')->element)
+		if ($id === null and $this->moduleExists('ORM') and $this->getModule('ORM') and $this->getModule('ORM')->element)
 			$id = $this->getModule('ORM')->element['id'];
 
 		return $this->getRouter()->generate($controller, $id, $tags, $opt);
