@@ -645,13 +645,18 @@ class Updater
 	{
 		$sorter = new StringSort;
 
-		foreach ($modules as $module) {
+		$modulesMap = [];
+		foreach ($modules as $module)
+			$modulesMap[$module->folder_name] = $module;
+
+		foreach ($modulesMap as $module) {
 			$dependencies = array_keys($module->dependencies);
 			if ($module->folder_name !== 'Core' and !in_array('Core', $dependencies)) // Every module depends upon the Core
 				$dependencies[] = 'Core';
 
-			$dependencies = array_filter($dependencies, function ($module) {
-				return $this->model->moduleExists($module);
+			// Filter against the given set (and not moduleExists, which returns false for not-yet-initialized modules, that must stay in the sort graph)
+			$dependencies = array_filter($dependencies, function ($depModule) use ($modulesMap) {
+				return isset($modulesMap[$depModule]);
 			});
 
 			$sorter->add($module->folder_name, $dependencies);
@@ -661,7 +666,7 @@ class Updater
 
 		$sortedModules = [];
 		foreach ($sorted as $moduleName)
-			$sortedModules[$moduleName] = $modules[$moduleName];
+			$sortedModules[$moduleName] = $modulesMap[$moduleName];
 
 		return $sortedModules;
 	}

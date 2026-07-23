@@ -100,6 +100,11 @@ class ZkController extends Controller
 									$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '" is not installed!';
 									$allDependenciesSatisfied = false;
 								} else {
+									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function ($m) {
+											return $m->folder_name;
+										}, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
+										$allDependenciesSatisfied = false;
+
 									if ($depVersion === '*')
 										continue;
 
@@ -118,11 +123,6 @@ class ZkController extends Controller
 										$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
 										$allDependenciesSatisfied = false;
 									}
-
-									if (!$modules[$depModule]->installed and !in_array($depModule, array_map(function ($m) {
-											return $m->folder_name;
-										}, $toBeInitialized))) // Installed but not initalized (and moreover, it's not going to be initialized now)
-										$allDependenciesSatisfied = false;
 								}
 							}
 
@@ -151,16 +151,35 @@ class ZkController extends Controller
 						}
 
 						if (count($toBeInitialized) > 0) {
+							$notInitialized = [];
+							$needingConfig = [];
 							foreach ($toBeInitialized as $moduleToInit) {
-								$response = $this->updater->initModule($moduleToInit->folder_name);
-								if ($response)
+								// If a dependency needs manual configuration, this module has to wait for it
+								$blocked = false;
+								foreach (array_keys($moduleToInit->dependencies) as $depModule) {
+									if (isset($notInitialized[$depModule])) {
+										$blocked = true;
+										break;
+									}
+								}
+								if ($blocked) {
+									$notInitialized[$moduleToInit->folder_name] = true;
+									continue;
+								}
+
+								if ($this->updater->initModule($moduleToInit->folder_name)) {
 									$moduleToInit->installed = true;
-								else
-									$this->model->redirect(PATH . 'zk/modules/init/' . $moduleToInit->folder_name);
+								} else {
+									$notInitialized[$moduleToInit->folder_name] = true;
+									$needingConfig[] = $moduleToInit->folder_name;
+								}
 							}
 
 							$coreConfigClass = $this->updater->getConfigClassFor('Core');
 							$coreConfigClass->makeCache();
+
+							if (count($needingConfig) > 0)
+								$this->model->redirect(PATH . 'zk/modules/init/' . $needingConfig[0]);
 						}
 
 						$priorities = [];
