@@ -6,7 +6,7 @@
 				if (count($modules) > 0) {
 					foreach ($modules as $m => $mod) {
 						?>
-						<div class="list-module" data-name="<?= entities($m) ?>" data-description="<?= entities($mod['description']) ?>" data-version="<?= $mod['current_version'] ?>" onclick="selectDownloadableModule(this)"><?= entities($mod['name']) ?></div><?php
+						<div class="list-module" data-name="<?= entities($m) ?>" data-description="<?= entities($mod['description']) ?>" data-version="<?= $mod['current_version'] ?>" data-dependencies="<?= entities(implode(', ', array_keys($mod['dependencies'] ?? []))) ?>" onclick="selectDownloadableModule(this)"><?= entities($mod['name']) ?></div><?php
 					}
 				} else {
 					echo '<div style="padding: 10px">No new downloadable module</div>';

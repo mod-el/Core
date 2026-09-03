@@ -80,6 +80,11 @@ class ZkController extends Controller
 						return $files['update'];
 
 					case null:
+						// The update queue is a one-shot flash: it must be consumed here, as soon as it's read.
+						// Otherwise, if the update fails, the JS in the template will keep restarting it at every reload, looping forever.
+						$this->injected['updateQueue'] = $_SESSION['update-queue'] ?? [];
+						unset($_SESSION['update-queue']);
+
 						$modules = $this->updater->getModules(true);
 						$modules = $this->updater->topSortModules($modules);
 
@@ -108,18 +113,7 @@ class ZkController extends Controller
 									if ($depVersion === '*')
 										continue;
 
-									if (str_starts_with($depVersion, '>=') or str_starts_with($depVersion, '<=') or str_starts_with($depVersion, '<>') or str_starts_with($depVersion, '!=') or str_starts_with($depVersion, '==')) {
-										$compareOperator = substr($depVersion, 0, 2);
-										$compareToVersion = substr($depVersion, 2);
-									} elseif (str_starts_with($depVersion, '>') or str_starts_with($depVersion, '<') or str_starts_with($depVersion, '=')) {
-										$compareOperator = substr($depVersion, 0, 1);
-										$compareToVersion = substr($depVersion, 1);
-									} else {
-										$compareOperator = '=';
-										$compareToVersion = $depVersion;
-									}
-
-									if (isset($modules[$depModule]->version) and !version_compare($modules[$depModule]->version, $compareToVersion, $compareOperator)) {
+									if (isset($modules[$depModule]->version) and !Updater::versionMatches($modules[$depModule]->version, $depVersion)) {
 										$this->model->viewOptions['errors'][] = 'Module "' . $depModule . '", dependency of "' . $m->name . '", does not match required version of ' . $depVersion;
 										$allDependenciesSatisfied = false;
 									}
@@ -335,6 +329,10 @@ class ZkController extends Controller
 										throw new Exception('Module ' . $module . ' already exists.');
 								}
 
+								// Dependencies are resolved before downloading anything: the missing ones are added to the list,
+								// and an unsatisfiable one aborts here, leaving the installation untouched
+								$modules = $this->updater->resolveDownloadDependencies($modules);
+
 								foreach ($modules as $module) {
 									$this->updater->addModuleToCache($module);
 									if (!isset($_SESSION['update-queue']))
@@ -395,7 +393,13 @@ class ZkController extends Controller
 								if (!$modules)
 									die('Missing data');
 								$modules = explode(',', $modules);
-								if ($this->updater->finalizeUpdate($modules, $_SESSION['delete-files']))
+
+								// Same treatment as the update queue: the file list is written by the "files-list" call and
+								// must not survive the attempt, or a later update would delete files based on a stale list
+								$filesToDelete = $_SESSION['delete-files'] ?? [];
+								unset($_SESSION['delete-files']);
+
+								if ($this->updater->finalizeUpdate($modules, $filesToDelete))
 									echo 'ok';
 								else
 									echo 'Generic error while finalizing';

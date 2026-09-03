@@ -1,5 +1,6 @@
 <?php namespace Model\Core;
 
+use Composer\InstalledVersions;
 use MJS\TopSort\Implementations\StringSort;
 
 class Updater
@@ -316,9 +317,6 @@ class Updater
 		if (!$this->deleteDirectory('model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'temp'))
 			return false;
 
-		if (isset($_SESSION['update-queue']))
-			unset($_SESSION['update-queue']);
-
 		return true;
 	}
 
@@ -487,6 +485,110 @@ class Updater
 		} else {
 			return [];
 		}
+	}
+
+	/**
+	 * Given a list of modules the user asked to install, returns the complete list of modules to actually download:
+	 * the requested ones, plus every missing dependency, sorted so that dependencies come first.
+	 * If a dependency cannot be satisfied, it throws: nothing is downloaded and nothing is written on disk,
+	 * instead of discovering the problem halfway through the update (when the module has already been copied in place).
+	 *
+	 * @param string[] $modules
+	 * @return string[]
+	 * @throws Exception
+	 */
+	public function resolveDownloadDependencies(array $modules): array
+	{
+		$downloadable = $this->downloadableModules();
+		$installed = $this->getModules(false, false);
+
+		$queue = array_values($modules);
+		$resolved = [];
+
+		while (count($queue) > 0) {
+			$name = array_shift($queue);
+			if (isset($resolved[$name]))
+				continue;
+
+			if (!isset($downloadable[$name]))
+				throw new Exception('Module "' . $name . '" is not available on the repository');
+
+			$resolved[$name] = $downloadable[$name];
+
+			// Composer packages cannot be installed from here, the user has to require them manually:
+			// better to say it now than to fail while finalizing the update.
+			// (the repository does not return "requires" yet: this check activates as soon as it does)
+			foreach (($downloadable[$name]['requires'] ?? []) as $package) {
+				if (!InstalledVersions::isInstalled($package))
+					throw new Exception('Module "' . $name . '" requires the Composer package "' . $package . '": please run "composer require ' . $package . '" before installing it');
+			}
+
+			foreach (($downloadable[$name]['dependencies'] ?? []) as $dep => $depVersion) {
+				if (isset($installed[$dep])) { // Already installed, I only have to check the version
+					if (!self::versionMatches($installed[$dep]->version ?? null, $depVersion))
+						throw new Exception('Module "' . $name . '" requires "' . $dep . '" ' . $depVersion . ', but version ' . ($installed[$dep]->version ?? '0.0.0') . ' is installed');
+					continue;
+				}
+
+				if (!isset($downloadable[$dep]))
+					throw new Exception('Module "' . $name . '" depends on "' . $dep . '", which is neither installed nor available on the repository');
+
+				if (!self::versionMatches($downloadable[$dep]['current_version'] ?? null, $depVersion))
+					throw new Exception('Module "' . $name . '" requires "' . $dep . '" ' . $depVersion . ', but the repository only offers version ' . ($downloadable[$dep]['current_version'] ?? '?'));
+
+				$queue[] = $dep; // Missing dependency: it gets installed along with the requested module
+			}
+		}
+
+		return $this->topSortRemoteModules($resolved);
+	}
+
+	/**
+	 * Same as topSortModules, but working on the raw module data coming from the repository (plain arrays, not ReflectionModules)
+	 *
+	 * @param array $modules
+	 * @return string[]
+	 */
+	private function topSortRemoteModules(array $modules): array
+	{
+		$sorter = new StringSort;
+
+		foreach ($modules as $name => $module) {
+			// Only the modules belonging to this same set take part in the sort, the already installed ones are irrelevant here
+			$dependencies = array_filter(array_keys($module['dependencies'] ?? []), function ($dep) use ($modules) {
+				return isset($modules[$dep]);
+			});
+
+			$sorter->add($name, $dependencies);
+		}
+
+		return $sorter->sort();
+	}
+
+	/**
+	 * Checks a version against a dependency constraint, in the "[operator]version" form used in the manifests (e.g. ">=1.6.0")
+	 *
+	 * @param string|null $version
+	 * @param string $constraint
+	 * @return bool
+	 */
+	public static function versionMatches(?string $version, string $constraint): bool
+	{
+		if ($constraint === '*' or $version === null)
+			return true;
+
+		if (str_starts_with($constraint, '>=') or str_starts_with($constraint, '<=') or str_starts_with($constraint, '<>') or str_starts_with($constraint, '!=') or str_starts_with($constraint, '==')) {
+			$compareOperator = substr($constraint, 0, 2);
+			$compareToVersion = substr($constraint, 2);
+		} elseif (str_starts_with($constraint, '>') or str_starts_with($constraint, '<') or str_starts_with($constraint, '=')) {
+			$compareOperator = substr($constraint, 0, 1);
+			$compareToVersion = substr($constraint, 1);
+		} else {
+			$compareOperator = '=';
+			$compareToVersion = $constraint;
+		}
+
+		return (bool)version_compare($version, $compareToVersion, $compareOperator);
 	}
 
 	/**

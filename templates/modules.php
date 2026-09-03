@@ -82,9 +82,11 @@ foreach ($modules as $module) {
 
 <script>
 	<?php
-	if (count($_SESSION['update-queue'] ?? []) > 0) {
+	// $updateQueue is injected (and cleared) by the controller: it must be a one-shot value,
+	// never read straight from the session, or a failed update would restart at every reload
+	if (count($updateQueue ?? []) > 0) {
 	?>
-	updateQueue = <?=json_encode($_SESSION['update-queue'] ?? [])?>;
+	updateQueue = <?=json_encode($updateQueue)?>;
 	<?php
 	}
 	?>
