@@ -104,11 +104,11 @@ class Module_Config
 		if (!is_dir($dirName))
 			mkdir($dirName, 0755, true);
 
-		$w = file_put_contents($configFile, '<?php
+		$w = writeGeneratedFile($configFile, '<?php
 $config = ' . var_export($data, true) . ';
 ');
 
-		return (bool)$w;
+		return $w;
 	}
 
 	/**
@@ -280,7 +280,7 @@ $config = ' . var_export($data, true) . ';
 
 					$content = call_user_func($asset['default']);
 					if ($content !== null and $content !== false)
-						file_put_contents($file, $content);
+						writeGeneratedFile($file, $content);
 				} else { // Otherwise, it's a directory
 					mkdir($file, 0777, true);
 				}
@@ -301,7 +301,7 @@ $config = ' . var_export($data, true) . ';
 		if (!is_dir($dir))
 			mkdir($dir, 0777, true);
 
-		file_put_contents(INCLUDE_PATH . $file, $default);
+		writeGeneratedFile(INCLUDE_PATH . $file, $default);
 	}
 
 	/**

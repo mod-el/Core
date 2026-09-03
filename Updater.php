@@ -158,7 +158,7 @@ class Updater
 
 			$file_path = $folder_path . DIRECTORY_SEPARATOR . 'vars.php';
 			if (!file_exists($file_path)) {
-				file_put_contents($file_path, "<?php\n");
+				writeGeneratedFile($file_path, "<?php\n");
 				@chmod($file_path, 0755);
 			}
 
@@ -191,7 +191,7 @@ class Updater
 		$this->moduleVarsCache[$name][$k] = $v;
 
 		$file_path = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'vars.php';
-		return (bool)file_put_contents($file_path, "<?php\n\$vars = " . var_export($vars, true) . ";\n");
+		return writeGeneratedFile($file_path, "<?php\n\$vars = " . var_export($vars, true) . ";\n");
 	}
 
 	/**
@@ -524,7 +524,9 @@ class Updater
 			}
 
 			foreach (($downloadable[$name]['dependencies'] ?? []) as $dep => $depVersion) {
-				if (isset($installed[$dep])) { // Already installed, I only have to check the version
+				// "exists" tells a real module from a leftover cache entry whose files were never downloaded:
+				// the latter must not count as a satisfied dependency
+				if (isset($installed[$dep]) and $installed[$dep]->exists) { // Already installed, I only have to check the version
 					if (!self::versionMatches($installed[$dep]->version ?? null, $depVersion))
 						throw new Exception('Module "' . $name . '" requires "' . $dep . '" ' . $depVersion . ', but version ' . ($installed[$dep]->version ?? '0.0.0') . ' is installed');
 					continue;
@@ -796,11 +798,11 @@ class Updater
 		];
 
 		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
-		$scrittura = file_put_contents($cacheFile, '<?php
+		$scrittura = writeGeneratedFile($cacheFile, '<?php
 $cache = ' . var_export($cache, true) . ';
 ');
 		$this->model->reloadCacheFile();
-		return (bool)$scrittura;
+		return $scrittura;
 	}
 
 	/**
@@ -827,7 +829,7 @@ $cache = ' . var_export($cache, true) . ';
 			unset($cache['modules'][$module]);
 
 		$cacheFile = INCLUDE_PATH . 'model' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'cache.php';
-		file_put_contents($cacheFile, '<?php
+		writeGeneratedFile($cacheFile, '<?php
 $cache = ' . var_export($cache, true) . ';
 ');
 

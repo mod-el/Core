@@ -261,7 +261,7 @@ class Config extends Module_Config
 			mkdir($cacheDir, 0777, true);
 
 		$cacheFile = $cacheDir . DIRECTORY_SEPARATOR . 'cache.php';
-		$scrittura = file_put_contents($cacheFile, '<?php
+		$scrittura = writeGeneratedFile($cacheFile, '<?php
 $cache = ' . var_export($cache, true) . ';
 ');
 		if (!$scrittura)
@@ -346,10 +346,10 @@ $cache = ' . var_export($cache, true) . ';
 				$config[$k] = $data[$k];
 		}
 
-		$w = file_put_contents($configFile, '<?php
+		$w = writeGeneratedFile($configFile, '<?php
 $config = ' . var_export($config, true) . ';
 ');
-		return (bool)$w;
+		return $w;
 	}
 
 	/**

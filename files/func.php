@@ -232,3 +232,26 @@ function array_merge_recursive_distinct(array $array1, array $array2): array
 
 	return $merged;
 }
+
+/**
+ * Writes a file generated at runtime (caches, module vars, config files, ...) and invalidates its opcode cache.
+ *
+ * Without the invalidation, opcache keeps serving the previous version of the file for up to
+ * opcache.revalidate_freq seconds (2 by default) - both to the rest of the current request and to
+ * the immediately following ones, which is enough to make a freshly written cache look like it never changed.
+ *
+ * @param string $path
+ * @param string $content
+ * @return bool
+ */
+function writeGeneratedFile(string $path, string $content): bool
+{
+	$written = file_put_contents($path, $content);
+	if ($written === false)
+		return false;
+
+	if (function_exists('opcache_invalidate'))
+		opcache_invalidate($path, true);
+
+	return true;
+}

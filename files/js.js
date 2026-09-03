@@ -273,14 +273,14 @@ function updateSelectedModules() {
 	let updateList = [], corrupted = false;
 	for (let module of selectedModules) {
 		let priority = 999;
+
+		// The card may be missing (e.g. a module just added to the queue, not rendered yet): the update
+		// only needs the module name, so it must go on anyway - the card is just where priority comes from
 		let div = document.querySelector('[data-module="' + module + '"]');
-		if (!div)
-			continue;
-
-		if (div.getAttribute('data-corrupted'))
-			corrupted = true;
-
 		if (div) {
+			if (div.getAttribute('data-corrupted'))
+				corrupted = true;
+
 			priority = parseInt(div.getAttribute('data-priority'));
 			if (isNaN(priority))
 				priority = 999;
@@ -429,7 +429,10 @@ function selectDownloadableModule(el) {
 
 	let div = document.getElementById('downloadable-module-details');
 	let name = el.dataset.name;
-	div.innerHTML = '<div><div class="module-version">' + el.dataset.version + '</div><b>' + name + '</b></div><p><i>' + el.dataset.description + '</i></p>';
+	let html = '<div><div class="module-version">' + el.dataset.version + '</div><b>' + name + '</b></div><p><i>' + el.dataset.description + '</i></p>';
+	if (el.dataset.dependencies)
+		html += '<p>Dependencies: <b>' + el.dataset.dependencies + '</b><br /><i>they will be installed as well, if missing</i></p>';
+	div.innerHTML = html;
 }
 
 function installSelectedModules() {
